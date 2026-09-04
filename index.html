@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VertexSoccer AI — Where AI Meets Football</title>
+    <meta name="description" content="AI-powered football match analysis. 20+ predictions per match. 80%+ accuracy.">
+    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='5' cy='5' r='2' fill='%2300d4ff'/><circle cx='19' cy='5' r='2' fill='%2300d4ff'/><circle cx='12' cy='12' r='2' fill='%2300d4ff'/><circle cx='5' cy='19' r='2' fill='%2300d4ff'/><circle cx='19' cy='19' r='2' fill='%2300d4ff'/><line x1='7' y1='5' x2='17' y2='5' stroke='%2300d4ff' stroke-width='0.5'/><line x1='7' y1='5' x2='10' y2='12' stroke='%2300d4ff' stroke-width='0.5'/><line x1='17' y1='5' x2='14' y2='12' stroke='%2300d4ff' stroke-width='0.5'/><line x1='10' y1='12' x2='14' y2='12' stroke='%2300d4ff' stroke-width='0.5'/><line x1='10' y1='12' x2='7' y2='19' stroke='%2300d4ff' stroke-width='0.5'/><line x1='14' y1='12' x2='17' y2='19' stroke='%2300d4ff' stroke-width='0.5'/><line x1='7' y1='19' x2='17' y2='19' stroke='%2300d4ff' stroke-width='0.5'/></svg>">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="particles-js"></div>
+
+    <header class="header">
+        <div class="container header-inner">
+            <a href="#" class="logo" id="logo">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+                    <circle cx="5" cy="5" r="2" fill="#00d4ff"/>
+                    <circle cx="19" cy="5" r="2" fill="#00d4ff"/>
+                    <circle cx="12" cy="12" r="2" fill="#00d4ff"/>
+                    <circle cx="5" cy="19" r="2" fill="#00d4ff"/>
+                    <circle cx="19" cy="19" r="2" fill="#00d4ff"/>
+                    <line x1="7" y1="5" x2="17" y2="5" stroke="#00d4ff" stroke-width="0.5"/>
+                    <line x1="7" y1="5" x2="10" y2="12" stroke="#00d4ff" stroke-width="0.5"/>
+                    <line x1="17" y1="5" x2="14" y2="12" stroke="#00d4ff" stroke-width="0.5"/>
+                    <line x1="10" y1="12" x2="14" y2="12" stroke="#00d4ff" stroke-width="0.5"/>
+                    <line x1="10" y1="12" x2="7" y2="19" stroke="#00d4ff" stroke-width="0.5"/>
+                    <line x1="14" y1="12" x2="17" y2="19" stroke="#00d4ff" stroke-width="0.5"/>
+                    <line x1="7" y1="19" x2="17" y2="19" stroke="#00d4ff" stroke-width="0.5"/>
+                </svg>
+                <span class="logo-text">VERTEX <span class="logo-accent">SOCCER AI</span></span>
+            </a>
+            <nav class="nav" id="nav">
+                <a href="#" data-tab="home" class="active">Home</a>
+                <a href="#" data-tab="analyzer">AI Analyzer</a>
+                <a href="#" data-tab="trainer">AI Trainer</a>
+                <a href="#" data-tab="results">Results</a>
+                <a href="#" data-tab="leaderboard">Leaderboard</a>
+                <a href="#" data-tab="reviews">Reviews</a>
+                <a href="#" data-tab="faq">FAQ</a>
+                <a href="#" data-tab="contact">Contact</a>
+                <a href="#" class="btn-signup" id="btnSignup">Sign Up</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        
+        <section id="tab-home" class="tab-content active">
+            <div class="container home-container">
+                <div class="hero">
+                    <h1 class="hero-title">VERTEX <span class="hero-accent">SOCCER AI</span></h1>
+                    <p class="hero-slogan">Where AI Meets Football</p>
+                    <p class="hero-sub">AI-powered match analysis with 20+ predictions. 80%+ accuracy.</p>
+                    
+                    <div class="search-box">
+                        <input type="text" id="searchInput" placeholder="Enter match (e.g., Chelsea vs Arsenal)" autocomplete="off">
+                        <div class="suggestions" id="suggestions"></div>
+                        <button class="btn-analyze" id="btnAnalyze">⚡ ANALYZE MATCH</button>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number">85%</div>
+                        <div class="stat-label">Win Rate</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">20+</div>
+                        <div class="stat-label">Predictions</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">4.8K</div>
+                        <div class="stat-label">Active Users</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">24/7</div>
+                        <div class="stat-label">AI Online</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-analyzer" class="tab-content">
+            <div class="container">
+                <h2 class="section-title">AI Match Analyzer</h2>
+                <p class="section-subtitle">Enter a match and get 20+ predictions for free</p>
+                <div id="analyzerContent">
+                    <div class="search-box">
+                        <input type="text" id="analyzerSearch" placeholder="Enter match (e.g., Chelsea vs Arsenal)" autocomplete="off">
+                        <div class="suggestions" id="analyzerSuggestions"></div>
+                        <button class="btn-analyze" id="btnAnalyzeMatch">⚡ ANALYZE</button>
+                    </div>
+                    <div id="analysisResult"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-trainer" class="tab-content">
+            <div class="container">
+                <h2 class="section-title">AI Trainer</h2>
+                <p class="section-subtitle">Personal betting strategy. Free during beta.</p>
+                <div id="trainerContent">
+                    <div class="trainer-card">
+                        <div class="trainer-price">FREE<span> beta</span></div>
+                        <ul class="trainer-features">
+                            <li>✓ Personal betting strategy</li>
+                            <li>✓ 4-6 AI-picked matches weekly</li>
+                            <li>✓ Full analysis included</li>
+                            <li>✓ Email notifications</li>
+                        </ul>
+                        <button class="btn-primary" id="btnTryTrainer">SET UP MY PROFILE</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-results" class="tab-content">
+            <div class="container">
+                <h2 class="section-title">AI Results</h2>
+                <p class="section-subtitle">Transparent history of our predictions</p>
+                <div id="resultsTable">
+                    <p>Loading results...</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-leaderboard" class="tab-content">
+            <div class="container">
+                <h2 class="section-title">Leaderboard</h2>
+                <p class="section-subtitle">Top 20 users by win rate</p>
+                <div id="leaderboard">
+                    <p>Loading leaderboard...</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-reviews" class="tab-content">
+            <div class="container">
+                <h2 class="section-title">Reviews</h2>
+                <p class="section-subtitle">What our users say</p>
+                <div id="reviewsList">
+                    <p>Loading reviews...</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-faq" class="tab-content">
+            <div class="container">
+                <h2 class="section-title">FAQ</h2>
+                <div class="faq-list">
+                    <div class="faq-item">
+                        <h3>How does AI Analyzer work?</h3>
+                        <p>Enter a match and get 20+ predictions with probabilities and AI match verdict. Free during beta.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3>How accurate is the AI?</h3>
+                        <p>Our AI has a proven win rate of 85%+ over the last 12 months.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3>What is AI Trainer?</h3>
+                        <p>AI Trainer provides personal betting strategy and 4-6 AI-picked matches weekly. Free during beta.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3>Is it really free?</h3>
+                        <p>Yes! During beta all features are free. Paid features coming soon.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-contact" class="tab-content">
+            <div class="container contact-container">
+                <h2 class="section-title">Contact Us</h2>
+                <p class="section-subtitle">We respond within 24 hours</p>
+                <p>📧 <a href="mailto:vertexsoccerai@outlook.com">vertexsoccerai@outlook.com</a></p>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>© 2025 VertexSoccer AI. All rights reserved. | 18+ | Free Beta</p>
+            <p>
+                <a href="#" data-tab-link="faq">FAQ</a> | 
+                <a href="#" data-tab-link="contact">Contact</a>
+            </p>
+        </div>
+    </footer>
+
+    <div id="modalOverlay" class="modal-overlay hidden">
+        <div class="modal" id="modalContent"></div>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="particles.js"></script>
+</body>
+</html>
