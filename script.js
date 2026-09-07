@@ -30,9 +30,20 @@ function initNavigation() {
     document.querySelectorAll('.nav a[data-tab]').forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
-            switchTab(this.dataset.tab);
+            const tabId = this.dataset.tab;
+            
+            // Проверка доступа
+            if (tabId !== 'home' && tabId !== 'faq' && tabId !== 'contact') {
+                if (!currentUser) {
+                    showSignupModal();
+                    return;
+                }
+            }
+            
+            switchTab(tabId);
         });
     });
+    
     document.getElementById('logo').addEventListener('click', function() { switchTab('home'); });
     document.getElementById('btnSignup').addEventListener('click', function(e) { e.preventDefault(); showSignupModal(); });
     document.getElementById('btnCabinet').addEventListener('click', function(e) { e.preventDefault(); showCabinet(); });
@@ -45,10 +56,12 @@ function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
     const activeTab = document.getElementById(`tab-${tabId}`);
     if (activeTab) activeTab.classList.add('active');
+    
     document.querySelectorAll('.nav a[data-tab]').forEach(link => {
         link.classList.remove('active');
         if (link.dataset.tab === tabId) link.classList.add('active');
     });
+    
     if (tabId === 'leaderboard') loadLeaderboard();
     if (tabId === 'reviews') loadReviews();
     if (tabId === 'strategy') showStrategyDashboard();
@@ -64,13 +77,16 @@ function initSearch() {
     analyzerInput.addEventListener('input', function() { showSuggestions(this.value, analyzerSuggestions); });
 
     document.getElementById('btnAnalyze').addEventListener('click', function() {
+        if (!currentUser) { showSignupModal(); return; }
         if (searchInput.value) {
             switchTab('analyzer');
             analyzerInput.value = searchInput.value;
             performAnalysis(searchInput.value);
         }
     });
+    
     document.getElementById('btnAnalyzeMatch').addEventListener('click', function() {
+        if (!currentUser) { showSignupModal(); return; }
         if (analyzerInput.value) performAnalysis(analyzerInput.value);
     });
 }
@@ -174,6 +190,7 @@ function initStrategy() {
 function showStrategyDashboard() {
     const content = document.getElementById('strategyContent');
     const profile = localStorage.getItem('strategy_profile');
+    
     if (profile) {
         const data = JSON.parse(profile);
         const stake = Math.round(data.bankroll * 0.03);
@@ -283,6 +300,7 @@ function showSignupModal() {
     const content = document.getElementById('modalContent');
     content.innerHTML = `
         <h2>Create Account</h2>
+        <p style="text-align:center;color:#9a9aae;font-size:13px;margin-bottom:15px;">Sign up to access all features</p>
         <input type="email" id="signupEmail" placeholder="Email">
         <input type="password" id="signupPassword" placeholder="Password">
         <button onclick="signup()">SIGN UP</button>
@@ -311,9 +329,26 @@ async function signup() {
     if (supabase) {
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) { alert('Error: ' + error.message); return; }
-        alert('Verification email sent!');
+        alert('Verification email sent! Check your inbox.');
         closeModal();
     }
+}
+
+function showWelcomeGuide() {
+    const modal = document.getElementById('modalOverlay');
+    const content = document.getElementById('modalContent');
+    content.innerHTML = `
+        <h2>👋 WELCOME TO VERTEX SOCCER AI</h2>
+        <div style="color:#9a9aae;font-size:13px;line-height:1.8;">
+            <p><strong style="color:#00d4ff;">1. MATCH ANALYZER:</strong><br>Enter match → Get predictions. FREE.</p>
+            <p><strong style="color:#00d4ff;">2. MY STRATEGY:</strong><br>Personal strategy. FREE.</p>
+            <p><strong style="color:#00d4ff;">3. LEADERBOARD:</strong><br>Top users by activity.</p>
+            <p><strong style="color:#00d4ff;">4. REVIEWS:</strong><br>Share your experience.</p>
+            <p><strong style="color:#00d4ff;">5. SUPPORT:</strong><br>${SUPPORT_EMAIL}</p>
+        </div>
+        <button onclick="closeModal()">✓ GOT IT!</button>
+    `;
+    modal.classList.remove('hidden');
 }
 
 function showCabinet() {
@@ -334,6 +369,7 @@ async function logout() {
     closeModal();
     document.getElementById('btnSignup').classList.remove('hidden');
     document.getElementById('btnCabinet').classList.add('hidden');
+    switchTab('home');
 }
 
 async function incrementActivity() {
