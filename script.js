@@ -1,12 +1,10 @@
+// ===== КОНФИГУРАЦИЯ =====
 const SUPABASE_URL = 'https://bznjdzgtiddggcdhxadj.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_kWwttoQARBmC6H_NqsEL_A_A5I7wDON';
 const SUPPORT_EMAIL = 'vertexsoccerai@outlook.com';
-const FOOTBALL_DATA_KEY = 'f7ab26252afa40fc81e38358e71d2e66';
-const THESPORTSDB_KEY = '123';
-const OPENWEATHER_KEY = 'b39f15cdbd0f8ffaef18929c6ac7088f';
-const NEWSAPI_KEY = '96282fa513c14a239c6d654b1a6f2a9b';
-const RAPIDAPI_KEY = 'ae425e653dmsh3deb1f40581e8e4p16a33cjsnda1bdee9b499';
-const RAPIDAPI_HOST = 'free-api-live-football-data.p.rapidapi.com';
+
+// API ключи берутся из Vercel Environment Variables
+// В открытом коде их нет (безопасно)
 
 let supabase = null;
 let currentUser = null;
@@ -26,13 +24,14 @@ document.addEventListener('DOMContentLoaded', function() {
     initStarRating();
 });
 
+// ===== НАВИГАЦИЯ =====
 function initNavigation() {
     document.querySelectorAll('.nav a[data-tab]').forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             const tabId = this.dataset.tab;
             
-            // Проверка доступа
+            // Проверка доступа: все вкладки кроме Home, FAQ, Contact требуют регистрацию
             if (tabId !== 'home' && tabId !== 'faq' && tabId !== 'contact') {
                 if (!currentUser) {
                     showSignupModal();
@@ -67,6 +66,7 @@ function switchTab(tabId) {
     if (tabId === 'strategy') showStrategyDashboard();
 }
 
+// ===== ПОИСК =====
 function initSearch() {
     const searchInput = document.getElementById('searchInput');
     const suggestions = document.getElementById('suggestions');
@@ -126,10 +126,13 @@ function loadTeamsDatabase() {
         "Celtic", "Rangers", "Galatasaray", "Fenerbahce", "Besiktas",
         "Buriram United", "Bangkok United", "Port FC", "Persija Jakarta", "Persib Bandung",
         "Al Ahly", "Zamalek", "Wydad Casablanca", "Raja Casablanca", "Mamelodi Sundowns",
-        "Flamengo", "Palmeiras", "Boca Juniors", "River Plate", "Penarol"
+        "Flamengo", "Palmeiras", "Boca Juniors", "River Plate", "Penarol",
+        "Al Nassr", "Al Hilal", "Al Ittihad", "Urawa Red Diamonds", "Kawasaki Frontale",
+        "Jeonbuk Hyundai", "Ulsan Hyundai", "Shanghai Port", "Beijing Guoan", "Muangthong United"
     ].sort();
 }
 
+// ===== MATCH ANALYZER =====
 function performAnalysis(matchText) {
     const resultDiv = document.getElementById('analysisResult');
     resultDiv.innerHTML = `<p style="text-align:center;color:#00d4ff;">⚡ AI is analyzing "${matchText}"...</p>`;
@@ -177,6 +180,7 @@ function generateAnalysis(matchText) {
     `;
 }
 
+// ===== MY STRATEGY =====
 function initStrategy() {
     const btn = document.getElementById('btnTryStrategy');
     if (btn) {
@@ -205,6 +209,10 @@ function showStrategyDashboard() {
                     <p style="color:#9a9aae;font-size:13px;">Stake: 3% ($${stake})</p>
                     <p style="color:#9a9aae;font-size:13px;">Bets/week: 3-5</p>
                     <p style="color:#9a9aae;font-size:13px;">Target: +15%/month</p>
+                </div>
+                <div style="background:rgba(0,0,0,0.3);padding:15px;border-radius:10px;margin-bottom:20px;">
+                    <p style="color:#ffd700;">💬 AI ADVICE:</p>
+                    <p style="color:#9a9aae;font-size:13px;">"Don't rush. Stick to the plan. Don't chase losses."</p>
                 </div>
                 <button class="btn-primary" onclick="showStrategySetup()">EDIT</button>
             </div>
@@ -236,6 +244,8 @@ function showStrategySetup() {
                 <option value="Ligue 1">Ligue 1</option>
                 <option value="Thai League">Thai League</option>
                 <option value="Liga 1 Indonesia">Liga 1 Indonesia</option>
+                <option value="Saudi Pro League">Saudi Pro League</option>
+                <option value="J1 League">J1 League</option>
             </select>
             <button class="btn-primary" onclick="saveStrategyProfile()">GENERATE</button>
         </div>
@@ -250,6 +260,7 @@ function saveStrategyProfile() {
     showStrategyDashboard();
 }
 
+// ===== LEADERBOARD =====
 async function loadLeaderboard() {
     if (supabase) {
         const { data } = await supabase.from('activity').select('user_id, analyses_count').order('analyses_count', { ascending: false }).limit(20);
@@ -261,6 +272,7 @@ async function loadLeaderboard() {
     document.getElementById('leaderboard').innerHTML = '<p style="text-align:center;color:#9a9aae;">No activity yet.</p>';
 }
 
+// ===== REVIEWS =====
 async function loadReviews() {
     if (supabase) {
         const { data } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
@@ -295,6 +307,7 @@ async function submitReview() {
     alert('Review submitted!');
 }
 
+// ===== АУТЕНТИФИКАЦИЯ =====
 function showSignupModal() {
     const modal = document.getElementById('modalOverlay');
     const content = document.getElementById('modalContent');
@@ -318,6 +331,7 @@ async function checkSession() {
             currentUser = session.user;
             document.getElementById('btnSignup').classList.add('hidden');
             document.getElementById('btnCabinet').classList.remove('hidden');
+            showWelcomeGuide();
         }
     }
 }
@@ -372,6 +386,7 @@ async function logout() {
     switchTab('home');
 }
 
+// ===== АКТИВНОСТЬ =====
 async function incrementActivity() {
     if (supabase && currentUser) {
         const { data } = await supabase.from('activity').select('analyses_count').eq('user_id', currentUser.id).single();
@@ -383,6 +398,7 @@ async function incrementActivity() {
     }
 }
 
+// ===== СТРАНИЦЫ =====
 function showAboutPage() {
     const modal = document.getElementById('modalOverlay');
     document.getElementById('modalContent').innerHTML = `<h2>About Us</h2><p style="color:#9a9aae;">Professional football analysis powered by AI. Real data from 5+ APIs.</p><button onclick="closeModal()">Close</button>`;
