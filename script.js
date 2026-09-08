@@ -2,6 +2,14 @@ const SUPABASE_URL = 'https://bznjdzgtiddggcdhxadj.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_kWwttoQARBmC6H_NqsEL_A_A5I7wDON';
 const SUPPORT_EMAIL = 'vertexsoccerai@outlook.com';
 
+// ====== API КЛЮЧИ (ДОБАВЛЕНЫ) ======
+const FOOTBALL_DATA_KEY = 'f7ab26252afa40fc81e38358e71d2e66';
+const THESPORTSDB_KEY = '123';
+const OPENWEATHER_KEY = 'b39f15cdbd0f8ffaef18929c6ac7088f';
+const NEWSAPI_KEY = '96282fa513c14a239c6d654b1a6f2a9b';
+const RAPIDAPI_KEY = 'ae425e653dmsh3deb1f40581e8e4p16a33cjsnda1bdee9b499';
+const RAPIDAPI_HOST = 'free-api-live-football-data.p.rapidapi.com';
+
 let supabase = null;
 let currentUser = null;
 let teamsDatabase = [];
@@ -111,16 +119,52 @@ function loadTeamsDatabase() {
     ].sort();
 }
 
-function performAnalysis(matchText) {
-    const resultDiv = document.getElementById('analysisResult');
-    resultDiv.innerHTML = `<p style="text-align:center;color:#00d4ff;">⚡ AI is analyzing "${matchText}"...</p>`;
-    setTimeout(() => {
-        resultDiv.innerHTML = generateAnalysis(matchText);
-        if (currentUser) incrementActivity();
-    }, 3000);
+async function fetchMatchData(matchText) {
+    const [home, away] = matchText.split(' vs ').map(s => s.trim());
+    const data = {
+        home,
+        away,
+        weather: null,
+        news: []
+    };
+    
+    // OpenWeatherMap
+    try {
+        const weatherRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(home)}&appid=${OPENWEATHER_KEY}&units=metric`);
+        if (weatherRes.ok) {
+            const weather = await weatherRes.json();
+            data.weather = `${Math.round(weather.main.temp)}°C, ${weather.weather[0].description}`;
+        }
+    } catch (e) { console.log('Weather error:', e); }
+    
+    // NewsAPI
+    try {
+        const newsRes = await fetch(`https://newsapi.org/v2/everything?q=${encodeURIComponent(home)}&apiKey=${NEWSAPI_KEY}`);
+        if (newsRes.ok) {
+            const news = await newsRes.json();
+            if (news.articles) data.news = news.articles.slice(0, 3).map(a => a.title);
+        }
+    } catch (e) { console.log('News error:', e); }
+    
+    return data;
 }
 
-function generateAnalysis(matchText) {
+async function performAnalysis(matchText) {
+    const resultDiv = document.getElementById('analysisResult');
+    resultDiv.innerHTML = `<p style="text-align:center;color:#00d4ff;">⚡ AI is analyzing "${matchText}"...</p>`;
+    
+    const data = await fetchMatchData(matchText);
+    
+    setTimeout(() => {
+        resultDiv.innerHTML = generateAnalysis(matchText, data);
+        if (currentUser) incrementActivity();
+    }, 2000);
+}
+
+function generateAnalysis(matchText, data) {
+    const homeInfo = data.weather ? `<br><span style="font-size:12px;color:#9a9aae;">🌡️ Weather: ${data.weather}</span>` : '';
+    const newsInfo = data.news.length > 0 ? `<br><span style="font-size:12px;color:#9a9aae;">📰 News: ${data.news.join(', ')}</span>` : '';
+    
     const predictions = [
         { label: "Winner", value: "Home Team", prob: 82, level: "high" },
         { label: "Double Chance", value: "1X", prob: 78, level: "high" },
@@ -135,9 +179,10 @@ function generateAnalysis(matchText) {
         { label: "Penalty", value: "No", prob: 85, level: "high" },
         { label: "Shots on Target", value: "Over 8.5", prob: 62, level: "medium" }
     ];
+    
     return `
         <div class="analysis-card">
-            <div class="analysis-teams">${matchText.toUpperCase()}</div>
+            <div class="analysis-teams">${matchText.toUpperCase()}${homeInfo}${newsInfo}</div>
             <div class="prediction-grid">
                 ${predictions.map(p => `<div class="prediction-item"><div class="prediction-label">${p.label}</div><div class="prediction-value">${p.value}</div><div class="prediction-prob prob-${p.level}">${p.prob}%</div></div>`).join('')}
             </div>
