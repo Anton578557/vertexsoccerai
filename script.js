@@ -2,7 +2,7 @@ const SUPABASE_URL = 'https://bznjdzgtiddggcdhxadj.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_kWwttoQARBmC6H_NqsEL_A_A5I7wDON';
 const SUPPORT_EMAIL = 'vertexsoccerai@outlook.com';
 
-// ====== API КЛЮЧИ (ДОБАВЛЕНЫ) ======
+// ====== API КЛЮЧИ (ПРОПИСАНЫ ВРУЧНУЮ) ======
 const FOOTBALL_DATA_KEY = 'f7ab26252afa40fc81e38358e71d2e66';
 const THESPORTSDB_KEY = '123';
 const OPENWEATHER_KEY = 'b39f15cdbd0f8ffaef18929c6ac7088f';
