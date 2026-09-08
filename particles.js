@@ -11,8 +11,15 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         interactivity: {
             detect_on: "canvas",
-            events: { onhover: { enable: true, mode: "grab" }, onclick: { enable: true, mode: "push" }, resize: true },
-            modes: { grab: { distance: 140, line_linked: { opacity: 0.6 } }, push: { particles_nb: 4 } }
+            events: {
+                onhover: { enable: true, mode: "grab" },
+                onclick: { enable: true, mode: "push" },
+                resize: true
+            },
+            modes: {
+                grab: { distance: 140, line_linked: { opacity: 0.6 } },
+                push: { particles_nb: 4 }
+            }
         },
         retina_detect: true
     });
