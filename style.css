@@ -15,7 +15,10 @@
 body {
     font-family: 'Manrope', sans-serif;
     background-color: #0a0e17;
-    background-image: none;
+    background-image: url('bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
     color: var(--text-main);
     min-height: 100vh;
     display: flex;
