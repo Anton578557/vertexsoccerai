@@ -1,10 +1,6 @@
-// ===== КОНФИГУРАЦИЯ =====
 const SUPABASE_URL = 'https://bznjdzgtiddggcdhxadj.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_kWwttoQARBmC6H_NqsEL_A_A5I7wDON';
 const SUPPORT_EMAIL = 'vertexsoccerai@outlook.com';
-
-// API ключи берутся из Vercel Environment Variables
-// В открытом коде их нет (безопасно)
 
 let supabase = null;
 let currentUser = null;
@@ -24,27 +20,21 @@ document.addEventListener('DOMContentLoaded', function() {
     initStarRating();
 });
 
-// ===== НАВИГАЦИЯ =====
 function initNavigation() {
     document.querySelectorAll('.nav a[data-tab]').forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             const tabId = this.dataset.tab;
-            
-            // Проверка доступа: все вкладки кроме Home, FAQ, Contact требуют регистрацию
             if (tabId !== 'home' && tabId !== 'faq' && tabId !== 'contact') {
-                if (!currentUser) {
-                    showSignupModal();
-                    return;
-                }
+                if (!currentUser) { showSignupModal(); return; }
             }
-            
             switchTab(tabId);
         });
     });
     
     document.getElementById('logo').addEventListener('click', function() { switchTab('home'); });
     document.getElementById('btnSignup').addEventListener('click', function(e) { e.preventDefault(); showSignupModal(); });
+    document.getElementById('btnLogin').addEventListener('click', function(e) { e.preventDefault(); showLoginModal(); });
     document.getElementById('btnCabinet').addEventListener('click', function(e) { e.preventDefault(); showCabinet(); });
     document.getElementById('linkAbout').addEventListener('click', function(e) { e.preventDefault(); showAboutPage(); });
     document.getElementById('linkTerms').addEventListener('click', function(e) { e.preventDefault(); showTermsPage(); });
@@ -55,36 +45,26 @@ function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
     const activeTab = document.getElementById(`tab-${tabId}`);
     if (activeTab) activeTab.classList.add('active');
-    
     document.querySelectorAll('.nav a[data-tab]').forEach(link => {
         link.classList.remove('active');
         if (link.dataset.tab === tabId) link.classList.add('active');
     });
-    
     if (tabId === 'leaderboard') loadLeaderboard();
     if (tabId === 'reviews') loadReviews();
     if (tabId === 'strategy') showStrategyDashboard();
 }
 
-// ===== ПОИСК =====
 function initSearch() {
     const searchInput = document.getElementById('searchInput');
     const suggestions = document.getElementById('suggestions');
     const analyzerInput = document.getElementById('analyzerSearch');
     const analyzerSuggestions = document.getElementById('analyzerSuggestions');
-
     searchInput.addEventListener('input', function() { showSuggestions(this.value, suggestions); });
     analyzerInput.addEventListener('input', function() { showSuggestions(this.value, analyzerSuggestions); });
-
     document.getElementById('btnAnalyze').addEventListener('click', function() {
         if (!currentUser) { showSignupModal(); return; }
-        if (searchInput.value) {
-            switchTab('analyzer');
-            analyzerInput.value = searchInput.value;
-            performAnalysis(searchInput.value);
-        }
+        if (searchInput.value) { switchTab('analyzer'); analyzerInput.value = searchInput.value; performAnalysis(searchInput.value); }
     });
-    
     document.getElementById('btnAnalyzeMatch').addEventListener('click', function() {
         if (!currentUser) { showSignupModal(); return; }
         if (analyzerInput.value) performAnalysis(analyzerInput.value);
@@ -116,8 +96,7 @@ function searchTeams(query) {
 
 function loadTeamsDatabase() {
     teamsDatabase = [
-        "Chelsea", "Arsenal", "Manchester City", "Manchester United", "Liverpool",
-        "Tottenham", "Newcastle", "Aston Villa", "West Ham", "Brighton",
+        "Chelsea", "Arsenal", "Manchester City", "Manchester United", "Liverpool", "Tottenham", "Newcastle", "Aston Villa", "West Ham", "Brighton",
         "Real Madrid", "Barcelona", "Atletico Madrid", "Sevilla", "Valencia",
         "Bayern Munich", "Borussia Dortmund", "RB Leipzig", "Bayer Leverkusen",
         "PSG", "Marseille", "Lyon", "Monaco", "Lille",
@@ -132,7 +111,6 @@ function loadTeamsDatabase() {
     ].sort();
 }
 
-// ===== MATCH ANALYZER =====
 function performAnalysis(matchText) {
     const resultDiv = document.getElementById('analysisResult');
     resultDiv.innerHTML = `<p style="text-align:center;color:#00d4ff;">⚡ AI is analyzing "${matchText}"...</p>`;
@@ -161,40 +139,24 @@ function generateAnalysis(matchText) {
         <div class="analysis-card">
             <div class="analysis-teams">${matchText.toUpperCase()}</div>
             <div class="prediction-grid">
-                ${predictions.map(p => `
-                    <div class="prediction-item">
-                        <div class="prediction-label">${p.label}</div>
-                        <div class="prediction-value">${p.value}</div>
-                        <div class="prediction-prob prob-${p.level}">${p.prob}%</div>
-                    </div>
-                `).join('')}
+                ${predictions.map(p => `<div class="prediction-item"><div class="prediction-label">${p.label}</div><div class="prediction-value">${p.value}</div><div class="prediction-prob prob-${p.level}">${p.prob}%</div></div>`).join('')}
             </div>
             <div class="verdict-box">
                 <div class="verdict-title">🔮 AI MATCH VERDICT</div>
-                <div class="verdict-text">
-                    Based on real data from multiple sources, this match is expected to be tight and tactical.
-                    Both teams have shown solid defensive form. Recommended: Under 2.5 goals.
-                </div>
+                <div class="verdict-text">Based on real data, this match is expected to be tight. Recommended: Under 2.5 goals.</div>
             </div>
         </div>
     `;
 }
 
-// ===== MY STRATEGY =====
 function initStrategy() {
     const btn = document.getElementById('btnTryStrategy');
-    if (btn) {
-        btn.addEventListener('click', function() {
-            if (!currentUser) { showSignupModal(); return; }
-            showStrategySetup();
-        });
-    }
+    if (btn) btn.addEventListener('click', function() { if (!currentUser) { showSignupModal(); return; } showStrategySetup(); });
 }
 
 function showStrategyDashboard() {
     const content = document.getElementById('strategyContent');
     const profile = localStorage.getItem('strategy_profile');
-    
     if (profile) {
         const data = JSON.parse(profile);
         const stake = Math.round(data.bankroll * 0.03);
@@ -210,16 +172,10 @@ function showStrategyDashboard() {
                     <p style="color:#9a9aae;font-size:13px;">Bets/week: 3-5</p>
                     <p style="color:#9a9aae;font-size:13px;">Target: +15%/month</p>
                 </div>
-                <div style="background:rgba(0,0,0,0.3);padding:15px;border-radius:10px;margin-bottom:20px;">
-                    <p style="color:#ffd700;">💬 AI ADVICE:</p>
-                    <p style="color:#9a9aae;font-size:13px;">"Don't rush. Stick to the plan. Don't chase losses."</p>
-                </div>
                 <button class="btn-primary" onclick="showStrategySetup()">EDIT</button>
             </div>
         `;
-    } else {
-        showStrategySetup();
-    }
+    } else { showStrategySetup(); }
 }
 
 function showStrategySetup() {
@@ -260,7 +216,6 @@ function saveStrategyProfile() {
     showStrategyDashboard();
 }
 
-// ===== LEADERBOARD =====
 async function loadLeaderboard() {
     if (supabase) {
         const { data } = await supabase.from('activity').select('user_id, analyses_count').order('analyses_count', { ascending: false }).limit(20);
@@ -272,7 +227,6 @@ async function loadLeaderboard() {
     document.getElementById('leaderboard').innerHTML = '<p style="text-align:center;color:#9a9aae;">No activity yet.</p>';
 }
 
-// ===== REVIEWS =====
 async function loadReviews() {
     if (supabase) {
         const { data } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
@@ -289,9 +243,7 @@ function initStarRating() {
     document.querySelectorAll('.star-rating').forEach(star => {
         star.addEventListener('click', function() {
             selectedRating = parseInt(this.dataset.rating);
-            document.querySelectorAll('.star-rating').forEach(s => {
-                s.classList.toggle('active', parseInt(s.dataset.rating) <= selectedRating);
-            });
+            document.querySelectorAll('.star-rating').forEach(s => { s.classList.toggle('active', parseInt(s.dataset.rating) <= selectedRating); });
         });
     });
 }
@@ -299,15 +251,12 @@ function initStarRating() {
 async function submitReview() {
     const text = document.getElementById('reviewText').value;
     if (!text) { alert('Please write a review'); return; }
-    if (supabase && currentUser) {
-        await supabase.from('reviews').insert([{ user_id: currentUser.id, rating: selectedRating, review_text: text }]);
-    }
+    if (supabase && currentUser) { await supabase.from('reviews').insert([{ user_id: currentUser.id, rating: selectedRating, review_text: text }]); }
     document.getElementById('reviewText').value = '';
     loadReviews();
     alert('Review submitted!');
 }
 
-// ===== АУТЕНТИФИКАЦИЯ =====
 function showSignupModal() {
     const modal = document.getElementById('modalOverlay');
     const content = document.getElementById('modalContent');
@@ -317,6 +266,21 @@ function showSignupModal() {
         <input type="email" id="signupEmail" placeholder="Email">
         <input type="password" id="signupPassword" placeholder="Password">
         <button onclick="signup()">SIGN UP</button>
+        <button class="btn-close-modal" onclick="showLoginModal()">Already have account? Sign In</button>
+        <button class="btn-close-modal" onclick="closeModal()">Close</button>
+    `;
+    modal.classList.remove('hidden');
+}
+
+function showLoginModal() {
+    const modal = document.getElementById('modalOverlay');
+    const content = document.getElementById('modalContent');
+    content.innerHTML = `
+        <h2>Sign In</h2>
+        <input type="email" id="loginEmail" placeholder="Email">
+        <input type="password" id="loginPassword" placeholder="Password">
+        <button onclick="login()">SIGN IN</button>
+        <button class="btn-close-modal" onclick="showSignupModal()">Don't have account? Sign Up</button>
         <button class="btn-close-modal" onclick="closeModal()">Close</button>
     `;
     modal.classList.remove('hidden');
@@ -329,9 +293,9 @@ async function checkSession() {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
             currentUser = session.user;
+            document.getElementById('btnLogin').classList.add('hidden');
             document.getElementById('btnSignup').classList.add('hidden');
             document.getElementById('btnCabinet').classList.remove('hidden');
-            showWelcomeGuide();
         }
     }
 }
@@ -348,6 +312,19 @@ async function signup() {
     }
 }
 
+async function login() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    if (!email || !password) { alert('Fill all fields'); return; }
+    if (supabase) {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) { alert('Error: ' + error.message); return; }
+        closeModal();
+        checkSession();
+        showWelcomeGuide();
+    }
+}
+
 function showWelcomeGuide() {
     const modal = document.getElementById('modalOverlay');
     const content = document.getElementById('modalContent');
@@ -357,8 +334,7 @@ function showWelcomeGuide() {
             <p><strong style="color:#00d4ff;">1. MATCH ANALYZER:</strong><br>Enter match → Get predictions. FREE.</p>
             <p><strong style="color:#00d4ff;">2. MY STRATEGY:</strong><br>Personal strategy. FREE.</p>
             <p><strong style="color:#00d4ff;">3. LEADERBOARD:</strong><br>Top users by activity.</p>
-            <p><strong style="color:#00d4ff;">4. REVIEWS:</strong><br>Share your experience.</p>
-            <p><strong style="color:#00d4ff;">5. SUPPORT:</strong><br>${SUPPORT_EMAIL}</p>
+            <p><strong style="color:#00d4ff;">4. SUPPORT:</strong><br>${SUPPORT_EMAIL}</p>
         </div>
         <button onclick="closeModal()">✓ GOT IT!</button>
     `;
@@ -381,38 +357,34 @@ async function logout() {
     if (supabase) await supabase.auth.signOut();
     currentUser = null;
     closeModal();
+    document.getElementById('btnLogin').classList.remove('hidden');
     document.getElementById('btnSignup').classList.remove('hidden');
     document.getElementById('btnCabinet').classList.add('hidden');
     switchTab('home');
 }
 
-// ===== АКТИВНОСТЬ =====
 async function incrementActivity() {
     if (supabase && currentUser) {
         const { data } = await supabase.from('activity').select('analyses_count').eq('user_id', currentUser.id).single();
-        if (data) {
-            await supabase.from('activity').update({ analyses_count: data.analyses_count + 1 }).eq('user_id', currentUser.id);
-        } else {
-            await supabase.from('activity').insert([{ user_id: currentUser.id, analyses_count: 1 }]);
-        }
+        if (data) { await supabase.from('activity').update({ analyses_count: data.analyses_count + 1 }).eq('user_id', currentUser.id); }
+        else { await supabase.from('activity').insert([{ user_id: currentUser.id, analyses_count: 1 }]); }
     }
 }
 
-// ===== СТРАНИЦЫ =====
 function showAboutPage() {
     const modal = document.getElementById('modalOverlay');
-    document.getElementById('modalContent').innerHTML = `<h2>About Us</h2><p style="color:#9a9aae;">Professional football analysis powered by AI. Real data from 5+ APIs.</p><button onclick="closeModal()">Close</button>`;
+    document.getElementById('modalContent').innerHTML = `<h2>About Us</h2><p style="color:#9a9aae;">Professional football analysis powered by AI.</p><button onclick="closeModal()">Close</button>`;
     modal.classList.remove('hidden');
 }
 
 function showTermsPage() {
     const modal = document.getElementById('modalOverlay');
-    document.getElementById('modalContent').innerHTML = `<h2>Terms</h2><p style="color:#9a9aae;">By using this site you agree to our terms. 18+ only. Predictions are not guaranteed.</p><button onclick="closeModal()">Close</button>`;
+    document.getElementById('modalContent').innerHTML = `<h2>Terms</h2><p style="color:#9a9aae;">18+ only. Predictions are not guaranteed.</p><button onclick="closeModal()">Close</button>`;
     modal.classList.remove('hidden');
 }
 
 function showPrivacyPage() {
     const modal = document.getElementById('modalOverlay');
-    document.getElementById('modalContent').innerHTML = `<h2>Privacy</h2><p style="color:#9a9aae;">We collect only email for account. Data stored securely in Supabase.</p><button onclick="closeModal()">Close</button>`;
+    document.getElementById('modalContent').innerHTML = `<h2>Privacy</h2><p style="color:#9a9aae;">We collect only email. Data stored securely.</p><button onclick="closeModal()">Close</button>`;
     modal.classList.remove('hidden');
 }
