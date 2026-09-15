@@ -1,9 +1,14 @@
 'use strict';
 
-const { clean, buildAnalysis } = require('../lib/football');
+const { buildBaseAnalysis } = require('../lib/base-analysis-v2');
 const { enhanceAnalysis } = require('../lib/analysis-enhancer');
 const { enhanceGranularAnalysis } = require('../lib/granular-enrichment');
+const { enrichApiFootballFallback } = require('../lib/api-football-fallback');
 const { resolveTeamName } = require('../lib/team-aliases');
+
+function clean(value, max = 80) {
+  return String(value || '').replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, max);
+}
 
 function readTeams(req) {
   const source = req.method === 'POST' ? req.body : req.query;
@@ -25,8 +30,26 @@ module.exports = async function handler(req, res) {
   if (!homeInput || !awayInput) return res.status(400).json({ error: 'Enter two team names.' });
 
   try {
-    const base = await buildAnalysis(home, away);
+    // Free/open providers first. This deliberately avoids consuming the
+    // 100-request/day API-Football allowance on every normal analysis.
+    const base = await buildBaseAnalysis(home, away);
     let analysis = await enhanceAnalysis(base);
+
+    let apiFootballFallback = { used: false, cacheHits: 0 };
+    if (!analysis.model) {
+      apiFootballFallback = await enrichApiFootballFallback(analysis);
+      analysis = apiFootballFallback.analysis;
+
+      // Rebuild model/context only when the fallback actually improved the data.
+      if (apiFootballFallback.used) {
+        analysis = await enhanceAnalysis(analysis);
+        analysis.sourceStatus = {
+          ...(analysis.sourceStatus || {}),
+          primaryFootball: analysis.model ? 'API-Football fallback + multi-source context' : (analysis.sourceStatus?.primaryFootball || 'API-Football fallback')
+        };
+      }
+    }
+
     analysis = await enhanceGranularAnalysis(analysis);
     analysis.input = {
       home: homeInput,
@@ -34,6 +57,13 @@ module.exports = async function handler(req, res) {
       resolvedHome: home,
       resolvedAway: away
     };
+    analysis.engine = {
+      ...(analysis.engine || {}),
+      quotaPolicy: 'open-and-cached-first',
+      apiFootballFallbackUsed: Boolean(apiFootballFallback.used),
+      apiFootballCacheHits: Number(apiFootballFallback.cacheHits || 0)
+    };
+
     return res.status(200).json({ analysis });
   } catch (error) {
     console.error('analyze', error.message, { homeInput, awayInput, home, away });
