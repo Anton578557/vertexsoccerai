@@ -6,102 +6,85 @@ Vertex Soccer AI 2.0 uses a server-side provider layer on Vercel. Browser JavaSc
 
 ## Vercel environment variables
 
-Open **Vercel → vertexsoccerai → Settings → Environment Variables**.
+Open **Vercel → vertexsoccerai → Settings → Environments → Production → Environment Variables**.
 
-For each secret:
+Add values without quotes and without `const ... =` wrappers. After variables are added or changed, create a new Production deployment or redeploy the latest one.
 
-1. Add the variable name exactly as shown below.
-2. Paste only the raw key/token as the value — no quotes and no `const ... =` wrapper.
-3. Enable it for **Production** and **Preview**. Development is optional unless local Vercel development is used.
-4. Save the variable.
-5. After adding or changing variables, create a new deployment / redeploy the latest Production deployment.
+### Required/current football stack
 
-### Core provider variables
+- `RAPIDAPI_KEY` — RapidAPI secret used by the Free API Live Football Data provider.
+- `RAPIDAPI_HOST` — current host: `free-api-live-football-data.p.rapidapi.com`.
+- `FOOTBALL_DATA_KEY` — football-data.org token used for fixtures/results and completed-match data.
+- `OPENWEATHER_KEY` — OpenWeather API key.
+- `NEWSAPI_KEY` — NewsAPI key.
 
-- `API_FOOTBALL_KEY` — **direct API-Sports / API-Football** key used with `https://v3.football.api-sports.io` and the `x-apisports-key` header. Do not put a RapidAPI marketplace key here unless that key is also valid for direct API-Sports authentication.
-- `FOOTBALL_DATA_KEY` — football-data.org token. Sent server-side in the `X-Auth-Token` header.
-- `OPENWEATHER_KEY` — OpenWeather API key. Venue/city is geocoded server-side and weather is fetched by coordinates.
-- `NEWSAPI_KEY` — NewsAPI key. Sent server-side in a header and treated as an optional news source.
+### Optional football providers
 
-### TheSportsDB variables
+- `API_FOOTBALL_KEY` — optional direct API-Sports/API-Football key. It is no longer required for the current Vertex pipeline. If configured, it remains available as an additional fallback/deeper-data provider.
+- `THESPORTSDB_KEY` — optional TheSportsDB v1 key. If omitted, supported metadata endpoints use the public free v1 key `123`.
+- `THESPORTSDB_V2_KEY` — optional premium TheSportsDB v2 key for premium live scores.
 
-- `THESPORTSDB_KEY` — optional TheSportsDB v1 key. If omitted, the application currently falls back to the public free v1 key `123` for supported metadata endpoints.
-- `THESPORTSDB_V2_KEY` — optional premium TheSportsDB v2 key. Used for premium livescore support via `X-API-KEY`.
-
-### RapidAPI compatibility
-
-The old DeepSeek project also used RapidAPI. RapidAPI credentials are a separate integration from direct API-Sports/API-Football.
-
-When we enable a RapidAPI provider, use separate variables instead of reusing `API_FOOTBALL_KEY`:
-
-- `RAPIDAPI_KEY`
-- `RAPIDAPI_HOST`
-
-The server adapter must match the exact RapidAPI product/host and response schema before these variables are used. This avoids silently sending a RapidAPI key to the wrong API-Football endpoint.
-
-### Email (later in the free beta)
-
-Resend will be connected server-side for welcome emails, support mail and reports. When enabled, use:
-
-- `RESEND_API_KEY`
-- `RESEND_FROM_EMAIL`
-
-The domain should be verified in Resend/Vercel before production mail is enabled.
+Do not reuse the RapidAPI marketplace key as `API_FOOTBALL_KEY`. They are different authentication paths.
 
 ### Supabase
 
-The browser uses the Supabase project URL and publishable key with Row Level Security enabled. The publishable client key is not treated as a server secret.
+Current Vercel variables:
 
-If we later add trusted server-only database jobs, a service-role key may be added as a Vercel secret. It must never be exposed in browser JavaScript.
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_SECRET_KEY` — server-only secret; never expose it in browser JavaScript.
 
-## Provider architecture
+The browser publishable key is protected by Row Level Security. Server-only jobs may use `SUPABASE_SECRET_KEY` for trusted writes such as result evaluation and scheduled maintenance.
 
-### Tier 1 — authoritative/core football data
+### Resend
 
-1. **API-Football / API-Sports**
-   - team search
-   - fixtures
-   - recent form/results
-   - live scores
-   - broader/deeper football coverage when available
+Current Vercel variables:
+
+- `RESEND_API_KEY` — Secret.
+- `RESEND_FROM_EMAIL` — sender address on the verified `vertexsoccerai.com` domain.
+- `RESEND_REPLY_TO_EMAIL` — real mailbox that receives replies, currently the project's Outlook mailbox.
+
+The domain `vertexsoccerai.com` is verified in Resend with DKIM and SPF.
+
+## Current provider architecture
+
+### Core football data
+
+1. **RapidAPI — Free API Live Football Data**
+   - primary Live Match Center feed
+   - endpoint used by the adapter: `football-current-live`
+   - authenticated with `RAPIDAPI_KEY` + `RAPIDAPI_HOST`
 
 2. **Football-Data.org**
-   - supported competitions
-   - fixtures/results
-   - fallback completed-match data
-
-### Tier 2 — metadata and additional football context
+   - primary upcoming/today fixtures feed
+   - completed-match data for Match Analyzer
+   - fallback/core statistical history
 
 3. **TheSportsDB**
    - team identity
    - badges
-   - stadium / location metadata
-   - fallback recent events
-   - premium live scores when v2 is configured
+   - stadium and location metadata
+   - recent-event fallback
+   - optional premium live fallback
 
-### Tier 3 — environment/context
+4. **Direct API-Sports / API-Football**
+   - optional only
+   - can provide additional team/fixture/live depth if a direct key is added later
+   - current production setup does not require `API_FOOTBALL_KEY`
 
-4. **OpenWeather**
-   - geocode the stadium/city
-   - current conditions by coordinates
+### Context data
 
-5. **NewsAPI**
+5. **OpenWeather**
+   - venue/city geocoding
+   - weather by coordinates
+
+6. **NewsAPI**
    - recent team headlines
-   - optional news signal
+   - optional news-impact signal
 
-### Tier 4 — keyless / fallback sources to add behind adapters
+### Platform services
 
-6. **Google News / RSS**
-   - optional news fallback
-   - no secret stored in the browser
-
-7. **ESPN site data endpoints**
-   - optional schedules/news/live fallback where technically suitable
-   - treated as non-critical because the endpoints are not an official public developer API and may change
-
-### Tier 5 — platform services
-
-8. **Supabase**
+7. **Supabase**
    - authentication
    - profiles
    - analysis history
@@ -110,63 +93,77 @@ If we later add trusted server-only database jobs, a service-role key may be add
    - reviews/activity
    - model evaluation history
 
-9. **Resend**
+8. **Resend**
    - welcome email
-   - support notifications
-   - later: weekly reports and user alerts
+   - support/contact email
+   - later: strategy alerts and weekly reports
 
-10. **Vercel Cron / scheduled jobs**
-   - later: update fixtures
+9. **Vercel Cron / scheduled jobs**
+   - later: refresh fixtures
    - check finished matches
    - evaluate stored predictions
-   - update public model performance
-   - strategy refresh jobs
+   - update model statistics
+   - recalculate strategy signals
 
-## Payments
+## Runtime flow
 
-Payments, credits and subscriptions are deliberately disabled during the **Free Beta**. NOWPayments/Cryptomus-style payment integrations are not part of the current production path. They can be introduced later after real usage exists.
+### Match Analyzer
 
-## Current analysis flow
+`Browser → /api/analyze → TheSportsDB identity + Football-Data history → OpenWeather + NewsAPI → Vertex model → Data Quality / Confidence → UI → Supabase`
 
-`Browser → /api/analyze → provider adapters → normalized match data → Vertex statistical model → confidence/data quality → UI → Supabase history`
+If a direct `API_FOOTBALL_KEY` exists, the legacy direct API-Sports adapter can provide additional data before the Football-Data fallback. It is optional.
 
-Current model probabilities are calculated from completed-match scoring data using a Poisson-based model. When the dataset is too weak, the UI should withhold the prediction instead of inventing a percentage.
+### Live Match Center
 
-## Current provider strategy in code
+`Browser → /api/live → RapidAPI Free Live Football Data → optional TheSportsDB/API-Football fallback → normalized matches → UI`
 
-1. Team identity / badges / venue metadata: TheSportsDB.
-2. Completed-match data: API-Football first when configured; Football-Data fallback; TheSportsDB development fallback.
-3. Weather: OpenWeather through server-side venue/city coordinates.
-4. News: NewsAPI through the server.
-5. Live center: TheSportsDB premium first when configured, otherwise API-Football.
-6. Statistical model: Vertex server function.
+If RapidAPI is configured but temporarily fails, the endpoint attempts the existing fallback providers instead of breaking the page.
+
+### Upcoming matches
+
+`Browser → /api/upcoming → Football-Data.org → optional direct API-Football fallback → normalized matches → UI`
+
+## Model policy
+
+Current model probabilities are calculated from real completed-match scoring data using a Poisson-based model. When the dataset is too weak, Vertex withholds the probability output instead of inventing percentages.
 
 ## Health check
 
-After variables are saved and the Production deployment is rebuilt, open:
+After Production redeploy, open:
 
 `https://vertexsoccerai.com/api/health`
 
-The response reports whether the server can see the expected environment variables without revealing their values.
+The health response never reveals secret values. It only reports whether each integration is configured.
 
-Expected shape:
+Expected important fields with the current setup:
 
 ```json
 {
   "ok": true,
   "services": {
-    "teamMetadata": true,
-    "apiFootball": true,
+    "footballPipeline": true,
+    "rapidApi": true,
     "footballData": true,
+    "apiFootballDirect": false,
+    "apiFootballDirectRequired": false,
     "openWeather": true,
     "newsApi": true,
-    "livePremium": false
+    "supabase": {
+      "url": true,
+      "publishable": true,
+      "serverSecret": true
+    },
+    "resend": {
+      "apiKey": true,
+      "fromEmail": true,
+      "replyToEmail": true
+    }
   }
 }
 ```
 
-`livePremium: false` is normal if TheSportsDB v2 premium is not configured; Live can still use API-Football when `API_FOOTBALL_KEY` is available.
+`apiFootballDirect: false` is normal. It does **not** mean the current football pipeline is broken.
 
 ## Free beta
 
-The site remains free while we collect real usage and verified model performance. Monetization is a later phase.
+Payments, credits and subscriptions are deliberately disabled during the Free Beta. The product remains free while real usage and verified model performance are collected.
