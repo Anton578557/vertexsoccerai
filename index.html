@@ -3,47 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VertexSoccer AI — Where AI Meets Football</title>
-    <meta name="description" content="AI-powered football match analysis. 20+ predictions per match.">
-    
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='5' cy='5' r='2' fill='%2300d4ff'/><circle cx='19' cy='5' r='2' fill='%2300d4ff'/><circle cx='12' cy='12' r='2' fill='%2300d4ff'/><circle cx='5' cy='19' r='2' fill='%2300d4ff'/><circle cx='19' cy='19' r='2' fill='%2300d4ff'/><line x1='7' y1='5' x2='17' y2='5' stroke='%2300d4ff' stroke-width='0.5'/><line x1='7' y1='5' x2='10' y2='12' stroke='%2300d4ff' stroke-width='0.5'/><line x1='17' y1='5' x2='14' y2='12' stroke='%2300d4ff' stroke-width='0.5'/><line x1='10' y1='12' x2='14' y2='12' stroke='%2300d4ff' stroke-width='0.5'/><line x1='10' y1='12' x2='7' y2='19' stroke='%2300d4ff' stroke-width='0.5'/><line x1='14' y1='12' x2='17' y2='19' stroke='%2300d4ff' stroke-width='0.5'/><line x1='7' y1='19' x2='17' y2='19' stroke='%2300d4ff' stroke-width='0.5'/></svg>">
-    
+    <meta name="theme-color" content="#071019">
+    <title>Vertex Soccer AI — Football Intelligence Engine</title>
+    <meta name="description" content="Vertex Soccer AI combines real football data, statistical modelling, team form, weather and news context in one transparent match intelligence platform.">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='5' cy='5' r='2' fill='%2319d8ff'/><circle cx='19' cy='5' r='2' fill='%2319d8ff'/><circle cx='12' cy='12' r='2' fill='%2319d8ff'/><circle cx='5' cy='19' r='2' fill='%2319d8ff'/><circle cx='19' cy='19' r='2' fill='%2319d8ff'/><path d='M7 5h10M6 7l5 4m7-4-5 4m-1 3-5 4m6-4 5 4M7 19h10' stroke='%2319d8ff' stroke-width='.7'/></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
+    <script defer src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <div id="particles-js"></div>
+    <div id="particles-js" aria-hidden="true"></div>
 
     <header class="header">
         <div class="container header-inner">
-            <a href="#" class="logo" id="logo">
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
-                    <circle cx="5" cy="5" r="2" fill="#00d4ff"/>
-                    <circle cx="19" cy="5" r="2" fill="#00d4ff"/>
-                    <circle cx="12" cy="12" r="2" fill="#00d4ff"/>
-                    <circle cx="5" cy="19" r="2" fill="#00d4ff"/>
-                    <circle cx="19" cy="19" r="2" fill="#00d4ff"/>
-                    <line x1="7" y1="5" x2="17" y2="5" stroke="#00d4ff" stroke-width="0.5"/>
-                    <line x1="7" y1="5" x2="10" y2="12" stroke="#00d4ff" stroke-width="0.5"/>
-                    <line x1="17" y1="5" x2="14" y2="12" stroke="#00d4ff" stroke-width="0.5"/>
-                    <line x1="10" y1="12" x2="14" y2="12" stroke="#00d4ff" stroke-width="0.5"/>
-                    <line x1="10" y1="12" x2="7" y2="19" stroke="#00d4ff" stroke-width="0.5"/>
-                    <line x1="14" y1="12" x2="17" y2="19" stroke="#00d4ff" stroke-width="0.5"/>
-                    <line x1="7" y1="19" x2="17" y2="19" stroke="#00d4ff" stroke-width="0.5"/>
+            <a href="#" class="logo" id="logo" aria-label="Vertex Soccer AI Home">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="5" cy="5" r="2" fill="#19d8ff"/>
+                    <circle cx="19" cy="5" r="2" fill="#19d8ff"/>
+                    <circle cx="12" cy="12" r="2" fill="#19d8ff"/>
+                    <circle cx="5" cy="19" r="2" fill="#19d8ff"/>
+                    <circle cx="19" cy="19" r="2" fill="#19d8ff"/>
+                    <path d="M7 5h10M6 7l5 4m7-4-5 4m-1 3-5 4m6-4 5 4M7 19h10" stroke="#19d8ff" stroke-width="0.6"/>
                 </svg>
                 <span class="logo-text">VERTEX <span class="logo-accent">SOCCER AI</span></span>
             </a>
-            <nav class="nav" id="nav">
+
+            <button class="mobile-menu-button" id="mobileMenuButton" type="button" aria-label="Open menu" aria-expanded="false">☰</button>
+
+            <nav class="nav" id="nav" aria-label="Main navigation">
                 <a href="#" data-tab="home" class="active">Home</a>
-                <a href="#" data-tab="analyzer">Match Analyzer</a>
-                <a href="#" data-tab="strategy">My Strategy</a>
-                <a href="#" data-tab="leaderboard">Leaderboard</a>
-                <a href="#" data-tab="reviews">Reviews</a>
+                <a href="#" data-tab="analyzer" data-protected="true">Match Analyzer</a>
+                <a href="#" data-tab="strategy" data-protected="true">My Strategy</a>
+                <a href="#" data-tab="live" data-protected="true">Live</a>
+                <a href="#" data-tab="results" data-protected="true">Results</a>
+                <a href="#" data-tab="leaderboard" data-protected="true">Leaderboard</a>
+                <a href="#" data-tab="reviews" data-protected="true">Reviews</a>
                 <a href="#" data-tab="faq">FAQ</a>
                 <a href="#" data-tab="contact">Contact</a>
                 <a href="#" class="btn-login" id="btnLogin">Sign In</a>
@@ -54,159 +49,231 @@
     </header>
 
     <main class="main-content">
-        
         <section id="tab-home" class="tab-content active">
             <div class="container home-container">
                 <div class="hero">
+                    <div class="eyebrow"><span class="status-dot"></span> FREE BETA · FOOTBALL INTELLIGENCE</div>
                     <h1 class="hero-title">VERTEX <span class="hero-accent">SOCCER AI</span></h1>
                     <p class="hero-slogan">Where AI Meets Football</p>
-                    <p class="hero-sub">AI-powered match analysis with 20+ predictions. Real data. Real accuracy.</p>
-                    
-                    <div class="search-box">
-                        <input type="text" id="searchInput" placeholder="Enter match (e.g., Chelsea vs Arsenal)" autocomplete="off">
+                    <p class="hero-sub">Real match data. Multi-source analysis. Transparent confidence.</p>
+
+                    <div class="search-box hero-search">
+                        <input type="text" id="searchInput" placeholder="Enter match — e.g. Chelsea vs Arsenal" autocomplete="off" spellcheck="false">
                         <div class="suggestions" id="suggestions"></div>
-                        <button class="btn-analyze" id="btnAnalyze">⚡ ANALYZE MATCH</button>
+                        <button class="btn-analyze" id="btnAnalyze" type="button">⚡ ANALYZE MATCH</button>
                     </div>
+                    <p class="microcopy">Create a free account to unlock analysis, strategy, live center and saved history.</p>
                 </div>
 
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-number">85%</div>
-                        <div class="stat-label">Win Rate</div>
+                <div class="stats-grid" aria-label="Platform capabilities">
+                    <div class="stat-item"><div class="stat-number">LIVE</div><div class="stat-label">Data Sources</div></div>
+                    <div class="stat-item"><div class="stat-number">20+</div><div class="stat-label">Metrics</div></div>
+                    <div class="stat-item"><div class="stat-number">GLOBAL</div><div class="stat-label">Coverage</div></div>
+                    <div class="stat-item"><div class="stat-number">24/7</div><div class="stat-label">Engine</div></div>
+                </div>
+
+                <div class="home-panel">
+                    <div class="panel-heading">
+                        <span class="kicker">ANALYSIS PIPELINE</span>
+                        <h2>How Vertex thinks</h2>
+                        <p>Every prediction should be traceable to the data used to produce it.</p>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-number">20+</div>
-                        <div class="stat-label">Predictions</div>
+                    <div class="pipeline-grid">
+                        <div class="pipeline-step"><span>01</span><strong>Match Data</strong><small>Fixtures, results, standings, team identity</small></div>
+                        <div class="pipeline-step"><span>02</span><strong>Context</strong><small>Form, venue, weather, news, availability</small></div>
+                        <div class="pipeline-step"><span>03</span><strong>Model</strong><small>Statistical probabilities and scenario scoring</small></div>
+                        <div class="pipeline-step"><span>04</span><strong>Verdict</strong><small>Confidence, data quality and transparent reasoning</small></div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-number">1000+</div>
-                        <div class="stat-label">Teams</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">24/7</div>
-                        <div class="stat-label">AI Online</div>
+                    <div class="source-strip">
+                        <span>DATA LAYER</span>
+                        <strong>API-Football</strong>
+                        <strong>Football-Data</strong>
+                        <strong>TheSportsDB</strong>
+                        <strong>OpenWeather</strong>
+                        <strong>News</strong>
                     </div>
                 </div>
             </div>
         </section>
 
         <section id="tab-analyzer" class="tab-content">
-            <div class="container">
-                <h2 class="section-title">Match Analyzer</h2>
-                <p class="section-subtitle">Enter any match worldwide. Get predictions.</p>
+            <div class="container section-shell">
+                <div class="section-heading">
+                    <span class="kicker">VERTEX ANALYSIS ENGINE</span>
+                    <h2 class="section-title">Match Analyzer</h2>
+                    <p class="section-subtitle">One match. Multiple data sources. No invented statistics.</p>
+                </div>
+
                 <div class="how-to-box">
-                    <p>📌 <strong>HOW TO USE:</strong> 1. Enter match → 2. Click ANALYZE → 3. Get predictions</p>
+                    <strong>HOW IT WORKS</strong>
+                    <span>Enter two teams → Vertex resolves the teams → collects current data → calculates probabilities → shows confidence and data quality.</span>
                 </div>
-                <div class="search-box">
-                    <input type="text" id="analyzerSearch" placeholder="Enter match" autocomplete="off">
+
+                <div class="search-box analyzer-search-box">
+                    <input type="text" id="analyzerSearch" placeholder="Borussia Dortmund vs Villarreal" autocomplete="off" spellcheck="false">
                     <div class="suggestions" id="analyzerSuggestions"></div>
-                    <button class="btn-analyze" id="btnAnalyzeMatch">⚡ ANALYZE</button>
+                    <button class="btn-analyze" id="btnAnalyzeMatch" type="button">⚡ RUN ANALYSIS</button>
                 </div>
-                <div id="analysisResult"></div>
+
+                <div id="analysisResult" class="analysis-result" aria-live="polite">
+                    <div class="empty-state">
+                        <div class="empty-icon">⌁</div>
+                        <h3>Ready for a match</h3>
+                        <p>Vertex will show only the information actually returned by the connected data sources.</p>
+                    </div>
+                </div>
             </div>
         </section>
 
         <section id="tab-strategy" class="tab-content">
-            <div class="container">
-                <h2 class="section-title">My Strategy</h2>
-                <p class="section-subtitle">Personal betting strategy. Free.</p>
-                <div class="how-to-box">
-                    <p>📌 <strong>HOW TO USE:</strong> 1. Bankroll → 2. Risk → 3. Leagues → 4. Get strategy</p>
+            <div class="container section-shell">
+                <div class="section-heading">
+                    <span class="kicker">PERSONAL DECISION ENGINE</span>
+                    <h2 class="section-title">My Strategy</h2>
+                    <p class="section-subtitle">A personal filter for risk, leagues and markets — not a promise of profit.</p>
                 </div>
                 <div id="strategyContent">
-                    <div class="trainer-card">
-                        <div class="trainer-price">FREE<span> beta</span></div>
+                    <div class="trainer-card strategy-intro">
+                        <div class="eyebrow"><span class="status-dot"></span> FREE BETA</div>
+                        <h3>Build your Vertex profile</h3>
+                        <p class="strategy-copy">Set your risk profile, experience, preferred competitions and markets. Vertex turns that into rules for which matches to consider — and which ones to reject.</p>
                         <ul class="trainer-features">
-                            <li>✓ Personal betting strategy</li>
-                            <li>✓ AI-picked matches</li>
-                            <li>✓ Real data from APIs</li>
-                            <li>✓ Honest advice</li>
+                            <li>✓ Personal risk framework</li>
+                            <li>✓ Preferred market filters</li>
+                            <li>✓ League and data-quality thresholds</li>
+                            <li>✓ Direct PASS / WATCH / FIT verdicts</li>
                         </ul>
-                        <button class="btn-primary" id="btnTryStrategy">SET UP MY PROFILE</button>
+                        <button class="btn-primary" id="btnTryStrategy" type="button">SET UP MY PROFILE</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-live" class="tab-content">
+            <div class="container section-shell">
+                <div class="section-heading inline-heading">
+                    <div>
+                        <span class="kicker">MATCH CENTER</span>
+                        <h2 class="section-title">Live</h2>
+                        <p class="section-subtitle">Current matches from the connected live-data provider.</p>
+                    </div>
+                    <button class="btn-secondary" id="btnRefreshLive" type="button">REFRESH</button>
+                </div>
+                <div id="liveStatus" class="data-status"></div>
+                <div id="liveMatches" class="live-grid">
+                    <div class="empty-state"><div class="empty-icon">●</div><h3>Live center ready</h3><p>Open this tab to load current matches.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-results" class="tab-content">
+            <div class="container section-shell">
+                <div class="section-heading">
+                    <span class="kicker">VERIFIED PERFORMANCE</span>
+                    <h2 class="section-title">Results</h2>
+                    <p class="section-subtitle">No fake 85%. Performance appears only after predictions have been matched against final results.</p>
+                </div>
+                <div id="modelPerformance" class="performance-panel">
+                    <div class="performance-hero">
+                        <span class="performance-label">MODEL STATUS</span>
+                        <strong>COLLECTING VERIFIED DATA</strong>
+                        <p>Vertex will publish accuracy only when enough real, evaluated predictions exist.</p>
+                    </div>
+                    <div class="performance-grid">
+                        <div><span>Evaluated</span><strong id="perfEvaluated">—</strong></div>
+                        <div><span>Correct</span><strong id="perfCorrect">—</strong></div>
+                        <div><span>Accuracy</span><strong id="perfAccuracy">—</strong></div>
+                        <div><span>Data quality</span><strong id="perfQuality">—</strong></div>
                     </div>
                 </div>
             </div>
         </section>
 
         <section id="tab-leaderboard" class="tab-content">
-            <div class="container">
-                <h2 class="section-title">Leaderboard</h2>
-                <p class="section-subtitle">Top users by activity</p>
-                <div id="leaderboard"><p>Loading...</p></div>
+            <div class="container section-shell">
+                <div class="section-heading">
+                    <span class="kicker">VERTEX COMMUNITY</span>
+                    <h2 class="section-title">Leaderboard</h2>
+                    <p class="section-subtitle">Top members by analysis activity.</p>
+                </div>
+                <div id="leaderboard"><div class="loading-state">Loading community activity…</div></div>
             </div>
         </section>
 
         <section id="tab-reviews" class="tab-content">
-            <div class="container">
-                <h2 class="section-title">Reviews</h2>
-                <p class="section-subtitle">Real reviews from our users</p>
-                <div id="reviewsList"><p>No reviews yet.</p></div>
-                <div id="reviewForm" class="hidden" style="margin-top:30px;">
-                    <h3 style="text-align:center;">Leave a Review</h3>
-                    <div style="max-width:500px;margin:0 auto;">
-                        <div style="text-align:center;margin-bottom:15px;" id="starContainer">
-                            <span class="star-rating" data-rating="1">⭐</span>
-                            <span class="star-rating" data-rating="2">⭐</span>
-                            <span class="star-rating" data-rating="3">⭐</span>
-                            <span class="star-rating" data-rating="4">⭐</span>
-                            <span class="star-rating" data-rating="5">⭐</span>
-                        </div>
-                        <textarea id="reviewText" placeholder="Write your review..." style="width:100%;padding:12px;background:rgba(0,0,0,0.3);border:1px solid #1e293b;border-radius:8px;color:#fff;height:100px;margin-bottom:15px;"></textarea>
-                        <button class="btn-primary" onclick="submitReview()">SUBMIT</button>
+            <div class="container section-shell">
+                <div class="section-heading">
+                    <span class="kicker">COMMUNITY FEEDBACK</span>
+                    <h2 class="section-title">Reviews</h2>
+                    <p class="section-subtitle">Only reviews submitted by registered Vertex users.</p>
+                </div>
+                <div id="reviewsList"><div class="loading-state">Loading reviews…</div></div>
+                <div id="reviewForm" class="review-form hidden">
+                    <h3>Leave a review</h3>
+                    <div id="starContainer" class="stars" aria-label="Rating">
+                        <button class="star-rating active" data-rating="1" type="button">★</button>
+                        <button class="star-rating active" data-rating="2" type="button">★</button>
+                        <button class="star-rating active" data-rating="3" type="button">★</button>
+                        <button class="star-rating active" data-rating="4" type="button">★</button>
+                        <button class="star-rating active" data-rating="5" type="button">★</button>
                     </div>
+                    <textarea id="reviewText" placeholder="What did you like? What should Vertex improve?"></textarea>
+                    <button class="btn-primary" id="btnSubmitReview" type="button">SUBMIT REVIEW</button>
                 </div>
             </div>
         </section>
 
         <section id="tab-faq" class="tab-content">
-            <div class="container">
-                <h2 class="section-title">FAQ</h2>
+            <div class="container section-shell">
+                <div class="section-heading">
+                    <span class="kicker">TRANSPARENCY</span>
+                    <h2 class="section-title">FAQ</h2>
+                </div>
                 <div class="faq-list">
-                    <div class="faq-item">
-                        <h3>How does Match Analyzer work?</h3>
-                        <p>Enter any match and get predictions using real data.</p>
-                    </div>
-                    <div class="faq-item">
-                        <h3>How accurate is the AI?</h3>
-                        <p>Our AI has a proven win rate of 85%+.</p>
-                    </div>
-                    <div class="faq-item">
-                        <h3>What is My Strategy?</h3>
-                        <p>Personal betting strategy based on your profile.</p>
-                    </div>
-                    <div class="faq-item">
-                        <h3>Is it free?</h3>
-                        <p>Yes! Free during beta.</p>
-                    </div>
+                    <div class="faq-item"><h3>How does Match Analyzer work?</h3><p>Vertex collects available match and team data, normalizes it, calculates statistical scenarios and shows both confidence and data quality. If a source is missing, the interface marks it as missing instead of inventing a value.</p></div>
+                    <div class="faq-item"><h3>Is Vertex Soccer AI free?</h3><p>Yes. The current product is a free beta. Monetization is not enabled.</p></div>
+                    <div class="faq-item"><h3>What does Data Quality mean?</h3><p>It measures how complete the input is for that specific analysis: recent form, team identity, fixture information, venue/weather and news context. High confidence with poor data quality is deliberately prevented.</p></div>
+                    <div class="faq-item"><h3>Can Vertex analyze smaller leagues?</h3><p>Coverage depends on the connected providers. Vertex can search globally, but it will only calculate a full prediction when enough reliable match data is available.</p></div>
+                    <div class="faq-item"><h3>Are predictions guaranteed?</h3><p>No. Football is uncertain. Vertex provides statistical analysis and decision support, not guaranteed outcomes or financial advice.</p></div>
                 </div>
             </div>
         </section>
 
         <section id="tab-contact" class="tab-content">
-            <div class="container contact-container">
+            <div class="container section-shell contact-container">
+                <span class="kicker">SUPPORT</span>
                 <h2 class="section-title">Contact</h2>
-                <p>📧 <a href="mailto:vertexsoccerai@outlook.com">vertexsoccerai@outlook.com</a></p>
+                <p class="section-subtitle">Questions, bugs or data-source issues — tell us what happened and which match you were analyzing.</p>
+                <a class="contact-card" href="mailto:vertexsoccerai@outlook.com">
+                    <span>EMAIL</span>
+                    <strong>vertexsoccerai@outlook.com</strong>
+                </a>
             </div>
         </section>
-
     </main>
 
     <footer class="footer">
-        <div class="container">
-            <p>© 2025 VertexSoccer AI. 18+ | Free Beta</p>
-            <p>
-                <a href="#" id="linkAbout">About</a> | 
-                <a href="#" id="linkTerms">Terms</a> | 
+        <div class="container footer-inner">
+            <div>
+                <strong>VERTEX SOCCER AI</strong>
+                <span>Football Intelligence Engine · Free Beta</span>
+            </div>
+            <div class="footer-links">
+                <a href="#" id="linkAbout">About</a>
+                <a href="#" id="linkTerms">Terms</a>
                 <a href="#" id="linkPrivacy">Privacy</a>
-            </p>
+            </div>
+            <p>© <span id="footerYear">2026</span> Vertex Soccer AI. 18+ · Analysis is not a guarantee of results.</p>
         </div>
     </footer>
 
-    <div id="modalOverlay" class="modal-overlay hidden">
+    <div id="modalOverlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Vertex dialog">
         <div class="modal" id="modalContent"></div>
     </div>
 
-    <script src="script.js"></script>
-    <script src="particles.js"></script>
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+    <script defer src="script.js"></script>
+    <script defer src="particles.js"></script>
 </body>
 </html>
