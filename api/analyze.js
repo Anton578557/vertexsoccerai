@@ -5,6 +5,7 @@ const { enhanceAnalysis } = require('../lib/analysis-enhancer');
 const { enhanceGranularAnalysis } = require('../lib/granular-enrichment');
 const { enrichApiFootballFallback } = require('../lib/api-football-fallback');
 const { recordModelEvaluations } = require('../lib/model-evaluation-store');
+const { requireUser } = require('../lib/api-auth');
 const { resolveTeamName } = require('../lib/team-aliases');
 
 function clean(value, max = 80) {
@@ -26,6 +27,9 @@ function readTeams(req) {
 module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   if (!['GET', 'POST'].includes(req.method)) return res.status(405).json({ error: 'Method not allowed' });
+
+  const user = await requireUser(req, res);
+  if (!user) return;
 
   const { homeInput, awayInput, home, away } = readTeams(req);
   if (!homeInput || !awayInput) return res.status(400).json({ error: 'Enter two team names.' });
@@ -62,7 +66,8 @@ module.exports = async function handler(req, res) {
       ...(analysis.engine || {}),
       quotaPolicy: 'open-and-cached-first',
       apiFootballFallbackUsed: Boolean(apiFootballFallback.used),
-      apiFootballCacheHits: Number(apiFootballFallback.cacheHits || 0)
+      apiFootballCacheHits: Number(apiFootballFallback.cacheHits || 0),
+      authenticated: true
     };
 
     // Store only real pre-match model selections that can later be compared
@@ -72,7 +77,7 @@ module.exports = async function handler(req, res) {
 
     return res.status(200).json({ analysis });
   } catch (error) {
-    console.error('analyze', error.message, { homeInput, awayInput, home, away });
+    console.error('analyze', error.message, { homeInput, awayInput, home, away, userId: user.id });
     const message = error.message && error.message.length < 180 ? error.message : 'Analysis failed.';
     return res.status(502).json({ error: message });
   }
