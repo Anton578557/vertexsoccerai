@@ -18,6 +18,15 @@
   document.head.appendChild(script);
 })();
 
+// Attach the current Supabase session to protected API calls.
+(() => {
+  if (document.querySelector('script[src^="auth-api-runtime-v1.js"]')) return;
+  const script = document.createElement('script');
+  script.src = 'auth-api-runtime-v1.js?v=1';
+  script.async = true;
+  document.head.appendChild(script);
+})();
+
 // Load cloud persistence / verified-results synchronization.
 (() => {
   if (document.querySelector('script[src^="runtime-sync-v1.js"]')) return;
