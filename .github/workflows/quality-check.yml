@@ -1,0 +1,80 @@
+name: Vertex Quality Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do
+            echo "Checking $file"
+            node --check "$file"
+          done < <(find . -type f -name '*.js' -not -path './node_modules/*' -print0)
+
+      - name: Validate Vercel configuration
+        run: node -e "JSON.parse(require('fs').readFileSync('vercel.json','utf8')); console.log('vercel.json OK')"
+
+      - name: Guard against committed server secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -R --line-number --fixed-string 'sb_secret_' . --exclude-dir=.git; then
+            echo 'Server Supabase secret prefix found in committed source.' >&2
+            exit 1
+          fi
+          if grep -R --line-number -E '(API_FOOTBALL_KEY|FOOTBALL_DATA_KEY|OPENWEATHER_KEY|NEWSAPI_KEY|SPORTMONKS_API_TOKEN)[[:space:]]*=[[:space:]]*["'"'][^"'"']+["'"']' . --exclude-dir=.git; then
+            echo 'A provider secret appears to be hardcoded.' >&2
+            exit 1
+          fi
+
+      - name: Guard model integrity
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -R --line-number --fixed-string 'Math.random' api lib; then
+            echo 'Random output is not allowed in the analytical engine.' >&2
+            exit 1
+          fi
+          if grep -R --line-number -E '(^|[^0-9])85%([^0-9]|$)' index.html script.js analysis-ui-*.js; then
+            echo 'Hardcoded 85% accuracy claim found.' >&2
+            exit 1
+          fi
+
+      - name: Verify protected API auth guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q "requireUser" api/analyze.js
+          grep -q "requireUser" api/live.js
+          grep -q "requireUser" api/upcoming.js
+          test -f lib/api-auth.js
+          test -f auth-api-runtime-v1.js
+
+      - name: Verify automation files
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q '"/api/results"' vercel.json
+          test -f api/results.js
+          test -f lib/model-evaluator.js
+          test -f lib/model-evaluation-store.js
+          test -f lib/provider-cache.js
