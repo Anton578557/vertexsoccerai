@@ -1,6 +1,7 @@
 'use strict';
 
 const { clean, buildAnalysis } = require('../lib/football');
+const { enhanceAnalysis } = require('../lib/analysis-enhancer');
 
 function readTeams(req) {
   if (req.method === 'POST') {
@@ -23,7 +24,8 @@ module.exports = async function handler(req, res) {
   if (!home || !away) return res.status(400).json({ error: 'Enter two team names.' });
 
   try {
-    const analysis = await buildAnalysis(home, away);
+    const base = await buildAnalysis(home, away);
+    const analysis = await enhanceAnalysis(base);
     return res.status(200).json({ analysis });
   } catch (error) {
     console.error('analyze', error.message);
