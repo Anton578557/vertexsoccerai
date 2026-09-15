@@ -1,5 +1,14 @@
 'use strict';
 
+// Load the analysis intelligence presentation layer without changing the base app bundle.
+(() => {
+  if (document.querySelector('script[src^="analysis-ui-v3.js"]')) return;
+  const script = document.createElement('script');
+  script.src = 'analysis-ui-v3.js?v=3';
+  script.async = true;
+  document.head.appendChild(script);
+})();
+
 // Compatibility fixes that must run before the main UI boot handler.
 (() => {
   // Force future Supabase email-confirmation links to point back to production.
