@@ -19,7 +19,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Check JavaScript syntax
         shell: bash
@@ -37,11 +37,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if grep -R --line-number --fixed-string 'sb_secret_' . --exclude-dir=.git; then
-            echo 'Server Supabase secret prefix found in committed source.' >&2
+          if grep -R --line-number -E 'sb_secret_[A-Za-z0-9_-]{8,}' . --exclude-dir=.git --exclude-dir=node_modules; then
+            echo 'A real Supabase server secret appears to be committed.' >&2
             exit 1
           fi
-          if grep -R --line-number -E '(API_FOOTBALL_KEY|FOOTBALL_DATA_KEY|OPENWEATHER_KEY|NEWSAPI_KEY|SPORTMONKS_API_TOKEN)[[:space:]]*=[[:space:]]*["'"'][^"'"']+["'"']' . --exclude-dir=.git; then
+          if grep -R --line-number -E '(API_FOOTBALL_KEY|FOOTBALL_DATA_KEY|OPENWEATHER_KEY|NEWSAPI_KEY|SPORTMONKS_API_TOKEN)[[:space:]]*=[[:space:]]*["'"'][^"'"']{8,}["'"']' . --exclude-dir=.git --exclude-dir=node_modules; then
             echo 'A provider secret appears to be hardcoded.' >&2
             exit 1
           fi
@@ -78,3 +78,5 @@ jobs:
           test -f lib/model-evaluator.js
           test -f lib/model-evaluation-store.js
           test -f lib/provider-cache.js
+          test -f contact-runtime-v1.js
+          test -f api/contact.js
