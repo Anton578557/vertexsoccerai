@@ -5,15 +5,21 @@ module.exports = async function handler(req, res) {
 
   res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120');
 
+  const rapidApi = Boolean(process.env.RAPIDAPI_KEY && process.env.RAPIDAPI_HOST);
+  const footballData = Boolean(process.env.FOOTBALL_DATA_KEY);
+  const apiFootballDirect = Boolean(process.env.API_FOOTBALL_KEY);
+
   return res.status(200).json({
     ok: true,
     services: {
       teamMetadata: true,
-      apiFootball: Boolean(process.env.API_FOOTBALL_KEY),
-      footballData: Boolean(process.env.FOOTBALL_DATA_KEY),
+      footballPipeline: rapidApi || footballData || apiFootballDirect,
+      rapidApi,
+      footballData,
+      apiFootballDirect,
+      apiFootballDirectRequired: false,
       openWeather: Boolean(process.env.OPENWEATHER_KEY),
       newsApi: Boolean(process.env.NEWSAPI_KEY),
-      rapidApi: Boolean(process.env.RAPIDAPI_KEY && process.env.RAPIDAPI_HOST),
       livePremium: Boolean(process.env.THESPORTSDB_V2_KEY),
       supabase: {
         url: Boolean(process.env.SUPABASE_URL),
