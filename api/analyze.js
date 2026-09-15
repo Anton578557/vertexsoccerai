@@ -4,6 +4,7 @@ const { buildBaseAnalysis } = require('../lib/base-analysis-v2');
 const { enhanceAnalysis } = require('../lib/analysis-enhancer');
 const { enhanceGranularAnalysis } = require('../lib/granular-enrichment');
 const { enrichApiFootballFallback } = require('../lib/api-football-fallback');
+const { recordModelEvaluations } = require('../lib/model-evaluation-store');
 const { resolveTeamName } = require('../lib/team-aliases');
 
 function clean(value, max = 80) {
@@ -63,6 +64,11 @@ module.exports = async function handler(req, res) {
       apiFootballFallbackUsed: Boolean(apiFootballFallback.used),
       apiFootballCacheHits: Number(apiFootballFallback.cacheHits || 0)
     };
+
+    // Store only real pre-match model selections that can later be compared
+    // with final results. This never blocks the user if persistence is down.
+    const evaluationWrite = await recordModelEvaluations(analysis);
+    analysis.engine.modelSnapshotRecorded = Number(evaluationWrite.recorded || 0) > 0;
 
     return res.status(200).json({ analysis });
   } catch (error) {
