@@ -1,0 +1,100 @@
+/* Vertex language + localized input v2 */
+
+.vertex-language {
+  min-height: 44px !important;
+  padding: 4px !important;
+  gap: 0 !important;
+  border-radius: 12px !important;
+  border-color: rgba(42, 218, 255, .28) !important;
+  background: linear-gradient(180deg, rgba(5, 21, 34, .96), rgba(3, 13, 23, .92)) !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.02), 0 8px 24px rgba(0,0,0,.18);
+}
+
+.vertex-language > span {
+  display: none !important;
+}
+
+.vertex-language-native {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.vertex-lang-buttons {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.vertex-lang-buttons button {
+  min-width: 38px;
+  height: 34px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #8fa6b7;
+  font-family: 'Manrope', Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: .06em;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.vertex-lang-buttons button:hover {
+  color: #eafaff;
+  border-color: rgba(43, 223, 255, .18);
+  background: rgba(43, 223, 255, .06);
+}
+
+.vertex-lang-buttons button.active {
+  color: #06131d;
+  background: linear-gradient(135deg, #2bdfff, #58b6ff);
+  border-color: rgba(96, 231, 255, .65);
+  box-shadow: 0 0 16px rgba(43, 223, 255, .20);
+}
+
+.logo svg {
+  width: 42px !important;
+  height: 42px !important;
+  filter: drop-shadow(0 0 10px rgba(31, 216, 255, .20));
+}
+
+.logo-text {
+  font-size: 17px !important;
+}
+
+#analyzerSearch::placeholder {
+  color: rgba(164, 184, 199, .68) !important;
+}
+
+@media (max-width: 1180px) {
+  .vertex-language {
+    margin-left: 0 !important;
+  }
+  .vertex-lang-buttons button {
+    min-width: 36px;
+    padding: 0 7px;
+  }
+}
+
+@media (max-width: 980px) {
+  .vertex-language {
+    width: 100% !important;
+    padding: 6px !important;
+  }
+  .vertex-lang-buttons {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .vertex-lang-buttons button {
+    width: 100%;
+    height: 40px;
+    font-size: 12px;
+  }
+}
