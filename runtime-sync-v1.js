@@ -36,9 +36,19 @@
       ready = true;
       client.auth.onAuthStateChange((_event, session) => {
         user = session?.user || null;
-        if (user) hydrateUserState();
+        if (user) {
+          setTimeout(async () => {
+            await hydrateUserState();
+            await persistStrategy();
+          }, 0);
+        }
       });
-      if (user) await hydrateUserState();
+      if (user) {
+        await hydrateUserState();
+        // First-login migration: if a profile already exists in localStorage,
+        // push it to Supabase even if the user created it before cloud sync loaded.
+        await persistStrategy();
+      }
     } catch (error) {
       console.warn('[Vertex sync] init:', error?.message || error);
     }
@@ -94,6 +104,8 @@
   async function persistAnalysis(analysis) {
     lastAnalysis = analysis || null;
     if (!client || !user || !analysis?.teams?.home?.name || !analysis?.teams?.away?.name) return;
+    // Do not pollute history with completely unresolved attempts.
+    if (!analysis.model && !Number(analysis.dataQuality || 0)) return;
     try {
       const payload = {
         user_id: user.id,
@@ -129,9 +141,9 @@
     }
   }
 
-  async function persistStrategy() {
+  async function persistStrategy(profileOverride = null) {
     if (!client || !user) return;
-    const profile = localRead('vertex_strategy_profile', null);
+    const profile = profileOverride || localRead('vertex_strategy_profile', null);
     if (!profile) return;
     try {
       const row = {
@@ -163,8 +175,6 @@
 
   async function loadPerformance() {
     try {
-      // This endpoint also performs a rate-limited verification pass for
-      // finished predictions before returning the public summary.
       const response = await fetch('/api/results', { headers: { Accept: 'application/json' } });
       const payload = await response.json().catch(() => null);
       if (!response.ok || !payload?.summary) throw new Error(payload?.error || `Results ${response.status}`);
@@ -174,7 +184,6 @@
       console.warn('[Vertex sync] results endpoint:', error?.message || error);
     }
 
-    // Safe client-side fallback: read only already-verified public rows.
     if (!client) return;
     try {
       const { data, error } = await client.from('model_evaluations').select('is_correct,data_quality').not('is_correct', 'is', null).limit(10000);
@@ -192,7 +201,6 @@
     }
   }
 
-  // Observe successful analyzer responses without changing the main UI pipeline.
   const nativeFetch = window.fetch.bind(window);
   window.fetch = async (...args) => {
     const response = await nativeFetch(...args);
@@ -210,13 +218,18 @@
 
   document.addEventListener('click', (event) => {
     if (event.target.closest('[data-action="save-analysis"]')) setTimeout(persistSavedMatch, 0);
+    if (event.target.closest('#strategyForm button[type="submit"]')) setTimeout(() => persistStrategy(), 220);
     const resultsTab = event.target.closest('.nav a[data-tab="results"]');
     if (resultsTab) setTimeout(loadPerformance, 80);
   }, true);
 
   document.addEventListener('submit', (event) => {
-    if (event.target?.id === 'strategyForm') setTimeout(persistStrategy, 80);
+    if (event.target?.id === 'strategyForm') setTimeout(() => persistStrategy(), 220);
   }, true);
+
+  document.addEventListener('vertex:strategy-saved', (event) => {
+    setTimeout(() => persistStrategy(event.detail?.profile || null), 0);
+  });
 
   document.addEventListener('vertex:cloudsync', () => {
     if (location.hash.includes('results')) loadPerformance();
