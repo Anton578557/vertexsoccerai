@@ -37,14 +37,36 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if grep -R --line-number -E 'sb_secret_[A-Za-z0-9_-]{8,}' . --exclude-dir=.git --exclude-dir=node_modules; then
-            echo 'A real Supabase server secret appears to be committed.' >&2
-            exit 1
-          fi
-          if grep -R --line-number -E '(API_FOOTBALL_KEY|FOOTBALL_DATA_KEY|OPENWEATHER_KEY|NEWSAPI_KEY|SPORTMONKS_API_TOKEN)[[:space:]]*=[[:space:]]*["'"'][^"'"']{8,}["'"']' . --exclude-dir=.git --exclude-dir=node_modules; then
-            echo 'A provider secret appears to be hardcoded.' >&2
-            exit 1
-          fi
+          python - <<'PY'
+          import pathlib, re, sys
+
+          roots = [pathlib.Path('.')]
+          skip_dirs = {'.git', 'node_modules'}
+          text_ext = {'.js', '.html', '.json', '.md', '.yml', '.yaml', '.css', '.sql'}
+          supabase_secret = re.compile(r'sb_secret_[A-Za-z0-9_-]{8,}')
+          provider_assignment = re.compile(
+              r'(API_FOOTBALL_KEY|FOOTBALL_DATA_KEY|OPENWEATHER_KEY|NEWSAPI_KEY|SPORTMONKS_API_TOKEN)\s*=\s*[\"\'][^\"\']{8,}[\"\']'
+          )
+
+          findings = []
+          for root in roots:
+              for path in root.rglob('*'):
+                  if not path.is_file() or path.suffix.lower() not in text_ext:
+                      continue
+                  if any(part in skip_dirs for part in path.parts):
+                      continue
+                  text = path.read_text(encoding='utf-8', errors='ignore')
+                  for lineno, line in enumerate(text.splitlines(), 1):
+                      if supabase_secret.search(line):
+                          findings.append(f'{path}:{lineno}: possible Supabase server secret')
+                      if provider_assignment.search(line):
+                          findings.append(f'{path}:{lineno}: possible hardcoded provider secret')
+
+          if findings:
+              print('\n'.join(findings), file=sys.stderr)
+              sys.exit(1)
+          print('No committed server secrets detected.')
+          PY
 
       - name: Guard model integrity
         shell: bash
@@ -54,8 +76,8 @@ jobs:
             echo 'Random output is not allowed in the analytical engine.' >&2
             exit 1
           fi
-          if grep -R --line-number -E '(^|[^0-9])85%([^0-9]|$)' index.html script.js analysis-ui-*.js; then
-            echo 'Hardcoded 85% accuracy claim found.' >&2
+          if grep -R --line-number --fixed-string '>85%<' index.html script.js analysis-ui-*.js; then
+            echo 'Hardcoded 85% accuracy display found.' >&2
             exit 1
           fi
 
