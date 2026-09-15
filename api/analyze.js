@@ -2,6 +2,7 @@
 
 const { clean, buildAnalysis } = require('../lib/football');
 const { enhanceAnalysis } = require('../lib/analysis-enhancer');
+const { enhanceGranularAnalysis } = require('../lib/granular-enrichment');
 const { resolveTeamName } = require('../lib/team-aliases');
 
 function readTeams(req) {
@@ -25,7 +26,8 @@ module.exports = async function handler(req, res) {
 
   try {
     const base = await buildAnalysis(home, away);
-    const analysis = await enhanceAnalysis(base);
+    let analysis = await enhanceAnalysis(base);
+    analysis = await enhanceGranularAnalysis(analysis);
     analysis.input = {
       home: homeInput,
       away: awayInput,
