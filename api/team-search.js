@@ -3,12 +3,18 @@
 const { clean, searchTheSportsDbTeams } = require('../lib/football');
 const { localizedSuggestions, searchQuery } = require('../lib/team-aliases');
 
-function mergeTeams(localNames, providerTeams) {
+function isYouthOrReserve(value) {
+  return /\b(youth|academy|reserve|reserves|u\s?-?\d{2}|under\s?-?\d{2}|primavera|b team|ii)\b/i.test(String(value || ''));
+}
+
+function mergeTeams(localNames, providerTeams, rawQuery = '') {
   const out = [];
   const seen = new Set();
+  const wantsYouth = isYouthOrReserve(rawQuery);
   const push = (team) => {
     const name = String(team?.name || '').trim();
     if (!name) return;
+    if (!wantsYouth && isYouthOrReserve(name)) return;
     const key = name.toLowerCase();
     if (seen.has(key)) return;
     seen.add(key);
@@ -32,10 +38,10 @@ module.exports = async function handler(req, res) {
 
   try {
     const provider = providerQuery.length >= 2 ? await searchTheSportsDbTeams(providerQuery) : [];
-    return res.status(200).json({ teams: mergeTeams(local, provider) });
+    return res.status(200).json({ teams: mergeTeams(local, provider, q) });
   } catch (error) {
     console.error('team-search', error.message, { q, providerQuery });
-    if (local.length) return res.status(200).json({ teams: mergeTeams(local, []) });
+    if (local.length) return res.status(200).json({ teams: mergeTeams(local, [], q) });
     return res.status(502).json({ error: 'Team search provider is temporarily unavailable.', teams: [] });
   }
 };
