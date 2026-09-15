@@ -1,18 +1,17 @@
 'use strict';
 
-// Load the analysis intelligence presentation layer without changing the base app bundle.
+// Load the multilingual input/language enhancement layer.
 (() => {
-  if (document.querySelector('script[src^="analysis-ui-v3.js"]')) return;
+  if (document.querySelector('script[src^="language-input-v2.js"]')) return;
   const script = document.createElement('script');
-  script.src = 'analysis-ui-v3.js?v=3';
+  script.src = 'language-input-v2.js?v=2';
   script.async = true;
   document.head.appendChild(script);
 })();
 
-// Compatibility fixes that must run before the main UI boot handler.
+// Compatibility fixes that must run before user interaction.
 (() => {
   // Force future Supabase email-confirmation links to point back to production.
-  // Supabase Dashboard must also allow https://vertexsoccerai.com/ as a Redirect URL.
   const originalCreateClient = window.supabase?.createClient;
   if (typeof originalCreateClient === 'function' && !window.__vertexSupabasePatched) {
     window.__vertexSupabasePatched = true;
@@ -35,13 +34,12 @@
 
   function normalizeMatchSeparator(value) {
     return String(value || '')
+      .replace(/\s+(?:против|contra|versus|vs\.?|v\.?)\s+/gi, ' vs ')
       .replace(/\s+[\-–—]\s+/g, ' vs ')
-      .replace(/\s+(?:versus)\s+/gi, ' vs ')
       .replace(/\s{2,}/g, ' ')
       .trim();
   }
 
-  // Accept natural input such as "Elche - Real Madrid" in addition to "Elche vs Real Madrid".
   document.addEventListener('click', (event) => {
     const button = event.target.closest('#btnAnalyze, #btnAnalyzeMatch');
     if (!button) return;
@@ -76,7 +74,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           density: { enable: true, area: 1040 }
         },
         color: {
-          // Mostly tracking-cyan, with a small amount of blue/green like player-data signals.
           value: ['#24dcff', '#24dcff', '#24dcff', '#24dcff', '#55adff', '#39e6b0']
         },
         shape: { type: 'circle' },
