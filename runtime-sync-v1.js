@@ -151,23 +151,44 @@
     }
   }
 
+  function setPerformance(summary = {}) {
+    const set = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+    const evaluated = Number(summary.evaluated || 0);
+    const correct = Number(summary.correct || 0);
+    set('perfEvaluated', String(evaluated));
+    set('perfCorrect', String(correct));
+    set('perfAccuracy', summary.accuracy == null ? '—' : `${Math.round(Number(summary.accuracy))}%`);
+    set('perfQuality', summary.averageDataQuality == null ? '—' : `${Math.round(Number(summary.averageDataQuality))}%`);
+  }
+
   async function loadPerformance() {
+    try {
+      // This endpoint also performs a rate-limited verification pass for
+      // finished predictions before returning the public summary.
+      const response = await fetch('/api/results', { headers: { Accept: 'application/json' } });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !payload?.summary) throw new Error(payload?.error || `Results ${response.status}`);
+      setPerformance(payload.summary);
+      return;
+    } catch (error) {
+      console.warn('[Vertex sync] results endpoint:', error?.message || error);
+    }
+
+    // Safe client-side fallback: read only already-verified public rows.
     if (!client) return;
     try {
       const { data, error } = await client.from('model_evaluations').select('is_correct,data_quality').not('is_correct', 'is', null).limit(10000);
       if (error) throw error;
       const rows = Array.isArray(data) ? data : [];
-      const evaluated = rows.length;
-      const correct = rows.filter((row) => row.is_correct === true).length;
-      const qualityRows = rows.map((row) => Number(row.data_quality)).filter(Number.isFinite);
-      const avgQuality = qualityRows.length ? Math.round(qualityRows.reduce((a, b) => a + b, 0) / qualityRows.length) : null;
-      const set = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
-      set('perfEvaluated', String(evaluated));
-      set('perfCorrect', String(correct));
-      set('perfAccuracy', evaluated ? `${Math.round(correct / evaluated * 100)}%` : '—');
-      set('perfQuality', avgQuality == null ? '—' : `${avgQuality}%`);
+      const quality = rows.map((row) => Number(row.data_quality)).filter(Number.isFinite);
+      setPerformance({
+        evaluated: rows.length,
+        correct: rows.filter((row) => row.is_correct === true).length,
+        accuracy: rows.length ? Math.round(rows.filter((row) => row.is_correct === true).length / rows.length * 100) : null,
+        averageDataQuality: quality.length ? Math.round(quality.reduce((a, b) => a + b, 0) / quality.length) : null
+      });
     } catch (error) {
-      console.warn('[Vertex sync] performance:', error?.message || error);
+      console.warn('[Vertex sync] performance fallback:', error?.message || error);
     }
   }
 
