@@ -9,6 +9,15 @@
   document.head.appendChild(script);
 })();
 
+// Load the event-market presentation layer (corners/cards/shots/offsides).
+(() => {
+  if (document.querySelector('script[src^="granular-ui-v1.js"]')) return;
+  const script = document.createElement('script');
+  script.src = 'granular-ui-v1.js?v=1';
+  script.async = true;
+  document.head.appendChild(script);
+})();
+
 // Compatibility fixes that must run before user interaction.
 (() => {
   // Force future Supabase email-confirmation links to point back to production.
