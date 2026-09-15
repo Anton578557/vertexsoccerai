@@ -63,42 +63,43 @@ document.addEventListener('DOMContentLoaded', async () => {
       detectRetina: true,
       particles: {
         number: {
-          value: 76,
-          density: { enable: true, area: 980 }
+          value: 66,
+          density: { enable: true, area: 1040 }
         },
         color: {
-          value: ['#27e2ff', '#5ab5ff', '#8b72ff']
+          // Mostly tracking-cyan, with a small amount of blue/green like player-data signals.
+          value: ['#24dcff', '#24dcff', '#24dcff', '#24dcff', '#55adff', '#39e6b0']
         },
         shape: { type: 'circle' },
         opacity: {
-          value: { min: 0.34, max: 0.82 },
+          value: { min: 0.30, max: 0.76 },
           animation: {
             enable: true,
-            speed: 0.55,
-            minimumValue: 0.24,
+            speed: 0.34,
+            minimumValue: 0.20,
             sync: false
           }
         },
         size: {
-          value: { min: 1.15, max: 3.15 },
+          value: { min: 1.0, max: 2.75 },
           animation: {
             enable: true,
-            speed: 0.75,
-            minimumValue: 0.9,
+            speed: 0.42,
+            minimumValue: 0.8,
             sync: false
           }
         },
         links: {
           enable: true,
-          distance: 175,
-          color: '#28d9ff',
-          opacity: 0.29,
-          width: 1.05,
+          distance: 158,
+          color: '#2ad8ef',
+          opacity: 0.22,
+          width: 0.82,
           triangles: { enable: false }
         },
         move: {
           enable: true,
-          speed: 0.48,
+          speed: 0.30,
           direction: 'none',
           random: false,
           straight: false,
