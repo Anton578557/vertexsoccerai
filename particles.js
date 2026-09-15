@@ -27,6 +27,15 @@
   document.head.appendChild(script);
 })();
 
+// Load the production Contact form wired to /api/contact -> Resend.
+(() => {
+  if (document.querySelector('script[src^="contact-runtime-v1.js"]')) return;
+  const script = document.createElement('script');
+  script.src = 'contact-runtime-v1.js?v=1';
+  script.async = true;
+  document.head.appendChild(script);
+})();
+
 // Compatibility fixes that must run before user interaction.
 (() => {
   // Force future Supabase email-confirmation links to point back to production.
