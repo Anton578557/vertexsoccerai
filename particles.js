@@ -1,48 +1,37 @@
 'use strict';
 
-// Load the multilingual input/language enhancement layer.
+// Load runtime modules in a deterministic order. This avoids race conditions
+// between auth, cloud sync, multilingual input and contact wiring.
 (() => {
-  if (document.querySelector('script[src^="language-input-v2.js"]')) return;
-  const script = document.createElement('script');
-  script.src = 'language-input-v2.js?v=2';
-  script.async = true;
-  document.head.appendChild(script);
-})();
+  const queue = [
+    'language-input-v2.js?v=2',
+    'granular-ui-v1.js?v=1',
+    'auth-api-runtime-v1.js?v=1',
+    'runtime-sync-v1.js?v=2',
+    'contact-runtime-v1.js?v=1'
+  ];
 
-// Load the event-market presentation layer (corners/cards/shots/offsides).
-(() => {
-  if (document.querySelector('script[src^="granular-ui-v1.js"]')) return;
-  const script = document.createElement('script');
-  script.src = 'granular-ui-v1.js?v=1';
-  script.async = true;
-  document.head.appendChild(script);
-})();
+  function exists(src) {
+    const base = src.split('?')[0];
+    return Boolean(document.querySelector(`script[src^="${base}"]`));
+  }
 
-// Attach the current Supabase session to protected API calls.
-(() => {
-  if (document.querySelector('script[src^="auth-api-runtime-v1.js"]')) return;
-  const script = document.createElement('script');
-  script.src = 'auth-api-runtime-v1.js?v=1';
-  script.async = true;
-  document.head.appendChild(script);
-})();
+  function load(index) {
+    if (index >= queue.length) return;
+    const src = queue[index];
+    if (exists(src)) return load(index + 1);
+    const script = document.createElement('script');
+    script.src = src;
+    script.async = false;
+    script.onload = () => load(index + 1);
+    script.onerror = () => {
+      console.warn('[Vertex] Runtime module failed:', src);
+      load(index + 1);
+    };
+    document.head.appendChild(script);
+  }
 
-// Load cloud persistence / verified-results synchronization.
-(() => {
-  if (document.querySelector('script[src^="runtime-sync-v1.js"]')) return;
-  const script = document.createElement('script');
-  script.src = 'runtime-sync-v1.js?v=1';
-  script.async = true;
-  document.head.appendChild(script);
-})();
-
-// Load the production Contact form wired to /api/contact -> Resend.
-(() => {
-  if (document.querySelector('script[src^="contact-runtime-v1.js"]')) return;
-  const script = document.createElement('script');
-  script.src = 'contact-runtime-v1.js?v=1';
-  script.async = true;
-  document.head.appendChild(script);
+  load(0);
 })();
 
 // Compatibility fixes that must run before user interaction.
