@@ -1,4 +1,4 @@
-' strict';
+'use strict';
 
 (() => {
   if (window.__vertexLanguageInputV2) return;
