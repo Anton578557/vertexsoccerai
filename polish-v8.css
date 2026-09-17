@@ -1,0 +1,249 @@
+/* Vertex Soccer AI — polish/performance/legal layer v8 */
+
+/* Keep the language switcher singular and compact. */
+#vertexLanguage .v6-lang-btn,
+#vertexLanguage.v6-language-switcher > [data-v6-lang] { display: none !important; }
+
+/* Strategy readability */
+#tab-strategy .strategy-dashboard {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr) !important;
+  gap: 18px !important;
+  max-width: 1040px !important;
+}
+#tab-strategy .strategy-panel {
+  padding: 26px !important;
+  border-radius: 18px !important;
+  background: rgba(5, 17, 29, .88) !important;
+}
+#tab-strategy .strategy-panel h3 {
+  margin: 8px 0 18px !important;
+  font-size: 17px !important;
+  line-height: 1.35 !important;
+}
+#tab-strategy .profile-score {
+  gap: 12px !important;
+}
+#tab-strategy .profile-score > div {
+  min-height: 84px;
+  padding: 14px 15px !important;
+}
+#tab-strategy .profile-score span {
+  margin-bottom: 7px;
+  line-height: 1.35;
+}
+#tab-strategy .profile-score strong {
+  font-size: 14px !important;
+  line-height: 1.45 !important;
+  overflow-wrap: anywhere;
+}
+#tab-strategy .strategy-rules li {
+  padding: 13px 14px !important;
+  color: #aabac7 !important;
+  line-height: 1.58 !important;
+}
+#tab-strategy .strategy-actions {
+  margin-top: 18px !important;
+}
+
+/* Legal / information modal */
+.vertex-legal-v8 {
+  width: min(920px, 100%) !important;
+  max-width: 920px !important;
+  max-height: 88vh !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border-radius: 22px !important;
+  background: rgba(4, 15, 26, .985) !important;
+}
+.v8-legal-scroll {
+  max-height: 88vh;
+  overflow: auto;
+  padding: 30px;
+  scrollbar-width: thin;
+}
+.v8-legal-head {
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.v8-legal-kicker {
+  color: #27ddff;
+  font: 800 10px 'JetBrains Mono', monospace;
+  letter-spacing: .14em;
+}
+.v8-legal-head h2 {
+  margin: 8px 0 10px !important;
+  text-align: left !important;
+  font-size: 28px !important;
+}
+.v8-legal-head p {
+  color: #a5b7c5;
+  line-height: 1.7;
+  font-size: 14px;
+}
+.v8-legal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+.v8-legal-card {
+  padding: 17px 18px;
+  border: 1px solid rgba(67, 174, 211, .14);
+  border-radius: 14px;
+  background: rgba(2, 10, 18, .62);
+}
+.v8-legal-card h3 {
+  margin: 0 0 8px;
+  color: #eaf9ff;
+  font-size: 14px;
+  line-height: 1.35;
+}
+.v8-legal-card p,
+.v8-legal-card li {
+  color: #92a6b5;
+  font-size: 12px;
+  line-height: 1.65;
+}
+.v8-legal-card ul {
+  margin: 8px 0 0 17px;
+}
+.v8-legal-warning {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-left: 3px solid #ffc857;
+  background: rgba(255, 200, 87, .055);
+  color: #bac6cf;
+  font-size: 12px;
+  line-height: 1.65;
+}
+.v8-legal-actions { margin-top: 18px; }
+.v8-legal-actions button { margin: 0 !important; }
+
+/* Fast cabinet */
+.v8-cabinet {
+  width: min(1100px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 12px 0 54px;
+}
+.v8-cabinet-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+.v8-cabinet-hero h2 {
+  margin: 6px 0 5px;
+  font-size: 32px;
+}
+.v8-cabinet-hero p { color: #91a6b5; }
+.v8-account-pill {
+  padding: 8px 11px;
+  border: 1px solid rgba(54,231,173,.22);
+  border-radius: 999px;
+  color: #59e7b6;
+  background: rgba(54,231,173,.05);
+  font-size: 11px;
+}
+.v8-cabinet-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 11px;
+  margin-bottom: 14px;
+}
+.v8-cabinet-stat,
+.v8-cabinet-panel {
+  border: 1px solid rgba(72, 173, 209, .14);
+  background: rgba(4, 15, 26, .86);
+  border-radius: 15px;
+}
+.v8-cabinet-stat { padding: 16px; }
+.v8-cabinet-stat span {
+  display: block;
+  color: #7e94a4;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+.v8-cabinet-stat strong {
+  display: block;
+  margin-top: 6px;
+  color: #effaff;
+  font-size: 22px;
+}
+.v8-cabinet-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(280px, .75fr);
+  gap: 14px;
+}
+.v8-cabinet-panel { padding: 19px; }
+.v8-cabinet-panel h3 { margin-bottom: 12px; font-size: 15px; }
+.v8-cabinet-list { display: flex; flex-direction: column; gap: 8px; }
+.v8-cabinet-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 13px;
+  border-radius: 11px;
+  background: rgba(1,9,16,.54);
+  border: 1px solid rgba(255,255,255,.045);
+}
+.v8-cabinet-row strong { display: block; font-size: 13px; }
+.v8-cabinet-row small { display: block; margin-top: 4px; color: #738898; font-size: 10px; }
+.v8-cabinet-row button {
+  flex: 0 0 auto;
+  padding: 8px 10px;
+  border-radius: 9px;
+  border: 1px solid rgba(32,220,255,.23);
+  background: rgba(32,220,255,.055);
+  color: #35ddff;
+  font-size: 10px;
+  cursor: pointer;
+}
+.v8-cabinet-empty { color: #7890a0; font-size: 12px; line-height: 1.6; }
+.v8-cabinet-account { display: grid; gap: 9px; }
+.v8-cabinet-account div {
+  padding: 11px 12px;
+  border-radius: 10px;
+  background: rgba(1,9,16,.48);
+}
+.v8-cabinet-account span { display: block; color: #718797; font-size: 9px; text-transform: uppercase; }
+.v8-cabinet-account strong { display: block; margin-top: 4px; overflow-wrap: anywhere; }
+.v8-cabinet-actions { display: grid; gap: 8px; margin-top: 14px; }
+
+/* Performance: reduce GPU-heavy effects while preserving the look. */
+.vertex-performance-lite #particles-js { opacity: .52 !important; }
+.vertex-performance-lite .hero,
+.vertex-performance-lite .analysis-card,
+.vertex-performance-lite .strategy-panel,
+.vertex-performance-lite .strategy-form,
+.vertex-performance-lite .performance-panel,
+.vertex-performance-lite .modal,
+.vertex-performance-lite .v8-cabinet-panel {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.vertex-performance-lite .header {
+  backdrop-filter: blur(7px) !important;
+  -webkit-backdrop-filter: blur(7px) !important;
+}
+.vertex-performance-lite .stat-item,
+.vertex-performance-lite .strategy-panel,
+.vertex-performance-lite .analysis-card {
+  box-shadow: 0 10px 30px rgba(0,0,0,.18) !important;
+}
+
+@media (max-width: 900px) {
+  #tab-strategy .strategy-dashboard,
+  .v8-cabinet-grid { grid-template-columns: 1fr !important; }
+  .v8-legal-grid { grid-template-columns: 1fr; }
+  .v8-cabinet-stats { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .v8-legal-scroll { padding: 22px 16px; }
+  .v8-cabinet { width: min(100% - 24px, 1100px); }
+  .v8-cabinet-stats { grid-template-columns: 1fr 1fr; }
+  .v8-cabinet-row { align-items: flex-start; flex-direction: column; }
+  .v8-cabinet-row button { width: 100%; }
+}
