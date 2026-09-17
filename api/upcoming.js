@@ -3,6 +3,7 @@
 const { upcomingMatches } = require('../lib/football');
 const { primaryUpcomingMatches } = require('../lib/football-feed');
 const { requireUser } = require('../lib/api-auth');
+const { enforceRateLimit } = require('../lib/rate-limit');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'private, no-store');
@@ -10,6 +11,7 @@ module.exports = async function handler(req, res) {
 
   const user = await requireUser(req, res);
   if (!user) return;
+  if (!(await enforceRateLimit(req, res, user, 'upcoming', { windowSeconds: 3600, limit: 120 }))) return;
 
   try {
     const matches = await primaryUpcomingMatches(() => upcomingMatches());
