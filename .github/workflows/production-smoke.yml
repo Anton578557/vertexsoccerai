@@ -21,7 +21,7 @@ jobs:
         run: |
           set -euo pipefail
           for attempt in {1..12}; do
-            if curl --fail --silent --show-error --max-time 20 https://vertexsoccerai.com/api/health -o /tmp/health.json; then
+            if curl --fail --silent --show-error --max-time 20 "https://vertexsoccerai.com/api/health?smoke=${GITHUB_SHA}" -o /tmp/health.json; then
               if node - <<'NODE'
           const fs = require('fs');
           const data = JSON.parse(fs.readFileSync('/tmp/health.json', 'utf8'));
@@ -53,7 +53,7 @@ jobs:
         run: |
           set -euo pipefail
           for attempt in {1..12}; do
-            if curl --fail --silent --show-error --max-time 30 https://vertexsoccerai.com/api/provider-check -o /tmp/providers.json; then
+            if curl --fail --silent --show-error --max-time 30 "https://vertexsoccerai.com/api/provider-check?smoke=${GITHUB_SHA}" -o /tmp/providers.json; then
               if node - <<'NODE'
           const fs = require('fs');
           const data = JSON.parse(fs.readFileSync('/tmp/providers.json', 'utf8'));
