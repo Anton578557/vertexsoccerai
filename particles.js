@@ -4,16 +4,16 @@
 // between auth, cloud sync, multilingual input and contact wiring.
 (() => {
   const queue = [
-    'language-input-v2.js?v=2',
+    'language-input-v2.js?v=3',
     'granular-ui-v1.js?v=1',
-    'auth-api-runtime-v1.js?v=1',
+    'auth-api-runtime-v1.js?v=2',
     'runtime-sync-v1.js?v=2',
     'contact-runtime-v1.js?v=1',
     'polish-v7.js?v=7',
     'polish-v7-hotfix.js?v=1',
     'polish-v8.js?v=8',
-    'polish-v8-hotfix.js?v=1',
-    'legal-consent-v1.js?v=1'
+    'polish-v8-hotfix.js?v=2',
+    'analyzer-stability-v1.js?v=1'
   ];
 
   function exists(src) {
@@ -41,9 +41,8 @@
 
 // Compatibility fixes that must run before user interaction.
 (() => {
-  // Force future Supabase email-confirmation links to point back to production
-  // and retain a versioned record that the account was created after the user
-  // accepted the current legal terms in the UI.
+  // Future Supabase confirmation links should return to the production site.
+  // No age or legal-consent claim is written into account metadata here.
   const originalCreateClient = window.supabase?.createClient;
   if (typeof originalCreateClient === 'function' && !window.__vertexSupabasePatched) {
     window.__vertexSupabasePatched = true;
@@ -52,16 +51,9 @@
       if (client?.auth?.signUp && !client.auth.__vertexSignUpPatched) {
         const originalSignUp = client.auth.signUp.bind(client.auth);
         client.auth.signUp = (credentials = {}) => {
-          const existingData = credentials?.options?.data || {};
           const options = {
             ...(credentials.options || {}),
-            emailRedirectTo: 'https://vertexsoccerai.com/',
-            data: {
-              ...existingData,
-              vertex_terms_version: '2026-09-17',
-              vertex_terms_accepted_at: new Date().toISOString(),
-              vertex_age_confirmed_18_plus: true
-            }
+            emailRedirectTo: 'https://vertexsoccerai.com/'
           };
           return originalSignUp({ ...credentials, options });
         };
