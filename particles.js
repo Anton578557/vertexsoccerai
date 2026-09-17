@@ -10,7 +10,8 @@
     'runtime-sync-v1.js?v=2',
     'contact-runtime-v1.js?v=1',
     'polish-v7.js?v=7',
-    'polish-v7-hotfix.js?v=1'
+    'polish-v7-hotfix.js?v=1',
+    'polish-v8.js?v=8'
   ];
 
   function exists(src) {
@@ -99,47 +100,37 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   try {
     await window.tsParticles.load('particles-js', {
-      fpsLimit: 60,
+      fpsLimit: 45,
       fullScreen: { enable: false },
-      detectRetina: true,
+      detectRetina: false,
       particles: {
         number: {
-          value: 66,
-          density: { enable: true, area: 1040 }
+          value: 48,
+          density: { enable: true, area: 1180 }
         },
         color: {
           value: ['#24dcff', '#24dcff', '#24dcff', '#24dcff', '#55adff', '#39e6b0']
         },
         shape: { type: 'circle' },
         opacity: {
-          value: { min: 0.30, max: 0.76 },
-          animation: {
-            enable: true,
-            speed: 0.34,
-            minimumValue: 0.20,
-            sync: false
-          }
+          value: { min: 0.28, max: 0.66 },
+          animation: { enable: false }
         },
         size: {
-          value: { min: 1.0, max: 2.75 },
-          animation: {
-            enable: true,
-            speed: 0.42,
-            minimumValue: 0.8,
-            sync: false
-          }
+          value: { min: 1.0, max: 2.55 },
+          animation: { enable: false }
         },
         links: {
           enable: true,
-          distance: 158,
+          distance: 150,
           color: '#2ad8ef',
-          opacity: 0.22,
-          width: 0.82,
+          opacity: 0.19,
+          width: 0.78,
           triangles: { enable: false }
         },
         move: {
           enable: true,
-          speed: 0.30,
+          speed: 0.24,
           direction: 'none',
           random: false,
           straight: false,
