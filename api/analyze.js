@@ -4,6 +4,8 @@ const { buildBaseAnalysis } = require('../lib/base-analysis-v2');
 const { enhanceAnalysis } = require('../lib/analysis-enhancer');
 const { enhanceGranularAnalysis } = require('../lib/granular-enrichment');
 const { enrichApiFootballFallback } = require('../lib/api-football-fallback');
+const { enrichFootballData } = require('../lib/football-data-enrichment');
+const { finalizeVertexModelV2 } = require('../lib/vertex-model-v2');
 const { recordModelEvaluations } = require('../lib/model-evaluation-store');
 const { requireUser } = require('../lib/api-auth');
 const { enforceRateLimit } = require('../lib/rate-limit');
@@ -36,6 +38,25 @@ function readTeams(req) {
   };
 }
 
+async function attachModelContext(analysis) {
+  if (!analysis?.teams?.home?.name || !analysis?.teams?.away?.name) return analysis;
+  const fd = await enrichFootballData(
+    analysis.teams.home.name,
+    analysis.teams.away.name,
+    analysis.fixture?.league || ''
+  );
+  if (fd?.ok) {
+    analysis.advanced = fd.advanced || analysis.advanced || null;
+    analysis.leagueContext = fd.leagueContext || analysis.leagueContext || null;
+    analysis.h2h = fd.h2h || analysis.h2h || null;
+    analysis.sourceStatus = {
+      ...(analysis.sourceStatus || {}),
+      vertexModelContext: 'Football-Data opponent-adjusted form + league baseline + H2H'
+    };
+  }
+  return analysis;
+}
+
 async function buildAnalysisCore(home, away) {
   const base = await buildBaseAnalysis(home, away);
   let analysis = await enhanceAnalysis(base);
@@ -57,6 +78,9 @@ async function buildAnalysisCore(home, away) {
   }
 
   analysis = await enhanceGranularAnalysis(analysis);
+  analysis = await attachModelContext(analysis);
+  analysis = finalizeVertexModelV2(analysis);
+
   return {
     analysis,
     providerMeta: {
@@ -79,7 +103,7 @@ module.exports = async function handler(req, res) {
   if (!home || !away || safeKey(home) === safeKey(away)) return res.status(400).json({ error: 'Choose two different teams.' });
 
   try {
-    const analysisKey = `analysis-core:v3:${safeKey(home)}:${safeKey(away)}`;
+    const analysisKey = `analysis-core:v4:${safeKey(home)}:${safeKey(away)}`;
     const cached = await cachedProviderCall({
       cacheKey: analysisKey,
       provider: 'Vertex Analysis Core',
@@ -111,8 +135,6 @@ module.exports = async function handler(req, res) {
       sharedInflight: Boolean(cached.shared)
     };
 
-    // Model evaluations are fixture-level snapshots, not per-user rows. Only a
-    // newly computed analysis writes them; cache hits simply reuse that snapshot.
     if (!cached.cacheHit && !cached.staleHit) {
       const evaluationWrite = await recordModelEvaluations(analysis);
       analysis.engine.modelSnapshotRecorded = Number(evaluationWrite.recorded || 0) > 0;
