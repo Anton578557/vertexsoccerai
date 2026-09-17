@@ -7,10 +7,21 @@ const { enrichApiFootballFallback } = require('../lib/api-football-fallback');
 const { recordModelEvaluations } = require('../lib/model-evaluation-store');
 const { requireUser } = require('../lib/api-auth');
 const { enforceRateLimit } = require('../lib/rate-limit');
+const { cachedProviderCall } = require('../lib/provider-cache');
 const { resolveTeamName } = require('../lib/team-aliases');
 
 function clean(value, max = 80) {
   return String(value || '').replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, max);
+}
+
+function safeKey(value) {
+  return clean(value, 80)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80) || 'unknown';
 }
 
 function readTeams(req) {
@@ -25,6 +36,36 @@ function readTeams(req) {
   };
 }
 
+async function buildAnalysisCore(home, away) {
+  const base = await buildBaseAnalysis(home, away);
+  let analysis = await enhanceAnalysis(base);
+
+  let apiFootballFallback = { used: false, cacheHits: 0 };
+  if (!analysis.model) {
+    apiFootballFallback = await enrichApiFootballFallback(analysis);
+    analysis = apiFootballFallback.analysis;
+
+    if (apiFootballFallback.used) {
+      analysis = await enhanceAnalysis(analysis);
+      analysis.sourceStatus = {
+        ...(analysis.sourceStatus || {}),
+        primaryFootball: analysis.model
+          ? 'API-Football fallback + multi-source context'
+          : (analysis.sourceStatus?.primaryFootball || 'API-Football fallback')
+      };
+    }
+  }
+
+  analysis = await enhanceGranularAnalysis(analysis);
+  return {
+    analysis,
+    providerMeta: {
+      apiFootballFallbackUsed: Boolean(apiFootballFallback.used),
+      apiFootballCacheHits: Number(apiFootballFallback.cacheHits || 0)
+    }
+  };
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   if (!['GET', 'POST'].includes(req.method)) return res.status(405).json({ error: 'Method not allowed' });
@@ -35,29 +76,25 @@ module.exports = async function handler(req, res) {
 
   const { homeInput, awayInput, home, away } = readTeams(req);
   if (!homeInput || !awayInput) return res.status(400).json({ error: 'Enter two team names.' });
+  if (!home || !away || safeKey(home) === safeKey(away)) return res.status(400).json({ error: 'Choose two different teams.' });
 
   try {
-    // Free/open providers first. This deliberately avoids consuming the
-    // 100-request/day API-Football allowance on every normal analysis.
-    const base = await buildBaseAnalysis(home, away);
-    let analysis = await enhanceAnalysis(base);
+    // The expensive provider/model layer is shared for five minutes across all
+    // authenticated users asking for the same fixture. This is the main guard
+    // against quota exhaustion when many people analyse a popular match at once.
+    const analysisKey = `analysis-core:v3:${safeKey(home)}:${safeKey(away)}`;
+    const cached = await cachedProviderCall({
+      cacheKey: analysisKey,
+      provider: 'Vertex Analysis Core',
+      ttlSeconds: 300,
+      staleSeconds: 1800,
+      loader: () => buildAnalysisCore(home, away)
+    });
 
-    let apiFootballFallback = { used: false, cacheHits: 0 };
-    if (!analysis.model) {
-      apiFootballFallback = await enrichApiFootballFallback(analysis);
-      analysis = apiFootballFallback.analysis;
+    if (!cached.payload?.analysis) throw new Error('Analysis providers did not return a usable result.');
+    const analysis = cached.payload.analysis;
+    const providerMeta = cached.payload.providerMeta || {};
 
-      // Rebuild model/context only when the fallback actually improved the data.
-      if (apiFootballFallback.used) {
-        analysis = await enhanceAnalysis(analysis);
-        analysis.sourceStatus = {
-          ...(analysis.sourceStatus || {}),
-          primaryFootball: analysis.model ? 'API-Football fallback + multi-source context' : (analysis.sourceStatus?.primaryFootball || 'API-Football fallback')
-        };
-      }
-    }
-
-    analysis = await enhanceGranularAnalysis(analysis);
     analysis.input = {
       home: homeInput,
       away: awayInput,
@@ -67,14 +104,16 @@ module.exports = async function handler(req, res) {
     analysis.engine = {
       ...(analysis.engine || {}),
       quotaPolicy: 'open-and-cached-first',
-      apiFootballFallbackUsed: Boolean(apiFootballFallback.used),
-      apiFootballCacheHits: Number(apiFootballFallback.cacheHits || 0),
+      apiFootballFallbackUsed: Boolean(providerMeta.apiFootballFallbackUsed),
+      apiFootballCacheHits: Number(providerMeta.apiFootballCacheHits || 0),
       authenticated: true,
-      distributedRateLimit: true
+      distributedRateLimit: true,
+      sharedAnalysisCache: true,
+      analysisCacheHit: Boolean(cached.cacheHit),
+      analysisCacheStale: Boolean(cached.staleHit),
+      sharedInflight: Boolean(cached.shared)
     };
 
-    // Store only real pre-match model selections that can later be compared
-    // with final results. This never blocks the user if persistence is down.
     const evaluationWrite = await recordModelEvaluations(analysis);
     analysis.engine.modelSnapshotRecorded = Number(evaluationWrite.recorded || 0) > 0;
 
