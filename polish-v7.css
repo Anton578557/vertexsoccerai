@@ -1,0 +1,216 @@
+/* Vertex Soccer AI — polish v7: home readability, one language control, localized info modals */
+
+#tab-home .home-hero-actions {
+  width: min(650px, 100%);
+  margin: 18px auto 0;
+  display: grid;
+  grid-template-columns: 1.35fr .85fr;
+  gap: 10px;
+}
+
+#tab-home .home-trust-line {
+  max-width: 680px;
+  margin: 16px auto 0;
+  color: #a7bac8;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+#tab-home .home-value-grid {
+  width: min(1020px, 100%);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+#tab-home .home-value-card {
+  position: relative;
+  min-height: 230px;
+  padding: 22px 22px 20px;
+  text-align: left;
+  border: 1px solid rgba(67, 185, 222, .17);
+  border-radius: 17px;
+  background:
+    radial-gradient(circle at 100% 0, rgba(43, 223, 255, .07), transparent 38%),
+    linear-gradient(180deg, rgba(5, 19, 32, .89), rgba(3, 13, 23, .84));
+  box-shadow: 0 18px 52px rgba(0, 0, 0, .22), inset 0 1px 0 rgba(255,255,255,.025);
+  overflow: hidden;
+}
+
+#tab-home .home-value-card::after {
+  content: '';
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(43,223,255,.45), transparent);
+}
+
+#tab-home .home-value-card > span {
+  display: block;
+  color: #42ddff;
+  font: 700 10px/1.35 'JetBrains Mono', monospace;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+#tab-home .home-value-card > strong {
+  display: block;
+  margin-top: 14px;
+  color: #effaff;
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+#tab-home .home-value-card > p {
+  margin-top: 12px;
+  color: #9db0bf;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+#tab-home .home-data-strip {
+  width: min(1020px, 100%);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 18px;
+  border: 1px solid rgba(66, 178, 213, .14);
+  border-radius: 15px;
+  background: rgba(4, 15, 26, .75);
+  box-shadow: 0 14px 40px rgba(0,0,0,.17);
+}
+
+#tab-home .home-data-strip > span {
+  margin-right: 5px;
+  color: #43ddff;
+  font: 700 10px/1.2 'JetBrains Mono', monospace;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+#tab-home .home-data-strip > b {
+  display: inline-flex;
+  align-items: center;
+  min-height: 31px;
+  padding: 7px 10px;
+  border: 1px solid rgba(122, 177, 202, .13);
+  border-radius: 9px;
+  background: rgba(255,255,255,.025);
+  color: #b9cbd6;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* About / Terms / Privacy */
+.modal.vertex-info-v7 {
+  max-width: 780px;
+  padding: 0;
+  overflow: hidden;
+  border-color: rgba(52, 213, 247, .23) !important;
+  background:
+    radial-gradient(circle at 90% 0, rgba(43,223,255,.08), transparent 38%),
+    linear-gradient(180deg, rgba(5,18,30,.99), rgba(3,12,21,.99)) !important;
+}
+
+.vertex-info-v7 .v7-info-head {
+  padding: 28px 30px 22px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+
+.vertex-info-v7 .v7-info-kicker {
+  color: #43ddff;
+  font: 700 10px/1.2 'JetBrains Mono', monospace;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.vertex-info-v7 h2 {
+  margin: 8px 0 7px !important;
+  text-align: left !important;
+  color: #f1fbff !important;
+  font-size: 28px !important;
+}
+
+.vertex-info-v7 .v7-info-lead {
+  margin: 0;
+  color: #a9bdca;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.vertex-info-v7 .v7-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 20px 30px 8px;
+}
+
+.vertex-info-v7 .v7-info-card {
+  min-height: 150px;
+  padding: 16px;
+  border: 1px solid rgba(69, 177, 211, .14);
+  border-radius: 13px;
+  background: rgba(1, 10, 18, .62);
+}
+
+.vertex-info-v7 .v7-info-card span {
+  display: block;
+  color: #49dcff;
+  font: 700 9px/1.25 'JetBrains Mono', monospace;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.vertex-info-v7 .v7-info-card strong {
+  display: block;
+  margin-top: 9px;
+  color: #e9f8ff;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.vertex-info-v7 .v7-info-card p {
+  margin: 8px 0 0;
+  color: #8299a8;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.vertex-info-v7 .v7-info-note {
+  margin: 12px 30px 20px;
+  padding: 13px 15px;
+  border-left: 2px solid rgba(79, 226, 176, .6);
+  background: rgba(79,226,176,.04);
+  color: #99aea9;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.vertex-info-v7 .v7-info-actions {
+  padding: 0 30px 26px;
+}
+
+.vertex-info-v7 .v7-info-actions button {
+  margin: 0;
+}
+
+@media (max-width: 880px) {
+  #tab-home .home-value-grid { grid-template-columns: 1fr; }
+  #tab-home .home-value-card { min-height: 0; }
+  .vertex-info-v7 .v7-info-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 620px) {
+  #tab-home .home-hero-actions { grid-template-columns: 1fr; }
+  #tab-home .home-data-strip { justify-content: flex-start; }
+  #tab-home .home-data-strip > span { width: 100%; margin-bottom: 3px; }
+  .vertex-info-v7 .v7-info-head,
+  .vertex-info-v7 .v7-info-grid,
+  .vertex-info-v7 .v7-info-actions { padding-left: 20px; padding-right: 20px; }
+  .vertex-info-v7 .v7-info-note { margin-left: 20px; margin-right: 20px; }
+}
