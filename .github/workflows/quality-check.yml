@@ -44,8 +44,9 @@ jobs:
           skip_dirs = {'.git', 'node_modules'}
           text_ext = {'.js', '.html', '.json', '.md', '.yml', '.yaml', '.css', '.sql'}
           supabase_secret = re.compile(r'sb_secret_[A-Za-z0-9_-]{8,}')
+          resend_secret = re.compile(r'\bre_[A-Za-z0-9_-]{16,}\b')
           provider_assignment = re.compile(
-              r'(API_FOOTBALL_KEY|FOOTBALL_DATA_KEY|OPENWEATHER_KEY|NEWSAPI_KEY|SPORTMONKS_API_TOKEN)\s*=\s*[\"\'][^\"\']{8,}[\"\']'
+              r'(RAPIDAPI_KEY|API_FOOTBALL_KEY|FOOTBALL_DATA_KEY|OPENWEATHER_KEY|NEWSAPI_KEY|SPORTMONKS_API_TOKEN|RESEND_API_KEY|SUPABASE_SECRET_KEY)\s*=\s*[\"\'][^\"\']{8,}[\"\']'
           )
 
           findings = []
@@ -59,6 +60,8 @@ jobs:
                   for lineno, line in enumerate(text.splitlines(), 1):
                       if supabase_secret.search(line):
                           findings.append(f'{path}:{lineno}: possible Supabase server secret')
+                      if resend_secret.search(line) and 'process.env.RESEND_API_KEY' not in line:
+                          findings.append(f'{path}:{lineno}: possible Resend server secret')
                       if provider_assignment.search(line):
                           findings.append(f'{path}:{lineno}: possible hardcoded provider secret')
 
@@ -81,21 +84,27 @@ jobs:
             exit 1
           fi
 
-      - name: Verify protected API auth guard
+      - name: Verify protected API auth and rate limits
         shell: bash
         run: |
           set -euo pipefail
           grep -q "requireUser" api/analyze.js
           grep -q "requireUser" api/live.js
           grep -q "requireUser" api/upcoming.js
+          grep -q "enforceRateLimit" api/analyze.js
+          grep -q "enforceRateLimit" api/live.js
+          grep -q "enforceRateLimit" api/upcoming.js
           test -f lib/api-auth.js
+          test -f lib/rate-limit.js
           test -f auth-api-runtime-v1.js
 
-      - name: Verify automation files
+      - name: Verify resilience and automation files
         shell: bash
         run: |
           set -euo pipefail
           grep -q '"/api/results"' vercel.json
+          grep -q "staleSeconds" lib/provider-cache.js
+          grep -q "RAPID_DEFAULT_HOST" lib/football-feed.js
           test -f api/results.js
           test -f lib/model-evaluator.js
           test -f lib/model-evaluation-store.js
