@@ -1,19 +1,18 @@
 'use strict';
 
-// Load runtime modules in a deterministic order. This avoids race conditions
-// between auth, cloud sync, multilingual input and contact wiring.
+// Load runtime modules in a deterministic order. Keep this list intentionally
+// small: older granular/cloud-sync layers duplicated analysis response parsing
+// and DOM observers, which could make large reports feel unresponsive.
 (() => {
   const queue = [
     'language-input-v2.js?v=3',
-    'granular-ui-v1.js?v=1',
     'auth-api-runtime-v1.js?v=2',
-    'runtime-sync-v1.js?v=2',
     'contact-runtime-v1.js?v=1',
     'polish-v7.js?v=7',
     'polish-v7-hotfix.js?v=1',
     'polish-v8.js?v=8',
     'polish-v8-hotfix.js?v=2',
-    'analyzer-stability-v1.js?v=2'
+    'analyzer-stability-v1.js?v=3'
   ];
 
   function exists(src) {
@@ -42,7 +41,6 @@
 // Compatibility fixes that must run before user interaction.
 (() => {
   // Future Supabase confirmation links should return to the production site.
-  // No age or legal-consent claim is written into account metadata here.
   const originalCreateClient = window.supabase?.createClient;
   if (typeof originalCreateClient === 'function' && !window.__vertexSupabasePatched) {
     window.__vertexSupabasePatched = true;
@@ -103,13 +101,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   try {
     await window.tsParticles.load('particles-js', {
-      fpsLimit: 45,
+      fpsLimit: 42,
       fullScreen: { enable: false },
       detectRetina: false,
       particles: {
         number: {
-          value: 48,
-          density: { enable: true, area: 1180 }
+          value: 44,
+          density: { enable: true, area: 1220 }
         },
         color: {
           value: ['#24dcff', '#24dcff', '#24dcff', '#24dcff', '#55adff', '#39e6b0']
@@ -133,7 +131,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
         move: {
           enable: true,
-          speed: 0.24,
+          speed: 0.22,
           direction: 'none',
           random: false,
           straight: false,
