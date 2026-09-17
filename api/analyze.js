@@ -4,7 +4,7 @@ const { buildBaseAnalysis } = require('../lib/base-analysis-v2');
 const { enhanceAnalysis } = require('../lib/analysis-enhancer');
 const { enhanceGranularAnalysis } = require('../lib/granular-enrichment');
 const { enrichApiFootballFallback } = require('../lib/api-football-fallback');
-const { enrichFootballData } = require('../lib/football-data-enrichment');
+const { enrichFootballData, resolveUpcomingFixture } = require('../lib/football-data-enrichment');
 const { enrichAvailabilityIntelligence } = require('../lib/squad-availability');
 const { finalizeVertexModelV2 } = require('../lib/vertex-model-v2');
 const { recordModelEvaluations } = require('../lib/model-evaluation-store');
@@ -39,6 +39,25 @@ function readTeams(req) {
   };
 }
 
+async function preResolveFixture(base) {
+  if (!base?.teams?.home?.name || !base?.teams?.away?.name) return base;
+  if (base.fixture?.date) return base;
+  const fixture = await resolveUpcomingFixture(base.teams.home.name, base.teams.away.name, 21);
+  if (!fixture) return base;
+  base.fixture = {
+    ...(base.fixture || {}),
+    date: fixture.date || null,
+    league: fixture.league || base.fixture?.league || null,
+    venue: fixture.venue || base.fixture?.venue || null,
+    source: 'Football-Data fixture resolver'
+  };
+  base.sourceStatus = {
+    ...(base.sourceStatus || {}),
+    fixtureResolver: fixture.reversed ? 'Football-Data · teams entered in reverse order' : 'Football-Data · exact upcoming fixture'
+  };
+  return base;
+}
+
 async function attachModelContext(analysis) {
   if (!analysis?.teams?.home?.name || !analysis?.teams?.away?.name) return analysis;
   const fd = await enrichFootballData(
@@ -47,23 +66,43 @@ async function attachModelContext(analysis) {
     analysis.fixture?.league || ''
   );
   if (fd?.ok) {
-    analysis.advanced = fd.advanced || analysis.advanced || null;
+    const homeSample = Number(fd.advanced?.home?.sample || 0);
+    const awaySample = Number(fd.advanced?.away?.sample || 0);
+    const currentHomeSample = Number(analysis?.advanced?.home?.sample || 0);
+    const currentAwaySample = Number(analysis?.advanced?.away?.sample || 0);
+    if (homeSample >= Math.max(3, currentHomeSample) && awaySample >= Math.max(3, currentAwaySample)) {
+      analysis.advanced = fd.advanced;
+    } else if (!analysis.advanced && homeSample >= 3 && awaySample >= 3) {
+      analysis.advanced = fd.advanced;
+    }
     analysis.leagueContext = fd.leagueContext || analysis.leagueContext || null;
     analysis.h2h = fd.h2h || analysis.h2h || null;
+    if (fd.penaltyModel?.ok) analysis.penaltyModel = fd.penaltyModel;
     analysis.sourceStatus = {
       ...(analysis.sourceStatus || {}),
-      vertexModelContext: 'Football-Data opponent-adjusted form + league baseline + H2H'
+      vertexModelContext: fd.crossCompetitionForm
+        ? 'Football-Data cross-competition form + competition baseline + H2H'
+        : 'Football-Data competition form + league baseline + H2H',
+      penaltyHistory: fd.penaltyModel?.ok ? 'Football-Data verified scored-penalty history' : (fd.penaltyModel?.reason || 'Penalty sample unavailable')
+    };
+    analysis.marketCoverage = {
+      ...(analysis.marketCoverage || {}),
+      granular: {
+        ...(analysis.marketCoverage?.granular || {}),
+        penalties: Boolean(fd.penaltyModel?.ok)
+      }
     };
   }
   return analysis;
 }
 
 async function buildAnalysisCore(home, away) {
-  const base = await buildBaseAnalysis(home, away);
+  let base = await buildBaseAnalysis(home, away);
+  base = await preResolveFixture(base);
   let analysis = await enhanceAnalysis(base);
 
   let apiFootballFallback = { used: false, cacheHits: 0 };
-  if (!analysis.model) {
+  if (!analysis.model || !analysis.fixture?.date) {
     apiFootballFallback = await enrichApiFootballFallback(analysis);
     analysis = apiFootballFallback.analysis;
 
@@ -82,6 +121,18 @@ async function buildAnalysisCore(home, away) {
   analysis = await attachModelContext(analysis);
   analysis = await enrichAvailabilityIntelligence(analysis);
   analysis = finalizeVertexModelV2(analysis);
+
+  if (analysis.penaltyModel?.ok) {
+    analysis.marketCoverage = {
+      ...(analysis.marketCoverage || {}),
+      granular: {
+        ...(analysis.marketCoverage?.granular || {}),
+        penalties: true,
+        penaltySource: analysis.penaltyModel.source,
+        penaltyBasis: analysis.penaltyModel.basis
+      }
+    };
+  }
 
   return {
     analysis,
@@ -105,7 +156,7 @@ module.exports = async function handler(req, res) {
   if (!home || !away || safeKey(home) === safeKey(away)) return res.status(400).json({ error: 'Choose two different teams.' });
 
   try {
-    const analysisKey = `analysis-core:v5:${safeKey(home)}:${safeKey(away)}`;
+    const analysisKey = `analysis-core:v6:${safeKey(home)}:${safeKey(away)}`;
     const cached = await cachedProviderCall({
       cacheKey: analysisKey,
       provider: 'Vertex Analysis Core',
@@ -118,12 +169,7 @@ module.exports = async function handler(req, res) {
     const analysis = cached.payload.analysis;
     const providerMeta = cached.payload.providerMeta || {};
 
-    analysis.input = {
-      home: homeInput,
-      away: awayInput,
-      resolvedHome: home,
-      resolvedAway: away
-    };
+    analysis.input = { home: homeInput, away: awayInput, resolvedHome: home, resolvedAway: away };
     analysis.engine = {
       ...(analysis.engine || {}),
       quotaPolicy: 'open-and-cached-first',
@@ -135,7 +181,9 @@ module.exports = async function handler(req, res) {
       analysisCacheHit: Boolean(cached.cacheHit),
       analysisCacheStale: Boolean(cached.staleHit),
       sharedInflight: Boolean(cached.shared),
-      availabilityIntelligence: true
+      availabilityIntelligence: true,
+      europeanFixtureResolver: true,
+      penaltyHistoryModel: Boolean(analysis.penaltyModel?.ok)
     };
 
     if (!cached.cacheHit && !cached.staleHit) {
