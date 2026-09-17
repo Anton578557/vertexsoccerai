@@ -2,6 +2,7 @@
 
 const { clean, searchTheSportsDbTeams } = require('../lib/football');
 const { localizedSuggestions, searchQuery } = require('../lib/team-aliases');
+const { enforceRateLimit } = require('../lib/rate-limit');
 
 function isYouthOrReserve(value) {
   return /\b(youth|academy|reserve|reserves|u\s?-?\d{2}|under\s?-?\d{2}|primavera|b team|ii)\b/i.test(String(value || ''));
@@ -29,6 +30,7 @@ function mergeTeams(localNames, providerTeams, rawQuery = '') {
 module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+  if (!(await enforceRateLimit(req, res, null, 'team-search', { windowSeconds: 60, limit: 120 }))) return;
 
   const q = clean(req.query?.q, 80);
   if (q.length < 2) return res.status(200).json({ teams: [] });
