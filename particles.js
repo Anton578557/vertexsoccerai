@@ -9,7 +9,8 @@
     'auth-api-runtime-v1.js?v=1',
     'runtime-sync-v1.js?v=2',
     'contact-runtime-v1.js?v=1',
-    'polish-v7.js?v=7'
+    'polish-v7.js?v=7',
+    'polish-v7-hotfix.js?v=1'
   ];
 
   function exists(src) {
