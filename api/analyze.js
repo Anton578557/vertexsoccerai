@@ -5,6 +5,7 @@ const { enhanceAnalysis } = require('../lib/analysis-enhancer');
 const { enhanceGranularAnalysis } = require('../lib/granular-enrichment');
 const { enrichApiFootballFallback } = require('../lib/api-football-fallback');
 const { enrichFootballData } = require('../lib/football-data-enrichment');
+const { enrichAvailabilityIntelligence } = require('../lib/squad-availability');
 const { finalizeVertexModelV2 } = require('../lib/vertex-model-v2');
 const { recordModelEvaluations } = require('../lib/model-evaluation-store');
 const { requireUser } = require('../lib/api-auth');
@@ -79,6 +80,7 @@ async function buildAnalysisCore(home, away) {
 
   analysis = await enhanceGranularAnalysis(analysis);
   analysis = await attachModelContext(analysis);
+  analysis = await enrichAvailabilityIntelligence(analysis);
   analysis = finalizeVertexModelV2(analysis);
 
   return {
@@ -103,7 +105,7 @@ module.exports = async function handler(req, res) {
   if (!home || !away || safeKey(home) === safeKey(away)) return res.status(400).json({ error: 'Choose two different teams.' });
 
   try {
-    const analysisKey = `analysis-core:v4:${safeKey(home)}:${safeKey(away)}`;
+    const analysisKey = `analysis-core:v5:${safeKey(home)}:${safeKey(away)}`;
     const cached = await cachedProviderCall({
       cacheKey: analysisKey,
       provider: 'Vertex Analysis Core',
@@ -132,7 +134,8 @@ module.exports = async function handler(req, res) {
       sharedAnalysisCache: true,
       analysisCacheHit: Boolean(cached.cacheHit),
       analysisCacheStale: Boolean(cached.staleHit),
-      sharedInflight: Boolean(cached.shared)
+      sharedInflight: Boolean(cached.shared),
+      availabilityIntelligence: true
     };
 
     if (!cached.cacheHit && !cached.staleHit) {
