@@ -3,6 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { buildVertexModelV2 } = require('../lib/vertex-model-v2');
+const { buildAvailabilityFromNews, parseDurationDays } = require('../lib/squad-availability');
 
 function baseAnalysis() {
   return {
@@ -71,4 +72,50 @@ test('insufficient samples are withheld rather than invented', () => {
 test('structured squad coverage is not falsely claimed', () => {
   const result = buildVertexModelV2(baseAnalysis());
   assert.equal(result.meta.coverage.structuredInjuriesAndLineups, false);
+});
+
+test('duration parser understands multi-week absences', () => {
+  assert.equal(parseDurationDays('The striker is ruled out for three weeks with a hamstring injury.'), 21);
+});
+
+test('confirmed top-scorer absence still affects a forecast one week ahead', () => {
+  const fixtureDate = new Date(Date.now() + 7 * 864e5).toISOString();
+  const result = buildAvailabilityFromNews({
+    homeName: 'Home FC',
+    awayName: 'Away FC',
+    fixtureDate,
+    news: [{
+      title: 'Home FC striker Alex Star ruled out for three weeks',
+      summary: 'Home FC leading scorer Alex Star will miss the next matches with a hamstring injury.',
+      source: 'Club News',
+      publishedAt: new Date(Date.now() - 12 * 3600e3).toISOString(),
+      teams: ['home']
+    }],
+    scorers: [
+      { name: 'Alex Star', team: 'Home FC', goals: 12 },
+      { name: 'Other Forward', team: 'Home FC', goals: 5 }
+    ]
+  });
+  assert.equal(result.usedSignals, 1);
+  assert.ok(result.home.incrementalAttackPct <= -5);
+  assert.equal(result.home.signals[0].rank, 1);
+});
+
+test('an absence that expires before kickoff is not applied', () => {
+  const fixtureDate = new Date(Date.now() + 7 * 864e5).toISOString();
+  const result = buildAvailabilityFromNews({
+    homeName: 'Home FC',
+    awayName: 'Away FC',
+    fixtureDate,
+    news: [{
+      title: 'Home FC striker Alex Star out for two days',
+      summary: 'Alex Star is sidelined for two days with a minor knock.',
+      source: 'Club News',
+      publishedAt: new Date(Date.now() - 24 * 3600e3).toISOString(),
+      teams: ['home']
+    }],
+    scorers: [{ name: 'Alex Star', team: 'Home FC', goals: 12 }]
+  });
+  assert.equal(result.usedSignals, 0);
+  assert.equal(result.home.incrementalAttackPct, 0);
 });
