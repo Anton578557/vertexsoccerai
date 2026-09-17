@@ -89,6 +89,12 @@
   function apply() {
     const target = document.querySelector('#analysisResult .analysis-card');
     if (!target || !lastAnalysis?.granularModel?.ok) return;
+    // UX v6 renders its own event section (including the new penalty model).
+    // Do not append the legacy granular panel or its old "penalties withheld" note.
+    if (target.classList.contains('v6-analysis-card') || target.querySelector('.v6-event-grid')) {
+      target.querySelector('[data-vertex-granular="1"]')?.remove();
+      return;
+    }
     target.querySelector('[data-vertex-granular="1"]')?.remove();
     const old = target.querySelector('.v4-granular-note');
     if (old) old.classList.add('vertex-granular-replaced');
