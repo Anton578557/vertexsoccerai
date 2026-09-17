@@ -12,7 +12,8 @@
     'polish-v7-hotfix.js?v=1',
     'polish-v8.js?v=8',
     'polish-v8-hotfix.js?v=2',
-    'analyzer-stability-v1.js?v=3'
+    'analyzer-stability-v1.js?v=3',
+    'analyzer-input-cleanup.js?v=1'
   ];
 
   function exists(src) {
