@@ -8,7 +8,8 @@
     'granular-ui-v1.js?v=1',
     'auth-api-runtime-v1.js?v=1',
     'runtime-sync-v1.js?v=2',
-    'contact-runtime-v1.js?v=1'
+    'contact-runtime-v1.js?v=1',
+    'polish-v7.js?v=7'
   ];
 
   function exists(src) {
@@ -60,10 +61,17 @@
   function normalizeMatchSeparator(value) {
     return String(value || '')
       .replace(/\s+(?:против|contra|versus|vs\.?|v\.?)\s+/gi, ' vs ')
-      .replace(/\s+[\-–—]\s+/g, ' vs ')
+      .replace(/\s*[–—]\s*/g, ' vs ')
+      .replace(/(\S)\s*-\s+(\S)/g, '$1 vs $2')
+      .replace(/(\S)\s+-\s*(\S)/g, '$1 vs $2')
       .replace(/\s{2,}/g, ' ')
       .trim();
   }
+
+  document.addEventListener('input', (event) => {
+    const input = event.target.closest?.('#searchInput, #analyzerSearch');
+    if (input) input.value = normalizeMatchSeparator(input.value);
+  }, true);
 
   document.addEventListener('click', (event) => {
     const button = event.target.closest('#btnAnalyze, #btnAnalyzeMatch');
