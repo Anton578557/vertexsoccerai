@@ -6,6 +6,7 @@ const { enhanceGranularAnalysis } = require('../lib/granular-enrichment');
 const { enrichApiFootballFallback } = require('../lib/api-football-fallback');
 const { recordModelEvaluations } = require('../lib/model-evaluation-store');
 const { requireUser } = require('../lib/api-auth');
+const { enforceRateLimit } = require('../lib/rate-limit');
 const { resolveTeamName } = require('../lib/team-aliases');
 
 function clean(value, max = 80) {
@@ -30,6 +31,7 @@ module.exports = async function handler(req, res) {
 
   const user = await requireUser(req, res);
   if (!user) return;
+  if (!(await enforceRateLimit(req, res, user, 'analyze', { windowSeconds: 3600, limit: 30 }))) return;
 
   const { homeInput, awayInput, home, away } = readTeams(req);
   if (!homeInput || !awayInput) return res.status(400).json({ error: 'Enter two team names.' });
@@ -67,7 +69,8 @@ module.exports = async function handler(req, res) {
       quotaPolicy: 'open-and-cached-first',
       apiFootballFallbackUsed: Boolean(apiFootballFallback.used),
       apiFootballCacheHits: Number(apiFootballFallback.cacheHits || 0),
-      authenticated: true
+      authenticated: true,
+      distributedRateLimit: true
     };
 
     // Store only real pre-match model selections that can later be compared
