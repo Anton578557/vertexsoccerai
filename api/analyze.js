@@ -79,9 +79,6 @@ module.exports = async function handler(req, res) {
   if (!home || !away || safeKey(home) === safeKey(away)) return res.status(400).json({ error: 'Choose two different teams.' });
 
   try {
-    // The expensive provider/model layer is shared for five minutes across all
-    // authenticated users asking for the same fixture. This is the main guard
-    // against quota exhaustion when many people analyse a popular match at once.
     const analysisKey = `analysis-core:v3:${safeKey(home)}:${safeKey(away)}`;
     const cached = await cachedProviderCall({
       cacheKey: analysisKey,
@@ -114,8 +111,14 @@ module.exports = async function handler(req, res) {
       sharedInflight: Boolean(cached.shared)
     };
 
-    const evaluationWrite = await recordModelEvaluations(analysis);
-    analysis.engine.modelSnapshotRecorded = Number(evaluationWrite.recorded || 0) > 0;
+    // Model evaluations are fixture-level snapshots, not per-user rows. Only a
+    // newly computed analysis writes them; cache hits simply reuse that snapshot.
+    if (!cached.cacheHit && !cached.staleHit) {
+      const evaluationWrite = await recordModelEvaluations(analysis);
+      analysis.engine.modelSnapshotRecorded = Number(evaluationWrite.recorded || 0) > 0;
+    } else {
+      analysis.engine.modelSnapshotRecorded = Boolean(analysis.model && analysis.fixture?.date);
+    }
 
     return res.status(200).json({ analysis });
   } catch (error) {
