@@ -2,6 +2,7 @@
 
 const { getProviderCache, setProviderCache } = require('../lib/provider-cache');
 const { evaluatePendingModels, performanceSummary } = require('../lib/model-evaluator');
+const { cleanupRuntimeData } = require('../lib/runtime-maintenance');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
@@ -9,15 +10,21 @@ module.exports = async function handler(req, res) {
 
   try {
     let maintenance = { ran: false, evaluated: 0, checkedFixtures: 0 };
-    const lockKey = 'maintenance:model-evaluation:v1';
+    let cleanup = { ran: false, providerCacheDeleted: 0, rateLimitDeleted: 0 };
+    const lockKey = 'maintenance:model-evaluation:v2';
     const lock = await getProviderCache(lockKey);
 
     // Lazy scheduled maintenance: the first Results visit in a four-hour window
-    // verifies any finished predictions; later visitors reuse the cached result.
+    // verifies finished predictions and cleans expired runtime rows. Later
+    // visitors reuse the cached result instead of repeating provider/DB work.
     if (!lock) {
       await setProviderCache(lockKey, 'Vertex Maintenance', { startedAt: new Date().toISOString() }, 4 * 3600);
-      const evaluated = await evaluatePendingModels(120);
+      const [evaluated, cleaned] = await Promise.all([
+        evaluatePendingModels(120),
+        cleanupRuntimeData()
+      ]);
       maintenance = { ran: true, ...evaluated };
+      cleanup = cleaned;
     }
 
     const summary = await performanceSummary();
@@ -25,6 +32,7 @@ module.exports = async function handler(req, res) {
       ok: true,
       summary,
       maintenance,
+      cleanup,
       verifiedOnly: true,
       timestamp: new Date().toISOString()
     });
