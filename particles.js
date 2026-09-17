@@ -11,7 +11,8 @@
     'contact-runtime-v1.js?v=1',
     'polish-v7.js?v=7',
     'polish-v7-hotfix.js?v=1',
-    'polish-v8.js?v=8'
+    'polish-v8.js?v=8',
+    'polish-v8-hotfix.js?v=1'
   ];
 
   function exists(src) {
