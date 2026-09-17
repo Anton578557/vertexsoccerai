@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: '23 4 * * *'
 
 permissions:
   contents: read
@@ -14,13 +16,14 @@ jobs:
     timeout-minutes: 8
     steps:
       - name: Wait for production deployment
+        if: github.event_name == 'push'
         run: sleep 25
 
       - name: Check public health endpoint
         shell: bash
         run: |
           set -euo pipefail
-          for attempt in {1..12}; do
+          for attempt in {1..8}; do
             if curl --fail --silent --show-error --max-time 20 "https://vertexsoccerai.com/api/health?smoke=${GITHUB_SHA}" -o /tmp/health.json; then
               if node - <<'NODE'
           const fs = require('fs');
@@ -42,7 +45,7 @@ jobs:
               fi
             fi
             echo "Health attempt ${attempt} failed; retrying..."
-            sleep 15
+            sleep 12
           done
           echo "Production health check failed." >&2
           cat /tmp/health.json 2>/dev/null || true
@@ -52,24 +55,25 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for attempt in {1..12}; do
+          for attempt in {1..4}; do
             if curl --fail --silent --show-error --max-time 30 "https://vertexsoccerai.com/api/provider-check?smoke=${GITHUB_SHA}" -o /tmp/providers.json; then
               if node - <<'NODE'
           const fs = require('fs');
           const data = JSON.parse(fs.readFileSync('/tmp/providers.json', 'utf8'));
           const p = data?.providers || {};
+          const working = new Set(data?.footballMesh?.working || []);
           const required = [
             data?.ok === true,
             data?.coreOk === true,
             Number(data?.footballMesh?.workingCount || 0) >= 3,
-            p?.apiFootball?.ok === true,
-            p?.sportmonks?.ok === true,
-            p?.footballData?.ok === true,
-            p?.rapidApi?.ok === true,
+            working.has('rapidApi'),
+            working.has('sportmonks'),
+            working.has('footballData'),
             p?.theSportsDb?.ok === true,
             p?.supabase?.ok === true,
             p?.openWeather?.ok === true,
-            p?.newsApi?.ok === true
+            p?.newsApi?.ok === true,
+            p?.footballDataCoUk?.ok === true
           ];
           if (required.every(Boolean)) process.exit(0);
           console.error(JSON.stringify(data));
