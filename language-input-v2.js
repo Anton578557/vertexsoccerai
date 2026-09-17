@@ -23,7 +23,7 @@
       'OBJECTIVE': 'ЦЕЛЬ',
       'EDIT PROFILE': 'ИЗМЕНИТЬ ПРОФИЛЬ',
       'SCAN TODAY': 'СКАНИРОВАТЬ МАТЧИ',
-      'NO CHASING. NO FORCED PICKS.': 'БЕЗ ПОГОНИ. БЕЗ НАТЯНУТЫХ СТАВОК.',
+      'NO CHASING. NO FORCED PICKS.': 'БЕЗ ПОГОНИ. БЕЗ НАТЯНУТЫХ ПРОГНОЗОВ.',
       'Reject matches below 68% data quality.': 'Отклонять матчи с качеством данных ниже 68%.',
       'Pass when recent form or team availability is too weak.': 'Пропускать матч, если форма или данные по составу слишком слабые.',
       'Only use markets supported by the available source data.': 'Использовать только рынки, которые подтверждаются доступными данными.',
@@ -48,7 +48,7 @@
       'OBJECTIVE': 'OBJETIVO',
       'EDIT PROFILE': 'EDITAR PERFIL',
       'SCAN TODAY': 'ESCANEAR PARTIDOS',
-      'NO CHASING. NO FORCED PICKS.': 'SIN PERSEGUIR. SIN FORZAR APUESTAS.',
+      'NO CHASING. NO FORCED PICKS.': 'SIN PERSEGUIR. SIN FORZAR PRONÓSTICOS.',
       'Reject matches below 68% data quality.': 'Descartar partidos con calidad de datos inferior al 68%.',
       'Pass when recent form or team availability is too weak.': 'Pasar cuando la forma reciente o la disponibilidad sea demasiado débil.',
       'Only use markets supported by the available source data.': 'Usar solo mercados respaldados por los datos disponibles.',
@@ -67,7 +67,7 @@
   };
 
   const allBase = new Map();
-  Object.entries(extra).forEach(([lang, table]) => {
+  Object.entries(extra).forEach(([code, table]) => {
     Object.entries(table).forEach(([en, translated]) => {
       allBase.set(en, en);
       allBase.set(translated, en);
@@ -78,6 +78,10 @@
     return window.VertexI18n?.getLanguage?.() || localStorage.getItem('vertex_language') || 'en';
   }
 
+  // This translation helper is intentionally run only on boot and explicit
+  // language changes. The old version watched the entire document and walked
+  // every new analysis node, which became expensive when a large match report
+  // was rendered.
   function translateExtra(root = document.body) {
     if (!root) return;
     const current = lang();
@@ -90,6 +94,7 @@
       const base = allBase.get(trimmed);
       if (!base) continue;
       const next = current === 'en' ? base : (extra[current]?.[base] || base);
+      if (next === trimmed) continue;
       const leading = raw.match(/^\s*/)?.[0] || '';
       const trailing = raw.match(/\s*$/)?.[0] || '';
       node.nodeValue = `${leading}${next}${trailing}`;
@@ -161,8 +166,7 @@
   }, true);
 
   document.addEventListener('keydown', (event) => {
-    if (event.key !== 'Enter') return;
-    normalizeTarget(event.target.closest?.('#searchInput, #analyzerSearch'));
+    if (event.key === 'Enter') normalizeTarget(event.target.closest?.('#searchInput, #analyzerSearch'));
   }, true);
 
   document.addEventListener('click', (event) => {
@@ -173,10 +177,10 @@
 
   document.addEventListener('vertex:languagechange', () => {
     syncLanguageButtons();
-    setTimeout(() => {
+    requestAnimationFrame(() => {
       translateExtra(document.body);
       updateAnalyzerPlaceholder();
-    }, 0);
+    });
   });
 
   function boot() {
@@ -184,18 +188,8 @@
     syncLanguageButtons();
     updateAnalyzerPlaceholder();
     translateExtra(document.body);
-
-    const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        mutation.addedNodes.forEach((node) => {
-          if (node.nodeType === Node.ELEMENT_NODE) translateExtra(node);
-          else if (node.nodeType === Node.TEXT_NODE && node.parentElement) translateExtra(node.parentElement);
-        });
-      }
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
   else boot();
 })();
