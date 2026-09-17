@@ -13,7 +13,7 @@
     'polish-v7-hotfix.js?v=1',
     'polish-v8.js?v=8',
     'polish-v8-hotfix.js?v=2',
-    'analyzer-stability-v1.js?v=1'
+    'analyzer-stability-v1.js?v=2'
   ];
 
   function exists(src) {
