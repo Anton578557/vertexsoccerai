@@ -270,6 +270,7 @@
     }
     rememberAnalysis(analysis);
     idlePersist(analysis);
+    document.dispatchEvent(new CustomEvent('vertex:analysis-rendered', { detail: { analysis } }));
   }
 
   async function saveCurrent() {
