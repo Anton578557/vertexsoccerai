@@ -427,8 +427,17 @@
     try {
       const data = await fetchJson(`/api/analyze?home=${encodeURIComponent(home)}&away=${encodeURIComponent(away)}`);
       lastAnalysis = data.analysis;
-      target.innerHTML = renderAnalysis(data.analysis);
-      rememberAnalysis(data.analysis);
+
+      // Render the analysis exactly once. UX7 owns the production report UI.
+      // The legacy renderer remains only as a defensive fallback if UX7 failed to load.
+      if (window.VertexAnalysisUI?.acceptAnalysis) {
+        window.VertexAnalysisUI.acceptAnalysis(data.analysis);
+      } else {
+        document.dispatchEvent(new CustomEvent('vertex:analysis-ready', { detail: { analysis: data.analysis } }));
+        if (!target.querySelector('.v6-analysis-card')) target.innerHTML = renderAnalysis(data.analysis);
+        rememberAnalysis(data.analysis);
+      }
+
       incrementActivity();
     } catch (error) {
       target.innerHTML = `<div class="analysis-error"><strong>ANALYSIS UNAVAILABLE</strong><p>${escapeHtml(error.message)}</p></div>`;
