@@ -59,7 +59,7 @@
   // Run only on explicit lifecycle events. The old MutationObservers rewrote
   // textContent while observing childList changes, which could create a
   // self-triggering mutation loop and freeze Chromium on large analysis reports.
-  document.addEventListener('vertex:analysis-ready', () => {
+  document.addEventListener('vertex:analysis-rendered', () => {
     requestAnimationFrame(() => localizeAnalysisDetails(document.getElementById('analysisResult') || document));
   });
 
