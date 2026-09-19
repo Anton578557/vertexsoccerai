@@ -36,7 +36,6 @@
                 <a href="#" data-tab="home" class="active">Home</a>
                 <a href="#" data-tab="analyzer" data-protected="true">Match Analyzer</a>
                 <a href="#" data-tab="strategy" data-protected="true">My Strategy</a>
-                <a href="#" data-tab="live" data-protected="true">Live</a>
                 <a href="#" data-tab="results" data-protected="true">Results</a>
                 <a href="#" data-tab="leaderboard" data-protected="true">Leaderboard</a>
                 <a href="#" data-tab="reviews" data-protected="true">Reviews</a>
@@ -53,7 +52,7 @@
         <section id="tab-home" class="tab-content active">
             <div class="container home-container">
                 <div class="hero">
-                    <div class="eyebrow"><span class="status-dot"></span> FREE BETA · FOOTBALL INTELLIGENCE</div>
+                    <div class="eyebrow"><span class="status-dot"></span> FOOTBALL INTELLIGENCE</div>
                     <h1 class="hero-title">VERTEX <span class="hero-accent">SOCCER AI</span></h1>
                     <p class="hero-slogan">Where AI Meets Football</p>
                     <p class="hero-sub">Real match data. Context-aware modelling. Transparent confidence.</p>
@@ -69,7 +68,7 @@
                     <div class="stat-item"><div class="stat-number">MULTI</div><div class="stat-label">Source Engine</div></div>
                     <div class="stat-item"><div class="stat-number">CONTEXT</div><div class="stat-label">News + Weather</div></div>
                     <div class="stat-item"><div class="stat-number">QUALITY</div><div class="stat-label">Confidence Layer</div></div>
-                    <div class="stat-item"><div class="stat-number">FREE</div><div class="stat-label">Beta Access</div></div>
+                    <div class="stat-item"><div class="stat-number">24/7</div><div class="stat-label">Analysis Engine</div></div>
                 </div>
 
                 <div class="home-value-grid">
@@ -106,14 +105,6 @@
                         <div class="pipeline-step"><span>02</span><strong>Context</strong><small>Form, venue, weather, news, availability</small></div>
                         <div class="pipeline-step"><span>03</span><strong>Model</strong><small>Statistical probabilities and scenario scoring</small></div>
                         <div class="pipeline-step"><span>04</span><strong>Verdict</strong><small>Confidence, data quality and transparent reasoning</small></div>
-                    </div>
-                    <div class="source-strip">
-                        <span>DATA LAYER</span>
-                        <strong>RapidAPI</strong>
-                        <strong>Football-Data</strong>
-                        <strong>TheSportsDB</strong>
-                        <strong>OpenWeather</strong>
-                        <strong>News</strong>
                     </div>
                 </div>
             </div>
@@ -157,7 +148,7 @@
                 </div>
                 <div id="strategyContent">
                     <div class="trainer-card strategy-intro">
-                        <div class="eyebrow"><span class="status-dot"></span> FREE BETA</div>
+                        <div class="eyebrow"><span class="status-dot"></span> VERTEX STRATEGY</div>
                         <h3>Build your Vertex profile</h3>
                         <p class="strategy-copy">Set your risk profile, experience, preferred competitions and markets. Vertex turns that into rules for which matches to consider — and which ones to reject.</p>
                         <ul class="trainer-features">
@@ -168,23 +159,6 @@
                         </ul>
                         <button class="btn-primary" id="btnTryStrategy" type="button">SET UP MY PROFILE</button>
                     </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="tab-live" class="tab-content">
-            <div class="container section-shell">
-                <div class="section-heading inline-heading">
-                    <div>
-                        <span class="kicker">MATCH CENTER</span>
-                        <h2 class="section-title">Live</h2>
-                        <p class="section-subtitle">Current matches from the connected live-data provider.</p>
-                    </div>
-                    <button class="btn-secondary" id="btnRefreshLive" type="button">REFRESH</button>
-                </div>
-                <div id="liveStatus" class="data-status"></div>
-                <div id="liveMatches" class="live-grid">
-                    <div class="empty-state"><div class="empty-icon">●</div><h3>Live center ready</h3><p>Open this tab to load current matches.</p></div>
                 </div>
             </div>
         </section>
@@ -279,12 +253,13 @@
         <div class="container footer-inner">
             <div>
                 <strong>VERTEX SOCCER AI</strong>
-                <span>Football Intelligence Engine · Free Beta</span>
+                <span>Football Intelligence Engine</span>
             </div>
             <div class="footer-links">
                 <a href="#" id="linkAbout">About</a>
                 <a href="#" id="linkTerms">Terms</a>
                 <a href="#" id="linkPrivacy">Privacy</a>
+                <a href="#" id="linkResponsible">Responsible use</a>
             </div>
             <p>© <span id="footerYear">2026</span> Vertex Soccer AI. 18+ · Analysis is not a guarantee of results.</p>
         </div>
@@ -296,9 +271,9 @@
 
     <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
-    <script defer src="i18n.js"></script>
-    <script defer src="analysis-ui-v4.js?v=8"></script>
-    <script defer src="script.js?v=10"></script>
-    <script defer src="particles.js?v=11"></script>
+    <script defer src="i18n.js?v=2"></script>
+    <script defer src="analysis-ui-v4.js?v=9"></script>
+    <script defer src="script.js?v=11"></script>
+    <script defer src="particles.js?v=12"></script>
 </body>
 </html>
