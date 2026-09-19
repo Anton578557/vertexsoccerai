@@ -19,6 +19,7 @@
   let db = null;
   let lastAnalysis = null;
   let cabinetOpen = false;
+  let lastPersistFingerprint = '';
 
   const esc = (value) => String(value ?? '').replace(/[&<>'"]/g, (ch) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
@@ -269,6 +270,7 @@
   async function persistAnalysis(analysis) {
     const client = getDb();
     if (!client || !analysis?.teams?.home?.name || !analysis?.teams?.away?.name) return;
+    if (Number(analysis?.dataQuality || 0) <= 0) return;
     try {
       const session = (await client.auth.getSession()).data?.session;
       if (!session?.user) return;
@@ -291,7 +293,16 @@
     else setTimeout(run, 400);
   }
 
-  function acceptAnalysis(analysis) {
+  function analysisFingerprint(analysis) {
+    return [
+      analysis?.generatedAt || '',
+      analysis?.teams?.home?.name || '',
+      analysis?.teams?.away?.name || '',
+      analysis?.fixture?.date || ''
+    ].join('|');
+  }
+
+  function acceptAnalysis(analysis, options = {}) {
     if (!analysis?.teams?.home?.name || !analysis?.teams?.away?.name) return;
     lastAnalysis = analysis;
     const target = document.getElementById('analysisResult');
@@ -299,8 +310,18 @@
       target.innerHTML = renderAnalysis(analysis);
       target.dataset.vertexV7Key = `${analysis.generatedAt || Date.now()}-${lang()}`;
     }
-    rememberAnalysis(analysis);
-    idlePersist(analysis);
+
+    const fingerprint = analysisFingerprint(analysis);
+    const shouldPersist = options.persist !== false
+      && Number(analysis?.dataQuality || 0) > 0
+      && fingerprint !== lastPersistFingerprint;
+
+    if (shouldPersist) {
+      lastPersistFingerprint = fingerprint;
+      rememberAnalysis(analysis);
+      idlePersist(analysis);
+    }
+
     document.dispatchEvent(new CustomEvent('vertex:analysis-rendered', { detail: { analysis } }));
   }
 
@@ -378,7 +399,7 @@
   }, true);
 
   document.addEventListener('vertex:languagechange', () => {
-    if (lastAnalysis) acceptAnalysis(lastAnalysis);
+    if (lastAnalysis) acceptAnalysis(lastAnalysis, { persist: false });
     if (cabinetOpen) openCabinet();
   });
 
