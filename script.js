@@ -56,7 +56,8 @@
   function showToast(message, ms = 3400) {
     const toast = byId('toast');
     if (!toast) return;
-    toast.textContent = message;
+    const localized = window.VertexI18n?.t ? window.VertexI18n.t(message) : message;
+    toast.textContent = localized;
     toast.classList.remove('hidden');
     clearTimeout(showToast.timer);
     showToast.timer = setTimeout(() => toast.classList.add('hidden'), ms);
@@ -67,6 +68,7 @@
     const content = byId('modalContent');
     if (!overlay || !content) return;
     content.innerHTML = html;
+    window.VertexI18n?.apply?.(content);
     overlay.classList.remove('hidden');
     requestAnimationFrame(() => content.querySelector('input, button, select, textarea')?.focus());
   }
@@ -104,7 +106,6 @@
     if (history.replaceState) history.replaceState(null, '', tabId === 'home' ? '#/' : `#/${tabId}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    if (tabId === 'live' && !liveLoaded) loadLiveMatches();
     if (tabId === 'leaderboard') loadLeaderboard();
     if (tabId === 'reviews') loadReviews();
     if (tabId === 'results') loadPerformance();
@@ -114,9 +115,9 @@
 
   function showAccessModal(targetTab = 'analyzer') {
     openModal(`
-      <span class="kicker">FREE BETA ACCESS</span>
+      <span class="kicker">VERTEX ACCESS</span>
       <h2>Sign in to unlock Vertex</h2>
-      <p class="modal-copy">Match Analyzer, My Strategy, Live, Results and your saved history are available to registered beta users.</p>
+      <p class="modal-copy">Match Analyzer, My Strategy, Results and your saved history are available to registered users.</p>
       <button data-modal-action="signup" data-target-tab="${escapeHtml(targetTab)}">CREATE FREE ACCOUNT</button>
       <button class="btn-close-modal" data-modal-action="login" data-target-tab="${escapeHtml(targetTab)}">SIGN IN</button>
       <button class="btn-close-modal" data-modal-action="close">CLOSE</button>
@@ -125,7 +126,7 @@
 
   function showSignupModal(targetTab = '') {
     openModal(`
-      <span class="kicker">VERTEX FREE BETA</span>
+      <span class="kicker">VERTEX ACCOUNT</span>
       <h2>Create your account</h2>
       <p class="modal-copy">No payment details. Create an account to unlock the football intelligence tools.</p>
       <input type="email" id="signupEmail" placeholder="Email" autocomplete="email">
@@ -321,6 +322,32 @@
     if (byId('analyzerSearch')) byId('analyzerSearch').value = value;
   }
 
+  let analysisUiPromise = null;
+  function ensureAnalysisUi() {
+    if (window.VertexAnalysisUI?.acceptAnalysis) return Promise.resolve(true);
+    if (analysisUiPromise) return analysisUiPromise;
+    analysisUiPromise = new Promise((resolve) => {
+      const existing = document.querySelector('script[src^="analysis-ui-v4.js"]');
+      if (existing) {
+        const started = Date.now();
+        const wait = () => {
+          if (window.VertexAnalysisUI?.acceptAnalysis) return resolve(true);
+          if (Date.now() - started > 2500) return resolve(false);
+          setTimeout(wait, 40);
+        };
+        wait();
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'analysis-ui-v4.js?v=9';
+      script.async = false;
+      script.onload = () => resolve(Boolean(window.VertexAnalysisUI?.acceptAnalysis));
+      script.onerror = () => resolve(false);
+      document.head.appendChild(script);
+    }).finally(() => { analysisUiPromise = null; });
+    return analysisUiPromise;
+  }
+
   function startHomeAnalysis() {
     if (!currentUser) return showAccessModal('analyzer');
     const parsed = parseMatchInput(byId('searchInput')?.value);
@@ -423,6 +450,7 @@
   async function performAnalysis(home, away) {
     const target = byId('analysisResult');
     if (!target) return;
+    await ensureAnalysisUi();
     target.innerHTML = '<div class="loading-state">Collecting match data and calculating the Vertex model…</div>';
     try {
       const data = await fetchJson(`/api/analyze?home=${encodeURIComponent(home)}&away=${encodeURIComponent(away)}`);
@@ -781,8 +809,11 @@
     try {
       if (byId('footerYear')) byId('footerYear').textContent = new Date().getFullYear();
       bindEvents();
-      bindSearch('searchInput', 'suggestions', startHomeAnalysis);
-      bindSearch('analyzerSearch', 'analyzerSuggestions', startAnalyzerAnalysis);
+      on('analyzerSearch', 'keydown', (event) => {
+        if (event.key !== 'Enter') return;
+        event.preventDefault();
+        startAnalyzerAnalysis();
+      });
       await initAuth();
       const initialTab = tabFromHash();
       activateTab(initialTab, { bypassAuth: initialTab === 'home' || !isProtected(initialTab) });
