@@ -60,6 +60,7 @@ async function preResolveFixture(base) {
 
 async function attachModelContext(analysis) {
   if (!analysis?.teams?.home?.name || !analysis?.teams?.away?.name) return analysis;
+  if (analysis?.advanced?.home && analysis?.advanced?.away && analysis?.leagueContext) return analysis;
   const fd = await enrichFootballData(
     analysis.teams.home.name,
     analysis.teams.away.name,
