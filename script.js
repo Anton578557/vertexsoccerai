@@ -157,7 +157,8 @@
     }
 
     try {
-      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      supabaseClient = window.__vertexSupabaseClient || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      window.__vertexSupabaseClient = supabaseClient;
       const { data, error } = await supabaseClient.auth.getSession();
       if (error) throw error;
       currentUser = data?.session?.user || null;
