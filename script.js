@@ -536,7 +536,7 @@
     if (!profile) {
       target.innerHTML = `
         <div class="trainer-card strategy-intro">
-          <span class="kicker">FREE BETA</span>
+          <span class="kicker">VERTEX STRATEGY</span>
           <h3>Build your Vertex profile</h3>
           <p class="strategy-copy">Set your experience, risk profile and preferred markets. Vertex uses these rules to decide when a match deserves attention and when PASS is the better decision.</p>
           <ul class="trainer-features"><li>Personal risk framework</li><li>Preferred market filters</li><li>Data-quality threshold</li><li>PASS / WATCH / FIT decision logic</li></ul>
@@ -626,11 +626,33 @@
     }
   }
 
-  function loadPerformance() {
-    byId('perfEvaluated') && (byId('perfEvaluated').textContent = '0');
-    byId('perfCorrect') && (byId('perfCorrect').textContent = '0');
-    byId('perfAccuracy') && (byId('perfAccuracy').textContent = '—');
-    byId('perfQuality') && (byId('perfQuality').textContent = '—');
+  async function loadPerformance() {
+    const evaluated = byId('perfEvaluated');
+    const correct = byId('perfCorrect');
+    const accuracy = byId('perfAccuracy');
+    const quality = byId('perfQuality');
+    if (!evaluated || !correct || !accuracy || !quality) return;
+
+    evaluated.textContent = '…';
+    correct.textContent = '…';
+    accuracy.textContent = '…';
+    quality.textContent = '…';
+
+    try {
+      const data = await fetchJson('/api/results');
+      const summary = data?.summary || {};
+      const count = Number(summary.evaluated || 0);
+      evaluated.textContent = String(count);
+      correct.textContent = String(Number(summary.correct || 0));
+      accuracy.textContent = count && Number.isFinite(Number(summary.accuracy)) ? `${Math.round(Number(summary.accuracy))}%` : '—';
+      quality.textContent = Number.isFinite(Number(summary.averageDataQuality)) ? `${Math.round(Number(summary.averageDataQuality))}%` : '—';
+    } catch (error) {
+      evaluated.textContent = '—';
+      correct.textContent = '—';
+      accuracy.textContent = '—';
+      quality.textContent = '—';
+      console.warn('[Vertex] results:', error?.message || error);
+    }
   }
 
   async function incrementActivity() {
@@ -667,7 +689,7 @@
     try {
       const { data, error } = await supabaseClient.from('reviews').select('*').order('created_at', { ascending: false }).limit(50);
       if (error) throw error;
-      list.innerHTML = data?.length ? data.map((review) => `<div class="result-row review-row"><div><strong class="review-stars">${'★'.repeat(clamp(Number(review.rating || 0), 0, 5))}</strong><p>${escapeHtml(review.review_text || '')}</p></div><small>${escapeHtml(fmtDate(review.created_at))}</small></div>`).join('') : '<div class="empty-state"><p>No reviews yet. Be the first beta user to leave one.</p></div>';
+      list.innerHTML = data?.length ? data.map((review) => `<div class="result-row review-row"><div><strong class="review-stars">${'★'.repeat(clamp(Number(review.rating || 0), 0, 5))}</strong><p>${escapeHtml(review.review_text || '')}</p></div><small>${escapeHtml(fmtDate(review.created_at))}</small></div>`).join('') : '<div class="empty-state"><p>No reviews yet. Be the first Vertex user to leave one.</p></div>';
     } catch (error) {
       list.innerHTML = `<div class="analysis-error"><p>${escapeHtml(error.message)}</p></div>`;
     }
