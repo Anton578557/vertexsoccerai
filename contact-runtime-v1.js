@@ -14,6 +14,30 @@
 
   ensureStylesheet('contact-runtime-v1.css');
 
+  const copy = {
+    en: { name: 'Name', namePh: 'Your name', email: 'Email', message: 'Message', messagePh: 'Describe the issue, match or question…', send: 'SEND MESSAGE', sending: 'SENDING…', invalid: 'Enter your name, a valid email and a message.', invalidToast: 'Please complete the contact form.', sendingStatus: 'Sending securely through Vertex…', sent: 'Message sent. We will reply by email.', sentToast: 'Message sent successfully.', failed: 'Message delivery failed. Please try again.' },
+    ru: { name: 'Имя', namePh: 'Ваше имя', email: 'Email', message: 'Сообщение', messagePh: 'Опишите проблему, матч или вопрос…', send: 'ОТПРАВИТЬ СООБЩЕНИЕ', sending: 'ОТПРАВЛЯЕМ…', invalid: 'Укажите имя, корректный email и сообщение.', invalidToast: 'Заполните форму обратной связи.', sendingStatus: 'Безопасно отправляем сообщение через Vertex…', sent: 'Сообщение отправлено. Мы ответим по email.', sentToast: 'Сообщение успешно отправлено.', failed: 'Не удалось отправить сообщение. Попробуйте позже.' },
+    es: { name: 'Nombre', namePh: 'Tu nombre', email: 'Email', message: 'Mensaje', messagePh: 'Describe el problema, partido o pregunta…', send: 'ENVIAR MENSAJE', sending: 'ENVIANDO…', invalid: 'Introduce tu nombre, un email válido y un mensaje.', invalidToast: 'Completa el formulario de contacto.', sendingStatus: 'Enviando de forma segura a través de Vertex…', sent: 'Mensaje enviado. Responderemos por email.', sentToast: 'Mensaje enviado correctamente.', failed: 'No se pudo enviar el mensaje. Inténtalo más tarde.' }
+  };
+  const lang = () => window.VertexI18n?.getLanguage?.() || localStorage.getItem('vertex_language') || 'en';
+  const t = () => copy[lang()] || copy.en;
+
+  function localizeForm() {
+    const form = document.getElementById('vertexContactForm');
+    if (!form) return;
+    const text = t();
+    const labels = form.querySelectorAll('label > span');
+    if (labels[0]) labels[0].textContent = text.name;
+    if (labels[1]) labels[1].textContent = text.email;
+    if (labels[2]) labels[2].textContent = text.message;
+    const name = form.querySelector('#contactName');
+    const message = form.querySelector('#contactMessage');
+    const button = form.querySelector('#contactSubmit');
+    if (name) name.placeholder = text.namePh;
+    if (message) message.placeholder = text.messagePh;
+    if (button && !button.disabled) button.textContent = text.send;
+  }
+
   function toast(message, ms = 3600) {
     const el = document.getElementById('toast');
     if (!el) return;
@@ -57,6 +81,7 @@
     container.appendChild(shell);
 
     shell.querySelector('#vertexContactForm')?.addEventListener('submit', submitContact);
+    localizeForm();
   }
 
   async function submitContact(event) {
@@ -69,17 +94,17 @@
     const message = form.querySelector('#contactMessage')?.value.trim() || '';
 
     if (!name || !/^\S+@\S+\.\S+$/.test(email) || message.length < 5) {
-      if (status) status.textContent = 'Enter your name, a valid email and a message.';
-      toast('Please complete the contact form.');
+      if (status) status.textContent = t().invalid;
+      toast(t().invalidToast);
       return;
     }
 
-    const original = button?.textContent || 'SEND MESSAGE';
+    const original = button?.textContent || t().send;
     if (button) {
       button.disabled = true;
-      button.textContent = 'SENDING…';
+      button.textContent = t().sending;
     }
-    if (status) status.textContent = 'Sending securely through Vertex…';
+    if (status) status.textContent = t().sendingStatus;
 
     try {
       const response = await fetch('/api/contact', {
@@ -91,11 +116,11 @@
       if (!response.ok) throw new Error(data?.error || `Request failed (${response.status})`);
 
       form.reset();
-      if (status) status.textContent = 'Message sent. We will reply by email.';
-      toast('Message sent successfully.');
+      if (status) status.textContent = t().sent;
+      toast(t().sentToast);
     } catch (error) {
-      if (status) status.textContent = error?.message || 'Message delivery failed. Please try again.';
-      toast('Message delivery failed. Please try again.', 5000);
+      if (status) status.textContent = error?.message || t().failed;
+      toast(t().failed, 5000);
     } finally {
       if (button) {
         button.disabled = false;
@@ -106,12 +131,10 @@
 
   function boot() {
     buildForm();
-    const target = document.getElementById('tab-contact');
-    if (target) {
-      new MutationObserver(buildForm).observe(target, { childList: true, subtree: true });
-    }
+    localizeForm();
   }
 
+  document.addEventListener('vertex:languagechange', localizeForm);
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
   else boot();
 })();
