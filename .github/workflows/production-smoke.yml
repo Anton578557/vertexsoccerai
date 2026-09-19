@@ -51,6 +51,35 @@ jobs:
           cat /tmp/health.json 2>/dev/null || true
           exit 1
 
+      - name: Check production shell and API boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --max-time 20 "https://vertexsoccerai.com/?smoke=${GITHUB_SHA}" -o /tmp/site.html
+          grep -q 'analyzer-stability-v1.js?v=5' /tmp/site.html
+          if grep -q 'data-tab="live"' /tmp/site.html; then
+            echo 'Deprecated Live tab is visible in production.' >&2
+            exit 1
+          fi
+
+          curl --fail --silent --show-error --max-time 20 "https://vertexsoccerai.com/api/results?smoke=${GITHUB_SHA}" -o /tmp/results.json
+          node - <<'NODE'
+          const fs = require('fs');
+          const data = JSON.parse(fs.readFileSync('/tmp/results.json', 'utf8'));
+          if (!data || typeof data !== 'object' || !data.summary || typeof data.summary !== 'object') {
+            console.error(JSON.stringify(data));
+            process.exit(1);
+          }
+          NODE
+
+          status="$(curl --silent --output /tmp/analyze-auth.json --write-out '%{http_code}' --max-time 20 \
+            'https://vertexsoccerai.com/api/analyze?home=Arsenal&away=Chelsea')"
+          if [ "$status" != "401" ] && [ "$status" != "403" ]; then
+            echo "Analyzer auth boundary returned HTTP $status" >&2
+            cat /tmp/analyze-auth.json 2>/dev/null || true
+            exit 1
+          fi
+
       - name: Check provider mesh
         shell: bash
         run: |
