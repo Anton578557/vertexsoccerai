@@ -5,11 +5,8 @@
   window.__vertexAnalyzerStabilityV1 = true;
 
   let busy = false;
-  let activeController = null;
-  let activeFetch = null;
   let stageTimer = null;
   let stageIndex = 0;
-  const nativeFetch = window.fetch.bind(window);
 
   const copy = {
     en: {
@@ -194,37 +191,23 @@
     document.head.appendChild(style);
   }
 
-  window.fetch = async (input, init = {}) => {
-    if (!isAnalyzeRequest(input)) return nativeFetch(input, init);
-
-    // If legacy UI layers accidentally trigger the analyzer twice, reuse the
-    // same network request instead of aborting the first one or hitting the API again.
-    if (activeFetch) {
-      const response = await activeFetch;
-      return response.clone();
-    }
-
-    // The base UI uses a 15 second AbortSignal. A full multi-provider analysis
-    // can legitimately take longer, so analyzer requests receive their own
-    // bounded timeout instead of being cancelled prematurely.
-    const controller = new AbortController();
-    activeController = controller;
-    const timer = setTimeout(() => controller.abort(), 38000);
-    setBusy(true);
-
-    const request = nativeFetch(input, { ...init, signal: controller.signal });
-    activeFetch = request;
-
-    try {
-      const response = await request;
-      return response.clone();
-    } finally {
-      clearTimeout(timer);
-      if (activeController === controller) activeController = null;
-      if (activeFetch === request) activeFetch = null;
+  // Analysis networking is owned by script.js. Keeping the busy lifecycle
+  // outside window.fetch prevents nested fetch wrappers, response cloning and
+  // premature unlocks while JSON parsing / report rendering is still running.
+  window.VertexAnalyzerState = Object.freeze({
+    begin() {
+      if (busy) return false;
+      setBusy(true);
+      return true;
+    },
+    end() {
+      if (!busy) return;
       setBusy(false);
+    },
+    isBusy() {
+      return busy;
     }
-  };
+  });
 
   // Block accidental repeat clicks and Enter presses while one analysis is running.
   document.addEventListener('click', (event) => {
