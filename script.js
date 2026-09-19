@@ -187,7 +187,7 @@
     if (!supabaseClient) return showToast('Authentication service is unavailable.');
 
     try {
-      const { data, error } = await supabaseClient.auth.signUp({ email, password });
+      const { data, error } = await supabaseClient.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/` } });
       if (error) throw error;
       closeModal();
       if (data?.session) {
@@ -231,11 +231,17 @@
     showToast('Signed out.');
   }
 
-  async function fetchJson(url, options = {}) {
+  async function fetchJson(url, options = {}, timeoutMs = 15000) {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 15000);
+    const externalSignal = options?.signal;
+    const forwardAbort = () => controller.abort();
+    if (externalSignal?.aborted) controller.abort();
+    else externalSignal?.addEventListener?.('abort', forwardAbort, { once: true });
+
+    const timer = setTimeout(() => controller.abort(), Math.max(1000, Number(timeoutMs) || 15000));
+    const { signal: _ignoredSignal, ...fetchOptions } = options || {};
     try {
-      const response = await fetch(url, { ...options, signal: controller.signal });
+      const response = await fetch(url, { ...fetchOptions, signal: controller.signal });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
         const error = new Error(data?.error || `Request failed (${response.status})`);
@@ -244,8 +250,16 @@
         throw error;
       }
       return data;
+    } catch (error) {
+      if (error?.name === 'AbortError') {
+        const timeoutError = new Error('Analysis took too long. Please try again — the request was stopped safely.');
+        timeoutError.code = 'REQUEST_TIMEOUT';
+        throw timeoutError;
+      }
+      throw error;
     } finally {
       clearTimeout(timer);
+      externalSignal?.removeEventListener?.('abort', forwardAbort);
     }
   }
 
@@ -324,6 +338,7 @@
   }
 
   let analysisUiPromise = null;
+  let analysisInFlight = null;
   function ensureAnalysisUi() {
     if (window.VertexAnalysisUI?.acceptAnalysis) return Promise.resolve(true);
     if (analysisUiPromise) return analysisUiPromise;
@@ -451,26 +466,56 @@
   async function performAnalysis(home, away) {
     const target = byId('analysisResult');
     if (!target) return;
-    await ensureAnalysisUi();
-    target.innerHTML = '<div class="loading-state">Collecting match data and calculating the Vertex model…</div>';
-    try {
-      const data = await fetchJson(`/api/analyze?home=${encodeURIComponent(home)}&away=${encodeURIComponent(away)}`);
-      lastAnalysis = data.analysis;
+    if (analysisInFlight) return analysisInFlight;
 
-      // Render the analysis exactly once. UX7 owns the production report UI.
-      // The legacy renderer remains only as a defensive fallback if UX7 failed to load.
-      if (window.VertexAnalysisUI?.acceptAnalysis) {
-        window.VertexAnalysisUI.acceptAnalysis(data.analysis);
-      } else {
-        document.dispatchEvent(new CustomEvent('vertex:analysis-ready', { detail: { analysis: data.analysis } }));
-        if (!target.querySelector('.v6-analysis-card')) target.innerHTML = renderAnalysis(data.analysis);
-        rememberAnalysis(data.analysis);
+    const state = window.VertexAnalyzerState;
+    if (state?.isBusy?.()) return;
+
+    analysisInFlight = (async () => {
+      const began = state?.begin?.() ?? true;
+      if (!began) return;
+
+      try {
+        const uiReady = await ensureAnalysisUi();
+        if (!state) target.innerHTML = '<div class="loading-state">Collecting match data and calculating the Vertex model…</div>';
+
+        // Vercel Fluid Compute allows the server enough time for cold provider calls.
+        // Keep a client-side upper bound so a broken upstream can never leave the UI stuck.
+        const data = await fetchJson(
+          `/api/analyze?home=${encodeURIComponent(home)}&away=${encodeURIComponent(away)}`,
+          {},
+          55000
+        );
+        if (!data?.analysis) throw new Error('Analysis providers did not return a usable result.');
+
+        lastAnalysis = data.analysis;
+
+        // Production has one report renderer. Avoid dispatching a second render
+        // when UX7 is already present.
+        if (uiReady && window.VertexAnalysisUI?.acceptAnalysis) {
+          window.VertexAnalysisUI.acceptAnalysis(data.analysis);
+        } else {
+          target.innerHTML = renderAnalysis(data.analysis);
+          rememberAnalysis(data.analysis);
+        }
+
+        // Activity is non-critical. Do not block rendering on this write.
+        incrementActivity();
+
+        // Give Chromium a paint opportunity before re-enabling particles/buttons.
+        await new Promise((resolve) => requestAnimationFrame(() => resolve()));
+      } catch (error) {
+        const message = error?.message || 'Analysis failed.';
+        target.innerHTML = `<div class="analysis-error"><strong>ANALYSIS UNAVAILABLE</strong><p>${escapeHtml(message)}</p></div>`;
+      } finally {
+        await new Promise((resolve) => requestAnimationFrame(() => resolve()));
+        state?.end?.();
       }
+    })().finally(() => {
+      analysisInFlight = null;
+    });
 
-      incrementActivity();
-    } catch (error) {
-      target.innerHTML = `<div class="analysis-error"><strong>ANALYSIS UNAVAILABLE</strong><p>${escapeHtml(error.message)}</p></div>`;
-    }
+    return analysisInFlight;
   }
 
   function analysisKey(analysis) {
