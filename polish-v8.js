@@ -424,17 +424,11 @@
 
   function bindWindowInterceptors() {
     window.addEventListener('click', (event) => {
-      const cabinet = event.target.closest?.('#btnCabinet');
-      if (cabinet) {
-        event.preventDefault(); event.stopImmediatePropagation();
-        renderFastCabinet();
-        return;
-      }
       const link = event.target.closest?.('#linkAbout, #linkTerms, #linkPrivacy, #linkResponsible');
-      if (link) {
-        event.preventDefault(); event.stopImmediatePropagation();
-        openLegal(link.id === 'linkAbout' ? 'about' : link.id === 'linkTerms' ? 'terms' : link.id === 'linkPrivacy' ? 'privacy' : 'responsible');
-      }
+      if (!link) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      openLegal(link.id === 'linkAbout' ? 'about' : link.id === 'linkTerms' ? 'terms' : link.id === 'linkPrivacy' ? 'privacy' : 'responsible');
     }, true);
   }
 
@@ -457,8 +451,9 @@
 
   document.addEventListener('vertex:languagechange', () => {
     setTimeout(() => {
-      renderStrategyProfile(); localizeStrategyScan(); removeBetaAndPolishFooter();
-      if (cabinetSection?.classList.contains('active')) renderFastCabinet();
+      renderStrategyProfile();
+      localizeStrategyScan();
+      removeBetaAndPolishFooter();
     }, 0);
   });
 
@@ -468,16 +463,10 @@
     renderStrategyProfile();
     localizeStrategyScan();
     removeBetaAndPolishFooter();
-
-    const strategy = document.getElementById('strategyContent');
-    if (strategy) {
-      let raf = 0;
-      new MutationObserver(() => {
-        cancelAnimationFrame(raf);
-        raf = requestAnimationFrame(() => { renderStrategyProfile(); localizeStrategyScan(); });
-      }).observe(strategy, { childList: true, subtree: true });
-    }
-    setTimeout(() => { renderStrategyProfile(); removeBetaAndPolishFooter(); }, 350);
+    // Strategy is refreshed only by explicit navigation/form/language events.
+    // Avoid subtree MutationObservers: they can recursively react to their own
+    // rendering work and add unnecessary main-thread pressure.
+    setTimeout(() => { renderStrategyProfile(); removeBetaAndPolishFooter(); }, 120);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
