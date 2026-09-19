@@ -89,10 +89,12 @@
 
   function getDb() {
     if (window.__vertexApiAuthClient) return window.__vertexApiAuthClient;
+    if (window.__vertexSupabaseClient) return window.__vertexSupabaseClient;
     if (db) return db;
     if (!window.supabase?.createClient) return null;
     try {
-      db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: false, detectSessionInUrl: false } });
+      db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+      window.__vertexSupabaseClient = db;
       return db;
     } catch (_) { return null; }
   }
@@ -114,10 +116,20 @@
     toast.timer = setTimeout(() => node.classList.add('hidden'), ms);
   }
 
+  function resultLabel(result) {
+    const code = String(result || '').toUpperCase();
+    const map = {
+      ru: { W: 'В', D: 'Н', L: 'П' },
+      es: { W: 'G', D: 'E', L: 'P' },
+      en: { W: 'W', D: 'D', L: 'L' }
+    };
+    return map[lang()]?.[code] || code;
+  }
+
   function formPills(stats = {}) {
     const rows = Array.isArray(stats.sequence) ? stats.sequence.slice(0, 8) : [];
     if (!rows.length) return `<span class="v6-event-note">${esc(t('noRecent'))}</span>`;
-    return rows.map((result) => `<span class="v6-pill ${esc(String(result).toLowerCase())}">${esc(result)}</span>`).join('');
+    return rows.map((result) => `<span class="v6-pill ${esc(String(result).toLowerCase())}">${esc(resultLabel(result))}</span>`).join('');
   }
 
   function formCard(team, stats = {}) {
@@ -135,8 +147,16 @@
     return raw || '—';
   }
 
+  function marketLineLabel(label) {
+    const match = String(label || '').match(/^O(\d+(?:\.\d+)?)$/i);
+    if (!match) return String(label || '');
+    if (lang() === 'ru') return `Больше ${match[1]}`;
+    if (lang() === 'es') return `Más de ${match[1]}`;
+    return `Over ${match[1]}`;
+  }
+
   function eventLines(rows) {
-    return `<div class="v6-lines">${rows.map(([label, value]) => `<div class="v6-line"><span>${esc(label)}</span><strong>${Number.isFinite(Number(value)) ? `${Math.round(Number(value))}%` : '—'}</strong></div>`).join('')}</div>`;
+    return `<div class="v6-lines">${rows.map(([label, value]) => `<div class="v6-line"><span>${esc(marketLineLabel(label))}</span><strong>${Number.isFinite(Number(value)) ? `${Math.round(Number(value))}%` : '—'}</strong></div>`).join('')}</div>`;
   }
 
   function eventCard(label, metric, rows = []) {
@@ -163,9 +183,14 @@
   function renderDrivers(analysis, home, away) {
     const rows = Array.isArray(analysis?.vertexModel?.drivers) ? analysis.vertexModel.drivers.slice(0, 5) : [];
     if (!rows.length) return `<div class="v6-cabinet-empty">${esc(t('noDrivers'))}</div>`;
+    const labels = {
+      en: { form: 'Recent form', 'schedule-strength': 'Opponent strength', 'home-fatigue': 'Recovery / schedule', 'away-fatigue': 'Recovery / schedule', 'news-home': 'News / squad', 'news-away': 'News / squad', weather: 'Weather', 'shot-pressure': 'Shot pressure', h2h: 'Head-to-head' },
+      ru: { form: 'Текущая форма', 'schedule-strength': 'Сила соперников', 'home-fatigue': 'Восстановление / календарь', 'away-fatigue': 'Восстановление / календарь', 'news-home': 'Новости / состав', 'news-away': 'Новости / состав', weather: 'Погода', 'shot-pressure': 'Давление по ударам в створ', h2h: 'Очные встречи' },
+      es: { form: 'Forma reciente', 'schedule-strength': 'Fuerza de los rivales', 'home-fatigue': 'Recuperación / calendario', 'away-fatigue': 'Recuperación / calendario', 'news-home': 'Noticias / plantilla', 'news-away': 'Noticias / plantilla', weather: 'Clima', 'shot-pressure': 'Presión de tiros a puerta', h2h: 'Enfrentamientos directos' }
+    };
     return `<div class="v6-driver-list">${rows.map((driver) => {
       const side = driver.side === 'home' ? home : driver.side === 'away' ? away : `${home} / ${away}`;
-      const label = ({ form: 'Form', 'schedule-strength': 'Opponent strength', 'home-fatigue': 'Recovery / schedule', 'away-fatigue': 'Recovery / schedule', 'news-home': 'News / squad', 'news-away': 'News / squad', weather: 'Weather', 'shot-pressure': 'Shot pressure', h2h: 'Head-to-head' })[driver.key] || driver.key || 'Model factor';
+      const label = labels[lang()]?.[driver.key] || labels.en[driver.key] || driver.label || driver.key || 'Vertex';
       return `<div class="v6-driver"><span class="v6-driver-icon">•</span><div><strong>${esc(label)} · ${esc(side)}</strong><small>${esc(driver.source || 'Vertex')}</small></div><b>${Number(driver.magnitudePct || 0)}%</b></div>`;
     }).join('')}</div>`;
   }
@@ -175,8 +200,14 @@
     for (const side of ['home', 'away']) {
       const team = side === 'home' ? analysis.teams?.home?.name : analysis.teams?.away?.name;
       for (const signal of (analysis?.squad?.[side]?.signals || []).slice(0, 2)) {
-        const state = String(signal.state || 'DOUBTFUL').toUpperCase();
-        const player = signal.player || 'Key player';
+        const rawState = String(signal.state || 'doubtful').toLowerCase();
+        const stateLabels = {
+          en: { out: 'OUT', doubtful: 'DOUBTFUL', available: 'AVAILABLE' },
+          ru: { out: 'ВЫБЫЛ', doubtful: 'ПОД ВОПРОСОМ', available: 'ДОСТУПЕН' },
+          es: { out: 'BAJA', doubtful: 'DUDA', available: 'DISPONIBLE' }
+        };
+        const state = stateLabels[lang()]?.[rawState] || rawState.toUpperCase();
+        const player = signal.player || (lang() === 'ru' ? 'Ключевой игрок' : lang() === 'es' ? 'Jugador clave' : 'Key player');
         const reason = signal.suspension ? (lang() === 'ru' ? 'дисквалификация' : lang() === 'es' ? 'suspensión' : 'suspension') : (lang() === 'ru' ? 'травма / доступность' : lang() === 'es' ? 'lesión / disponibilidad' : 'injury / availability');
         cards.push(`<div class="v6-context-card"><span>${esc(t('availability'))}</span><strong>${esc(team)} · ${esc(player)} · ${esc(state)}</strong><p>${esc(reason)}</p></div>`);
       }
