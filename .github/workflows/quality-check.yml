@@ -143,4 +143,39 @@ jobs:
           done
           grep -q "window.VertexAnalysisUI = { acceptAnalysis }" analysis-ui-v4.js
           grep -q "ensureAnalysisUi" script.js
+          grep -q "analysisInFlight" script.js
+          grep -q "window.VertexAnalyzerState" analyzer-stability-v1.js
+          if grep -q "window.fetch =" analyzer-stability-v1.js; then
+            echo 'Analyzer stability layer must not monkey-patch window.fetch.' >&2
+            exit 1
+          fi
+          if grep -q "createElement('script')" particles.js; then
+            echo 'particles.js must remain a visual module, not a runtime loader.' >&2
+            exit 1
+          fi
+          node - <<'NODE'
+          const fs = require('fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const ordered = [
+            'i18n.js',
+            'language-input-v2.js',
+            'auth-api-runtime-v1.js',
+            'analysis-ui-v4.js',
+            'contact-runtime-v1.js',
+            'polish-v8.js',
+            'analyzer-input-cleanup.js',
+            'analyzer-stability-v1.js',
+            'script.js',
+            'particles.js'
+          ];
+          let previous = -1;
+          for (const file of ordered) {
+            const current = html.indexOf(file);
+            if (current < 0 || current <= previous) {
+              console.error('Invalid runtime script order:', file);
+              process.exit(1);
+            }
+            previous = current;
+          }
+          NODE
           echo 'Frontend runtime stability guards passed.'
