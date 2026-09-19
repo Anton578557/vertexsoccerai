@@ -103,6 +103,14 @@
       'What does Data Quality mean?': 'Что означает качество данных?',
       'Can Vertex analyze smaller leagues?': 'Vertex анализирует небольшие лиги?',
       'Are predictions guaranteed?': 'Прогнозы гарантированы?',
+      'Vertex collects available match and team data, normalizes it, calculates statistical scenarios and shows both confidence and data quality. If a source is missing, the interface marks it as missing instead of inventing a value.': 'Vertex собирает доступные данные о матче и командах, нормализует их, рассчитывает статистические сценарии и показывает достоверность вместе с качеством данных. Если источник не вернул значение, система отмечает пробел, а не придумывает его.',
+      'Yes. The current product is a free beta. Monetization is not enabled.': 'Да. Сейчас сервис доступен бесплатно. Платные функции не подключены.',
+      'It measures how complete the input is for that specific analysis: recent form, team identity, fixture information, venue/weather and news context. High confidence with poor data quality is deliberately prevented.': 'Показывает, насколько полны данные именно для этого анализа: свежая форма, идентификация команд, информация о матче, стадион, погода и новостной контекст. Высокая достоверность при слабых данных намеренно не допускается.',
+      'Coverage depends on the connected providers. Vertex can search globally, but it will only calculate a full prediction when enough reliable match data is available.': 'Покрытие зависит от подключённых источников. Vertex ищет команды глобально, но полный прогноз выдаётся только при достаточном объёме надёжной истории матчей.',
+      'No. Football is uncertain. Vertex provides statistical analysis and decision support, not guaranteed outcomes or financial advice.': 'Нет. Футбол содержит неопределённость. Vertex предоставляет статистический анализ и поддержку решений, а не гарантированный результат или финансовую консультацию.',
+      'Football Intelligence Engine': 'Футбольный аналитический движок',
+      'Analysis Engine': 'Аналитический движок',
+      'Responsible use': 'Ответственное использование',
       'SUPPORT': 'ПОДДЕРЖКА',
       'Questions, bugs or data-source issues — tell us what happened and which match you were analyzing.': 'Вопросы, ошибки или проблемы с источниками данных — напишите, что произошло и какой матч вы анализировали.',
       'EMAIL': 'ПОЧТА',
@@ -265,6 +273,14 @@
       'What does Data Quality mean?': '¿Qué significa calidad de datos?',
       'Can Vertex analyze smaller leagues?': '¿Vertex puede analizar ligas pequeñas?',
       'Are predictions guaranteed?': '¿Los pronósticos están garantizados?',
+      'Vertex collects available match and team data, normalizes it, calculates statistical scenarios and shows both confidence and data quality. If a source is missing, the interface marks it as missing instead of inventing a value.': 'Vertex recopila los datos disponibles del partido y de los equipos, los normaliza, calcula escenarios estadísticos y muestra la confianza junto con la calidad de los datos. Si una fuente no aporta un dato, se marca como ausente en lugar de inventarlo.',
+      'Yes. The current product is a free beta. Monetization is not enabled.': 'Sí. Actualmente el servicio se puede usar de forma gratuita. No hay funciones de pago activadas.',
+      'It measures how complete the input is for that specific analysis: recent form, team identity, fixture information, venue/weather and news context. High confidence with poor data quality is deliberately prevented.': 'Indica lo completos que son los datos para ese análisis: forma reciente, identidad de equipos, información del partido, estadio, clima y contexto de noticias. Se evita deliberadamente mostrar alta confianza con datos débiles.',
+      'Coverage depends on the connected providers. Vertex can search globally, but it will only calculate a full prediction when enough reliable match data is available.': 'La cobertura depende de los proveedores conectados. Vertex puede buscar equipos a nivel global, pero solo calcula un pronóstico completo cuando existe suficiente historial fiable.',
+      'No. Football is uncertain. Vertex provides statistical analysis and decision support, not guaranteed outcomes or financial advice.': 'No. El fútbol es incierto. Vertex ofrece análisis estadístico y apoyo a la decisión, no resultados garantizados ni asesoramiento financiero.',
+      'Football Intelligence Engine': 'Motor de inteligencia de fútbol',
+      'Analysis Engine': 'Motor de análisis',
+      'Responsible use': 'Uso responsable',
       'SUPPORT': 'SOPORTE',
       'Questions, bugs or data-source issues — tell us what happened and which match you were analyzing.': 'Preguntas, errores o problemas de datos: dinos qué ocurrió y qué partido estabas analizando.',
       'EMAIL': 'EMAIL',
@@ -454,18 +470,10 @@
 
   function boot() {
     injectSwitcher();
+    // Static UI is translated once at startup and again only when the user
+    // explicitly changes language. Large analysis reports localize themselves,
+    // so a body-wide MutationObserver is unnecessary and can stall Chromium.
     apply(document.body);
-    if (observer) observer.disconnect();
-    observer = new MutationObserver((mutations) => {
-      if (applying) return;
-      for (const mutation of mutations) {
-        mutation.addedNodes.forEach((node) => {
-          if (node.nodeType === Node.TEXT_NODE) translateTextNode(node);
-          else if (node.nodeType === Node.ELEMENT_NODE) apply(node);
-        });
-      }
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
   }
 
   window.VertexI18n = { t, setLanguage, getLanguage, getLocale, apply };
