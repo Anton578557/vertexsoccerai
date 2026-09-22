@@ -326,6 +326,7 @@
   }
 
   async function saveCurrent() {
+    if (!window.VertexAccess?.requireAccount('analyzer')) return;
     if (!lastAnalysis) return;
     const row = { match: `${lastAnalysis.teams.home.name} vs ${lastAnalysis.teams.away.name}`, savedAt: new Date().toISOString(), confidence: lastAnalysis.confidence, dataQuality: lastAnalysis.dataQuality, mainScenario: lastAnalysis.model?.mainScenario || null };
     writeLocal('vertex_saved_analyses', [row, ...readLocal('vertex_saved_analyses', []).filter((x) => x.match !== row.match)].slice(0, 50));
@@ -338,6 +339,7 @@
   }
 
   async function copyCurrent() {
+    if (!window.VertexAccess?.requireAccount('analyzer')) return;
     if (!lastAnalysis) return;
     const text = [`Vertex Soccer AI — ${lastAnalysis.teams.home.name} vs ${lastAnalysis.teams.away.name}`, `${t('quality')}: ${lastAnalysis.dataQuality ?? '—'}%`, `${t('confidence')}: ${lastAnalysis.confidence ?? '—'}%`, `${t('likely')}: ${outcomeLabel(lastAnalysis.model?.mainScenario)}`].join('\n');
     try { await navigator.clipboard.writeText(text); toast(t('copied')); } catch (_) {}

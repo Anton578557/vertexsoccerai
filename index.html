@@ -12,6 +12,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="ui-v5.css">
+    <link rel="stylesheet" href="home.css?v=1">
 </head>
 <body>
     <div id="particles-js" aria-hidden="true"></div>
@@ -33,14 +34,14 @@
             <button class="mobile-menu-button" id="mobileMenuButton" type="button" aria-label="Open menu" aria-expanded="false">☰</button>
 
             <nav class="nav" id="nav" aria-label="Main navigation">
-                <a href="#" data-tab="home" class="active">Home</a>
-                <a href="#" data-tab="analyzer" data-protected="true">Match Analyzer</a>
-                <a href="#" data-tab="strategy" data-protected="true">My Strategy</a>
-                <a href="#" data-tab="results" data-protected="true">Results</a>
-                <a href="#" data-tab="leaderboard" data-protected="true">Leaderboard</a>
-                <a href="#" data-tab="reviews" data-protected="true">Reviews</a>
-                <a href="#" data-tab="faq">FAQ</a>
-                <a href="#" data-tab="contact">Contact</a>
+                <a href="#/" data-tab="home" class="active">Home</a>
+                <a href="#/analyzer" data-tab="analyzer">Match Analyzer</a>
+                <a href="#/strategy" data-tab="strategy">My Strategy</a>
+                <a href="#/results" data-tab="results">Results</a>
+                <a href="#/leaderboard" data-tab="leaderboard">Leaderboard</a>
+                <a href="#/reviews" data-tab="reviews">Reviews</a>
+                <a href="#/faq" data-tab="faq">FAQ</a>
+                <a href="#/contact" data-tab="contact">Contact</a>
                 <a href="#" class="btn-login" id="btnLogin">Sign In</a>
                 <a href="#" class="btn-signup" id="btnSignup">Sign Up</a>
                 <a href="#" class="btn-cabinet hidden" id="btnCabinet">My Cabinet</a>
@@ -50,63 +51,47 @@
 
     <main class="main-content">
         <section id="tab-home" class="tab-content active">
-            <div class="container home-container">
-                <div class="hero">
-                    <div class="eyebrow"><span class="status-dot"></span> FOOTBALL INTELLIGENCE</div>
-                    <h1 class="hero-title">VERTEX <span class="hero-accent">SOCCER AI</span></h1>
-                    <p class="hero-slogan">Where AI Meets Football</p>
-                    <p class="hero-sub">Real match data. Context-aware modelling. Transparent confidence.</p>
-
-                    <div class="home-hero-actions">
-                        <button class="btn-primary" id="homeOpenAnalyzer" type="button">OPEN MATCH ANALYZER</button>
-                        <button class="btn-secondary" id="homeOpenStrategy" type="button">BUILD MY STRATEGY</button>
+            <div class="container landing">
+                <div class="landing-hero">
+                    <div class="landing-copy">
+                        <p class="landing-eyebrow">VERTEX / FOOTBALL INTELLIGENCE</p>
+                        <h1><span>See the game.</span><span class="landing-accent">Beyond the score.</span></h1>
+                        <p class="landing-lead">Understand the match through team form, squad news and probabilities. The evidence, in one clear report.</p>
+                        <div class="landing-actions">
+                            <a class="landing-button landing-button-primary" href="#/analyzer" data-route="analyzer"><span>Explore match analysis</span><span aria-hidden="true">↗</span></a>
+                            <a class="landing-button landing-button-secondary" href="#/strategy" data-route="strategy">Explore my strategy</a>
+                        </div>
+                        <p class="landing-access">Free to use. An account is needed to run an analysis.</p>
                     </div>
-                    <p class="home-trust-line">No fake accuracy. No invented statistics. Unsupported markets stay hidden until real data exists.</p>
+                    <aside class="landing-report" aria-labelledby="report-heading">
+                        <div class="landing-report-heading"><span>INSIDE YOUR REPORT</span><span class="landing-report-mark" aria-hidden="true">V / AI</span></div>
+                        <h2 id="report-heading">The full picture.<br><span>Before the whistle.</span></h2>
+                        <ol class="landing-report-list">
+                            <li><span class="landing-step" aria-hidden="true">01</span><div><h3>Team form</h3><p>Recent results, goals and strength of opposition.</p></div></li>
+                            <li><span class="landing-step" aria-hidden="true">02</span><div><h3>Match context</h3><p>Available squad information, news and weather.</p></div></li>
+                            <li><span class="landing-step" aria-hidden="true">03</span><div><h3>Probabilities & confidence</h3><p>Likely outcomes, with the limits of the data in view.</p></div></li>
+                        </ol>
+                        <p class="landing-report-note"><span aria-hidden="true">ⓘ</span><span>When evidence is weak, Vertex says so.</span></p>
+                    </aside>
                 </div>
-
-                <div class="stats-grid" aria-label="Platform capabilities">
-                    <div class="stat-item"><div class="stat-number">MULTI</div><div class="stat-label">Source Engine</div></div>
-                    <div class="stat-item"><div class="stat-number">CONTEXT</div><div class="stat-label">News + Weather</div></div>
-                    <div class="stat-item"><div class="stat-number">QUALITY</div><div class="stat-label">Confidence Layer</div></div>
-                    <div class="stat-item"><div class="stat-number">24/7</div><div class="stat-label">Analysis Engine</div></div>
-                </div>
-
-                <div class="home-value-grid">
-                    <article class="home-value-card">
-                        <span>MATCH INTELLIGENCE</span>
-                        <strong>Probabilities with evidence</strong>
-                        <p>Form, scoring rates and fixture context are normalized before the model produces a verdict.</p>
-                    </article>
-                    <article class="home-value-card">
-                        <span>CONTEXT ENGINE</span>
-                        <strong>News and weather are inputs, not decoration</strong>
-                        <p>Only relevant context signals are allowed to change the model, and their influence is deliberately bounded.</p>
-                    </article>
-                    <article class="home-value-card">
-                        <span>PERSONAL STRATEGY</span>
-                        <strong>PASS is a valid decision</strong>
-                        <p>Your risk profile and market preferences filter matches instead of forcing a recommendation on every fixture.</p>
-                    </article>
-                </div>
-
-                <div class="home-data-strip" aria-label="Data inputs">
-                    <span>VERTEX READS</span>
-                    <b>Recent Form</b><b>Goals</b><b>Fixtures</b><b>Team Data</b><b>News</b><b>Weather</b><b>Venue</b><b>Data Quality</b>
-                </div>
-
-                <div class="home-panel">
-                    <div class="panel-heading">
-                        <span class="kicker">ANALYSIS PIPELINE</span>
-                        <h2>How Vertex thinks</h2>
-                        <p>Every prediction should be traceable to the data used to produce it.</p>
-                    </div>
-                    <div class="pipeline-grid">
-                        <div class="pipeline-step"><span>01</span><strong>Match Data</strong><small>Fixtures, results, standings, team identity</small></div>
-                        <div class="pipeline-step"><span>02</span><strong>Context</strong><small>Form, venue, weather, news, availability</small></div>
-                        <div class="pipeline-step"><span>03</span><strong>Model</strong><small>Statistical probabilities and scenario scoring</small></div>
-                        <div class="pipeline-step"><span>04</span><strong>Verdict</strong><small>Confidence, data quality and transparent reasoning</small></div>
+                <div class="landing-tools">
+                    <div class="landing-section-heading"><p class="landing-eyebrow">YOUR FOOTBALL WORKSPACE</p><h2>One game. Your perspective.</h2></div>
+                    <div class="landing-card-grid">
+                        <a class="landing-card" href="#/analyzer" data-route="analyzer">
+                            <div class="landing-card-top"><span>01 / ANALYSIS</span><span aria-hidden="true">↗</span></div>
+                            <h3>Match Analyzer</h3><p>Compare two teams and see the reasoning behind each probability.</p><span class="landing-card-link">Open analyzer</span>
+                        </a>
+                        <a class="landing-card" href="#/strategy" data-route="strategy">
+                            <div class="landing-card-top"><span>02 / STRATEGY</span><span aria-hidden="true">↗</span></div>
+                            <h3>My Strategy</h3><p>Set your preferences for risk and markets. Keep your approach consistent.</p><span class="landing-card-link">Explore strategy</span>
+                        </a>
+                        <a class="landing-card" href="#/results" data-route="results">
+                            <div class="landing-card-top"><span>03 / RESULTS</span><span aria-hidden="true">↗</span></div>
+                            <h3>Verified results</h3><p>See how model predictions compare with completed matches.</p><span class="landing-card-link">View results</span>
+                        </a>
                     </div>
                 </div>
+                <div class="landing-footnote"><span>REAL DATA. CLEAR REASONING.</span><p>Football is unpredictable. Analysis informs your judgement; it does not guarantee a result.</p></div>
             </div>
         </section>
 
@@ -205,6 +190,10 @@
                     <p class="section-subtitle">Only reviews submitted by registered Vertex users.</p>
                 </div>
                 <div id="reviewsList"><div class="loading-state">Loading reviews…</div></div>
+                <div id="reviewGuest" class="guest-action">
+                    <p>Have you tried Vertex? Sign in to leave your review.</p>
+                    <button class="btn-secondary" type="button" data-auth-action="reviews">Sign in to contribute</button>
+                </div>
                 <div id="reviewForm" class="review-form hidden">
                     <h3>Leave a review</h3>
                     <div id="starContainer" class="stars" aria-label="Rating">
@@ -271,15 +260,15 @@
 
     <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
-    <script defer src="i18n.js?v=3"></script>
+    <script defer src="i18n.js?v=4"></script>
     <script defer src="language-input-v2.js?v=4"></script>
     <script defer src="auth-api-runtime-v1.js?v=3"></script>
-    <script defer src="analysis-ui-v4.js?v=10"></script>
+    <script defer src="analysis-ui-v4.js?v=11"></script>
     <script defer src="contact-runtime-v1.js?v=2"></script>
-    <script defer src="polish-v8.js?v=10"></script>
+    <script defer src="polish-v8.js?v=11"></script>
     <script defer src="analyzer-input-cleanup.js?v=3"></script>
     <script defer src="analyzer-stability-v1.js?v=5"></script>
-    <script defer src="script.js?v=12"></script>
+    <script defer src="script.js?v=13"></script>
     <script defer src="particles.js?v=13"></script>
 </body>
 </html>

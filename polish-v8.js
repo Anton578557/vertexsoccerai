@@ -107,7 +107,7 @@
     setText(root.querySelector('.section-heading .section-title'), copy.title);
     setText(root.querySelector('.section-heading .section-subtitle'), copy.subtitle);
 
-    const profile = readLocal('vertex_strategy_profile', null);
+    const profile = window.VertexAccess?.signedIn?.() ? readLocal('vertex_strategy_profile', null) : null;
     const form = target.querySelector('#strategyForm');
     if (form) return localizeStrategyForm(form, profile);
 

@@ -77,21 +77,20 @@
     byId('modalOverlay')?.classList.add('hidden');
   }
 
-  function isProtected(tabId) {
-    return qs(`.nav a[data-tab="${tabId}"]`)?.dataset.protected === 'true';
+  function requireAccount(targetTab = 'analyzer') {
+    if (currentUser) return true;
+    showAccessModal(targetTab);
+    return false;
   }
+
+  window.VertexAccess = { signedIn: () => Boolean(currentUser), requireAccount };
 
   function closeMobileNav() {
     byId('nav')?.classList.remove('open');
     byId('mobileMenuButton')?.setAttribute('aria-expanded', 'false');
   }
 
-  function activateTab(tabId, { bypassAuth = false } = {}) {
-    if (!bypassAuth && isProtected(tabId) && !currentUser) {
-      showAccessModal(tabId);
-      return false;
-    }
-
+  function activateTab(tabId) {
     const target = byId(`tab-${tabId}`);
     if (!target) {
       console.warn('[Vertex] Missing tab:', tabId);
@@ -101,6 +100,10 @@
     qsa('.tab-content').forEach((section) => section.classList.remove('active'));
     target.classList.add('active');
     qsa('.nav a[data-tab]').forEach((link) => link.classList.toggle('active', link.dataset.tab === tabId));
+    qsa('.nav a[data-tab]').forEach((link) => {
+      if (link.dataset.tab === tabId) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    });
     closeMobileNav();
 
     if (history.replaceState) history.replaceState(null, '', tabId === 'home' ? '#/' : `#/${tabId}`);
@@ -110,14 +113,15 @@
     if (tabId === 'reviews') loadReviews();
     if (tabId === 'results') loadPerformance();
     if (tabId === 'strategy') renderStrategy();
+    window.VertexI18n?.apply?.(target);
     return true;
   }
 
   function showAccessModal(targetTab = 'analyzer') {
     openModal(`
       <span class="kicker">VERTEX ACCESS</span>
-      <h2>Sign in to unlock Vertex</h2>
-      <p class="modal-copy">Match Analyzer, My Strategy, Results and your saved history are available to registered users.</p>
+      <h2>Sign in to continue</h2>
+      <p class="modal-copy">Explore every section freely. Create a free account to run analyses, use your strategy and save your work.</p>
       <button data-modal-action="signup" data-target-tab="${escapeHtml(targetTab)}">CREATE FREE ACCOUNT</button>
       <button class="btn-close-modal" data-modal-action="login" data-target-tab="${escapeHtml(targetTab)}">SIGN IN</button>
       <button class="btn-close-modal" data-modal-action="close">CLOSE</button>
@@ -178,6 +182,8 @@
     byId('btnSignup')?.classList.toggle('hidden', Boolean(currentUser));
     byId('btnCabinet')?.classList.toggle('hidden', !currentUser);
     byId('reviewForm')?.classList.toggle('hidden', !currentUser);
+    byId('reviewGuest')?.classList.toggle('hidden', Boolean(currentUser));
+    if (byId('tab-strategy')?.classList.contains('active')) renderStrategy();
   }
 
   async function signup(targetTab = '') {
@@ -194,7 +200,7 @@
         currentUser = data.user;
         updateAuthUI();
         showToast('Account created. Vertex is unlocked.');
-        if (targetTab) activateTab(targetTab, { bypassAuth: true });
+        if (targetTab) activateTab(targetTab);
       } else {
         showToast('Verification email sent. Confirm your email, then sign in.', 6000);
       }
@@ -216,7 +222,7 @@
       closeModal();
       updateAuthUI();
       showToast('Signed in. Vertex is unlocked.');
-      if (targetTab) activateTab(targetTab, { bypassAuth: true });
+      if (targetTab) activateTab(targetTab);
     } catch (error) {
       showToast(`Sign in failed: ${error.message}`, 5000);
     }
@@ -227,7 +233,7 @@
     currentUser = null;
     closeModal();
     updateAuthUI();
-    activateTab('home', { bypassAuth: true });
+    activateTab('home');
     showToast('Signed out.');
   }
 
@@ -369,7 +375,7 @@
     const parsed = parseMatchInput(byId('searchInput')?.value);
     if (!parsed) return showToast('Use the format “Home Team vs Away Team”.');
     setMatchInputs(`${parsed.home} vs ${parsed.away}`);
-    activateTab('analyzer', { bypassAuth: true });
+    activateTab('analyzer');
     performAnalysis(parsed.home, parsed.away);
   }
 
@@ -464,6 +470,7 @@
   }
 
   async function performAnalysis(home, away) {
+    if (!requireAccount('analyzer')) return;
     const target = byId('analysisResult');
     if (!target) return;
     if (analysisInFlight) return analysisInFlight;
@@ -540,6 +547,7 @@
   }
 
   function saveCurrentAnalysis() {
+    if (!requireAccount('analyzer')) return;
     if (!lastAnalysis) return showToast('Run an analysis first.');
     const row = {
       match: analysisKey(lastAnalysis),
@@ -554,6 +562,7 @@
   }
 
   async function copyCurrentAnalysis() {
+    if (!requireAccount('analyzer')) return;
     if (!lastAnalysis) return;
     const summary = [
       `Vertex Soccer AI — ${analysisKey(lastAnalysis)}`,
@@ -570,7 +579,7 @@
   }
 
   function getStrategyProfile() {
-    return readLocal('vertex_strategy_profile', null);
+    return currentUser ? readLocal('vertex_strategy_profile', null) : null;
   }
 
   function renderStrategy() {
@@ -588,6 +597,7 @@
           <button class="btn-primary" id="btnTryStrategy" type="button">SET UP MY PROFILE</button>
         </div>`;
       on('btnTryStrategy', 'click', showStrategySetup);
+      window.VertexI18n?.apply?.(target);
       return;
     }
 
@@ -597,9 +607,11 @@
         <div class="strategy-panel"><span class="kicker">YOUR PROFILE</span><h3>${escapeHtml(profile.risk)} · ${escapeHtml(profile.experience)}</h3><div class="profile-score"><div><span>Bankroll reference</span><strong>${escapeHtml(profile.bankroll)}</strong></div><div><span>Data threshold</span><strong>${threshold}%</strong></div><div><span>Markets</span><strong>${escapeHtml(profile.markets.join(', '))}</strong></div><div><span>Objective</span><strong>${escapeHtml(profile.objective)}</strong></div></div><div class="strategy-actions"><button class="btn-secondary" data-action="edit-strategy" type="button">EDIT PROFILE</button><button class="btn-primary" data-action="scan-strategy" type="button">SCAN TODAY</button></div></div>
         <div class="strategy-panel"><span class="kicker">VERTEX RULES</span><h3>NO CHASING. NO FORCED PICKS.</h3><ul class="strategy-rules"><li>Reject matches below ${threshold}% data quality.</li><li>Pass when recent form or team availability is too weak.</li><li>Only use markets supported by the available source data.</li><li>More matches do not mean better decisions.</li></ul></div>
       </div><div id="strategyScanResults" class="strategy-scan-results"></div>`;
+    window.VertexI18n?.apply?.(target);
   }
 
   function showStrategySetup() {
+    if (!requireAccount('strategy')) return;
     const target = byId('strategyContent');
     if (!target) return;
     const previous = getStrategyProfile() || {};
@@ -616,6 +628,7 @@
       </form>`;
     byId('strategyForm')?.addEventListener('submit', (event) => {
       event.preventDefault();
+      if (!requireAccount('strategy')) return;
       const profile = {
         bankroll: Number(byId('strategyBankroll')?.value || 0),
         experience: byId('strategyExperience')?.value || 'Intermediate',
@@ -629,9 +642,11 @@
       renderStrategy();
       showToast('Strategy profile saved.');
     });
+    window.VertexI18n?.apply?.(target);
   }
 
   async function scanStrategyMatches() {
+    if (!requireAccount('strategy')) return;
     const target = byId('strategyScanResults');
     if (!target) return;
     target.innerHTML = '<div class="loading-state">Scanning today’s available fixtures…</div>';
@@ -785,6 +800,21 @@
 
   function bindEvents() {
     document.addEventListener('click', (event) => {
+      const routeLink = event.target.closest('[data-route]');
+      if (routeLink) {
+        if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        activateTab(routeLink.dataset.route);
+        return;
+      }
+
+      const authAction = event.target.closest('[data-auth-action]');
+      if (authAction) {
+        event.preventDefault();
+        showAccessModal(authAction.dataset.authAction);
+        return;
+      }
+
       const tabLink = event.target.closest('.nav a[data-tab]');
       if (tabLink) {
         event.preventDefault();
@@ -803,9 +833,10 @@
 
       const analyzeMatch = event.target.closest('[data-analyze-match]');
       if (analyzeMatch) {
+        if (!requireAccount('analyzer')) return;
         const match = analyzeMatch.dataset.analyzeMatch;
         setMatchInputs(match);
-        activateTab('analyzer', { bypassAuth: true });
+        activateTab('analyzer');
         const parsed = parseMatchInput(match);
         if (parsed) performAnalysis(parsed.home, parsed.away);
       }
@@ -820,11 +851,11 @@
         if (action === 'do-signup') signup(targetTab);
         if (action === 'do-login') login(targetTab);
         if (action === 'logout') logout();
-        if (action === 'open-strategy') { closeModal(); activateTab('strategy', { bypassAuth: true }); }
+        if (action === 'open-strategy') { closeModal(); activateTab('strategy'); }
       }
     });
 
-    on('logo', 'click', (event) => { event.preventDefault(); activateTab('home', { bypassAuth: true }); });
+    on('logo', 'click', (event) => { event.preventDefault(); activateTab('home'); });
     on('btnAnalyze', 'click', startHomeAnalysis);
     on('btnAnalyzeMatch', 'click', startAnalyzerAnalysis);
     on('btnLogin', 'click', (event) => { event.preventDefault(); showLoginModal(); });
@@ -856,6 +887,7 @@
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape') closeModal();
     });
+    window.addEventListener('hashchange', () => activateTab(tabFromHash()));
   }
 
   function tabFromHash() {
@@ -884,7 +916,7 @@
       });
       await initAuth();
       const initialTab = tabFromHash();
-      activateTab(initialTab, { bypassAuth: initialTab === 'home' || !isProtected(initialTab) });
+      activateTab(initialTab);
       checkHealth();
       console.info('[Vertex] UI initialized');
     } catch (error) {
