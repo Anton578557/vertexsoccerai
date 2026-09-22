@@ -119,3 +119,13 @@ test('an absence that expires before kickoff is not applied', () => {
   assert.equal(result.usedSignals, 0);
   assert.equal(result.home.incrementalAttackPct, 0);
 });
+
+
+test('missing numeric context behaves like omitted data, not zero', () => {
+  const absent = baseAnalysis();
+  absent.advanced.home.restDays = undefined;
+  const explicitNull = structuredClone(absent);
+  explicitNull.advanced.home.restDays = null;
+  assert.deepEqual(buildVertexModelV2(explicitNull), buildVertexModelV2(absent));
+  assert.equal(buildVertexModelV2(explicitNull).meta.teamPower.home.restDays, null);
+});
