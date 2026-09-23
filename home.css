@@ -134,30 +134,46 @@
 }
 .landing a:focus-visible, #nav a:focus-visible, #headerActions a:focus-visible, #mobileMenuButton:focus-visible { outline: 2px solid #8becf6; outline-offset: 5px; }
 
-/* Give every navigation label its own space, including translated labels. */
-.header .header-inner { display: grid; grid-template-columns: minmax(0, 1fr) auto; width: min(1420px, calc(100% - 48px)); gap: 18px 28px !important; align-items: center !important; }
-.header .header-actions { display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
-#headerActions a { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; width: auto; padding: 12px 20px !important; font: 700 14px/1.5 'Manrope', sans-serif !important; letter-spacing: 0 !important; text-transform: none !important; text-decoration: none; white-space: nowrap; }
+/* Compact navigation: brand, sections and account share one desktop row. */
+.header .header-inner { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; width: min(1660px, calc(100% - 40px)); gap: 16px !important; align-items: center !important; }
+.header .logo { grid-column: 1; grid-row: 1; gap: 10px !important; }
+.header .logo-text { font-size: 19px !important; white-space: nowrap; }
+.header .logo svg { width: 40px !important; height: 40px !important; }
+.header .header-actions { grid-column: 3; grid-row: 1; display: flex; justify-content: flex-end; align-items: center; gap: 7px; }
+#headerActions a { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; width: auto; padding: 9px 13px !important; font: 700 12px/1.5 'Manrope', sans-serif !important; letter-spacing: 0 !important; text-transform: none !important; text-decoration: none; white-space: nowrap; }
 #headerActions a.hidden { display: none !important; }
 #headerActions #btnSignup { color: #04202b !important; }
-#headerActions #vertexLanguage { flex: 0 0 auto; width: auto !important; order: 0; margin: 0 6px 0 0; }
+#headerActions #vertexLanguage { flex: 0 0 auto; width: auto !important; order: 0; margin: 0 3px 0 0; padding: 3px !important; min-height: 40px; }
 #headerActions .vertex-lang-buttons { display: inline-flex; width: auto; }
-#headerActions .vertex-lang-buttons button { min-width: 40px; min-height: 36px; font-size: 12px; }
-#nav { grid-column: 1 / -1; display: flex; justify-content: center; gap: 8px !important; min-width: 0; width: 100%; padding: 15px 0 0; border-top: 1px solid #a1d6e61a; }
-#nav a[data-tab] { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; min-height: 54px; font-size: 16px !important; font-weight: 700 !important; line-height: 1.4 !important; letter-spacing: 0 !important; text-transform: none !important; white-space: nowrap; padding: 14px 18px !important; color: #c1d1dc !important; background: #10243280; border: 1px solid #89bfd524; border-radius: 12px !important; transition: color .18s, background .18s, border-color .18s; }
+#headerActions .vertex-lang-buttons button { min-width: 31px; min-height: 30px; padding: 0 6px; font-size: 11px; }
+#nav { grid-column: 2; grid-row: 1; display: flex; flex-wrap: nowrap; justify-content: center; gap: 4px !important; min-width: 0; width: 100%; padding: 0; border: 0; }
+#nav a[data-tab] { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; min-height: 40px; font-size: 13px !important; font-weight: 700 !important; line-height: 1.4 !important; letter-spacing: 0 !important; text-transform: none !important; white-space: nowrap; padding: 9px 10px !important; color: #c1d1dc !important; background: #10243280; border: 1px solid #89bfd524; border-radius: 9px !important; transition: color .18s, background .18s, border-color .18s; }
 #nav a[data-tab]:hover { color: #f0fcff !important; background: #163647 !important; border-color: #58dce26b; }
 #nav a[data-tab].active { color: #06232c !important; background: linear-gradient(120deg, #54e4ed, #31c7e4) !important; border-color: #77eef3; box-shadow: 0 4px 22px #27cbdc25; }
 #nav a[data-tab]::after { display: none; }
+#mobileMenuButton { display: none !important; }
+@media (min-width: 1280px) and (max-width: 1450px) {
+  .header .header-inner { gap: 10px !important; width: calc(100% - 32px); }
+  .header .logo-text { font-size: 17px !important; }
+  .header .logo svg { width: 34px !important; height: 34px !important; }
+  #nav { gap: 3px !important; }
+  #nav a[data-tab] { font-size: 12px !important; padding: 9px 8px !important; }
+  #headerActions a { padding: 9px 10px !important; }
+}
 #analyzerSuggestions { top: 59px; max-height: 290px; }
 #analyzerSuggestions .suggestion-item { display: flex; flex-direction: column; gap: 4px; width: 100%; border: 0; border-bottom: 1px solid #8bb8c521; background: transparent; color: #e5f4fa; padding: 15px 18px; font: 500 14px/1.5 'Manrope', sans-serif; }
 #analyzerSuggestions .suggestion-item:hover, #analyzerSuggestions .suggestion-item:focus-visible { background: #174052; outline: 2px solid #69dce8; outline-offset: -2px; }
 #analyzerSuggestions .suggestion-item small { color: #93afbf; }
-@media (max-width: 1050px) {
+@media (max-width: 1279px) {
   .header .header-inner { grid-template-columns: minmax(0, 1fr) auto auto; gap: 12px !important; }
   #mobileMenuButton { display: inline-flex !important; margin-left: auto; }
-  #nav { display: none !important; width: 100%; padding-top: 12px; }
+  .header .header-actions { grid-column: 2; }
+  #mobileMenuButton { grid-column: 3; grid-row: 1; }
+  #nav { grid-column: 1 / -1; grid-row: 2; display: none !important; width: 100%; padding-top: 12px; }
   #nav.open { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px !important; }
-  #nav a[data-tab] { font-size: 15px !important; padding: 14px !important; text-align: center; white-space: normal; min-height: 52px; }
+  #nav a[data-tab] { font-size: 14px !important; padding: 12px !important; text-align: center; white-space: normal; min-height: 46px; }
+}
+@media (max-width: 1050px) {
   #tab-home .landing-hero { gap: 30px; grid-template-columns: minmax(0, 1fr) minmax(0, .9fr); }
   #tab-home .landing-report { padding: 24px; }
   #tab-home .landing-actions { flex-direction: column; align-items: stretch; }
@@ -178,6 +194,7 @@
   #headerActions .vertex-lang-buttons button { min-width: 32px; padding: 0 6px; }
   #headerActions #vertexLanguage { margin: 0; }
   #mobileMenuButton { grid-row: 1; grid-column: 2; }
+  #nav { grid-row: 3; }
   .header .logo-text { font-size: 16px !important; }
   .header .logo svg { width: 37px !important; height: 37px !important; padding: 6px; }
   .header .logo { gap: 9px !important; }
