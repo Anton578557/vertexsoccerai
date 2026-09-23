@@ -19,7 +19,7 @@
   ],
   "crons": [
     {
-      "path": "/api/results?maintenance=1",
+      "path": "/api/results",
       "schedule": "17 3 * * *"
     }
   ]

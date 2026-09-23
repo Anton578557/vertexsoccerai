@@ -17,12 +17,20 @@ test('non-football namesakes, unrelated institutions and other squads cannot ent
   assert.ok(classify(article('Instituto Cordoba prepare for their next football match'), 'Instituto', 'Estudiantes Rio Cuarto'));
 });
 
-test('opponent injury headlines are context, not a team-strength penalty', () => {
+test('opponent injury headlines are excluded without roster attribution', () => {
   const item = classify(article('Barcelona striker ruled out against Boca Juniors'), 'Racing Club', 'Boca Juniors');
-  assert.deepEqual(item.teams, ['away']);
-  assert.equal(item.impact, 0);
+  assert.equal(item,null);
   assert.equal(classify(article('Barcelona confirm Joan Garcia injury against Racing Club'), 'Racing Club', 'Boca Juniors'), null);
   assert.ok(classify(article('Racing Club of Avellaneda announce team news'), 'Racing Club', 'Boca Juniors'));
+});
+
+test('owner profiles, scouting rumors and incidental opponent injury stories are excluded', () => {
+  for(const title of ['Brighton owner reveals football prediction business',
+    'Manchester City scouting midfielder who scored for Benfica',
+    'Federico Valverde sidelined for weeks after tackle in Rayo Vallecano match']) {
+    assert.equal(classify(article(title),title.includes('Rayo')?'Rayo Vallecano':'Brighton','Benfica'),null,title);
+  }
+  assert.equal(classify({...article('Preview: Rayo Vallecano vs Espanyol, team news'),publishedAt:new Date(Date.now()-8*864e5).toISOString()},'Rayo Vallecano','Espanyol'),null);
 });
 
 test('news requires full club identity and a valid recent publication date', () => {

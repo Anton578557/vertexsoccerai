@@ -7,14 +7,16 @@ const { timingSafeEqual } = require('node:crypto');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
-  const scheduled = req.query?.maintenance === '1';
+  const scheduled = req.query?.maintenance === '1' || req.headers?.['user-agent'] === 'vercel-cron/1.0';
   if (scheduled) {
     const secret = String(process.env.CRON_SECRET || '');
     const actual = Buffer.from(String(req.headers?.authorization || ''));
     const expected = Buffer.from(`Bearer ${secret}`);
     if (!secret || actual.length !== expected.length || !timingSafeEqual(actual, expected)) return res.status(401).json({error:'Unauthorized'});
   }
-  res.setHeader('Cache-Control', scheduled ? 'no-store' : 's-maxage=300, stale-while-revalidate=600');
+  // The scheduled and public request share a path. Never let a cached public
+  // summary answer the scheduler without executing the protected work.
+  res.setHeader('Cache-Control', 'no-store');
 
   try {
     let maintenance = { ran: false, evaluated: 0, checkedFixtures: 0 };

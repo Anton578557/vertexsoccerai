@@ -35,4 +35,16 @@ test('maintenance endpoint refuses unauthenticated execution',async()=>{
   const res={statusCode:0,status(code){this.statusCode=code;return this;},json(value){this.body=value;return this;}};
   await handler({method:'GET',query:{maintenance:'1'},headers:{}},res);
   assert.equal(res.statusCode,401);assert.deepEqual(res.body,{error:'Unauthorized'});
+  await handler({method:'GET',query:{},headers:{'user-agent':'vercel-cron/1.0'}},res);
+  assert.equal(res.statusCode,401);
+});
+
+test('the actual Vercel scheduler path executes authenticated maintenance without query parameters or CDN caching',async()=>{
+  const handler=require('../api/results'), saved=process.env.CRON_SECRET;
+  process.env.CRON_SECRET='test-cron-secret';
+  const res={statusCode:0,headers:{},setHeader(k,v){this.headers[k]=v;},status(code){this.statusCode=code;return this;},json(body){this.body=body;return this;}};
+  try{
+    await handler({method:'GET',query:{},headers:{'user-agent':'vercel-cron/1.0',authorization:'Bearer test-cron-secret'}},res);
+    assert.equal(res.statusCode,200);assert.equal(res.body.maintenance.ran,true);assert.equal(res.headers['Cache-Control'],'no-store');
+  }finally{if(saved===undefined)delete process.env.CRON_SECRET;else process.env.CRON_SECRET=saved;}
 });

@@ -4,6 +4,21 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { competitionCode, buildPenaltyContext } = require('../lib/football-data-enrichment');
 
+test('verified Football-Data identity recovers missing club metadata without borrowing the competition country', async () => {
+  const {teamIdentityFromMatches,recoverFootballDataMetadata}=require('../lib/football-data-enrichment');
+  const club={id:397,name:'Brighton & Hove Albion FC',crest:'https://crests.football-data.org/397.png'};
+  assert.equal(teamIdentityFromMatches([{homeTeam:club}],'Brighton'),club);
+  assert.equal(teamIdentityFromMatches([{homeTeam:club,awayTeam:{...club,id:999}}],'Brighton'),null);
+  const old=global.fetch; let url;
+  global.fetch=async value=>{url=String(value);return {ok:true,json:async()=>({...club,area:{name:'England'}})};};
+  try{
+    const input={teams:{home:{name:'Coventry City',country:'England',resolved:true,badge:'home.png'},away:{name:'Brighton',resolved:false}},sourceStatus:{}};
+    await recoverFootballDataMetadata(input,{away:club});
+    assert.equal(input.teams.away.country,'England');assert.equal(input.teams.away.badge,club.crest);
+    assert.equal(input.teams.away.resolved,true);assert.match(url,/\/teams\/397$/);
+  }finally{global.fetch=old;}
+});
+
 test('maps UEFA competitions to football-data competition codes', () => {
   assert.equal(competitionCode('UEFA Champions League'), 'CL');
   assert.equal(competitionCode('Champions League'), 'CL');

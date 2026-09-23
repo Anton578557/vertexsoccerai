@@ -84,6 +84,14 @@ test('structured squad coverage is not falsely claimed', () => {
   assert.equal(result.meta.coverage.structuredInjuriesAndLineups, false);
 });
 
+test('final limitations reflect recovered history rather than a failed earlier source', () => {
+  const {finalizeVertexModelV2}=require('../lib/vertex-model-v2');
+  const input=baseAnalysis(); input.limitations=['Recent-form sample is limited (1 / 1 completed matches).'];
+  assert.equal(finalizeVertexModelV2(input).limitations.some(item=>item.includes('1 / 1')),false);
+  input.form.home.played=3;
+  assert.ok(finalizeVertexModelV2(input).limitations.some(item=>item.includes('3 / 8')));
+});
+
 test('connected news and default opponent averages alone cannot inflate quality', () => {
   const input = baseAnalysis(); input.news = [];
   const empty = buildVertexModelV2(input);
