@@ -352,6 +352,8 @@
 
   // Homepage and public browsing copy.
   Object.assign(dictionary.ru, {
+    'Your review': 'Ваш отзыв',
+    'Show more reviews': 'Показать ещё отзывы',
     "VERTEX / FOOTBALL INTELLIGENCE": "VERTEX / ФУТБОЛЬНАЯ АНАЛИТИКА",
     "See the game.": "Смотри на игру.",
     "Beyond the score.": "Глубже счёта.",
@@ -397,6 +399,8 @@
     "PASS / WATCH / FIT decision logic": "Пропустить / наблюдать / подходит"
 });
   Object.assign(dictionary.es, {
+    'Your review': 'Tu reseña',
+    'Show more reviews': 'Mostrar más reseñas',
     "VERTEX / FOOTBALL INTELLIGENCE": "VERTEX / INTELIGENCIA DE FÚTBOL",
     "See the game.": "Mira el juego.",
     "Beyond the score.": "Más allá del marcador.",
@@ -531,7 +535,7 @@
 
   function injectSwitcher() {
     if (document.getElementById('vertexLanguage')) return;
-    const nav = document.getElementById('nav');
+    const nav = document.getElementById('headerActions') || document.getElementById('nav');
     if (!nav) return;
     const wrap = document.createElement('div');
     wrap.id = 'vertexLanguage';

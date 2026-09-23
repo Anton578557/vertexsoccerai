@@ -37,6 +37,8 @@ module.exports = async function handler(req, res) {
 
   const local = localizedSuggestions(q, 8);
   const providerQuery = searchQuery(q);
+  // Known names must remain searchable even when the upstream quota is exhausted.
+  if (local.length) return res.status(200).json({ teams: mergeTeams(local, [], q) });
 
   try {
     const provider = providerQuery.length >= 2 ? await searchTheSportsDbTeams(providerQuery) : [];

@@ -82,6 +82,7 @@
   }
 
   function safeUrl(value) {
+    if (!String(value || '').trim()) return '';
     try {
       const url = new URL(String(value || ''), window.location.origin);
       return ['http:', 'https:'].includes(url.protocol) ? esc(url.href) : '';
@@ -134,7 +135,8 @@
   }
 
   function formCard(team, stats = {}) {
-    return `<div class="v6-form-card"><div class="v6-form-title"><strong>${esc(team)}</strong><span>${Number(stats.played || 0)} ${esc(t('matches'))}</span></div><div class="v6-form-pills">${formPills(stats)}</div><div class="v6-form-metrics"><div><span>${esc(t('gf'))}</span><strong>${Number.isFinite(Number(stats.avgFor)) ? Number(stats.avgFor).toFixed(2) : '—'}</strong></div><div><span>${esc(t('ga'))}</span><strong>${Number.isFinite(Number(stats.avgAgainst)) ? Number(stats.avgAgainst).toFixed(2) : '—'}</strong></div><div><span>${esc(t('ppg'))}</span><strong>${Number.isFinite(Number(stats.ppg)) ? Number(stats.ppg).toFixed(2) : '—'}</strong></div></div></div>`;
+    const metric = (value) => Number(stats.played) > 0 && value != null && value !== '' && Number.isFinite(Number(value)) ? Number(value).toFixed(2) : '—';
+    return `<div class="v6-form-card"><div class="v6-form-title"><strong>${esc(team)}</strong><span>${Number(stats.played || 0)} ${esc(t('matches'))}</span></div><div class="v6-form-pills">${formPills(stats)}</div><div class="v6-form-metrics"><div><span>${esc(t('gf'))}</span><strong>${metric(stats.avgFor)}</strong></div><div><span>${esc(t('ga'))}</span><strong>${metric(stats.avgAgainst)}</strong></div><div><span>${esc(t('ppg'))}</span><strong>${metric(stats.ppg)}</strong></div></div></div>`;
   }
 
   function bestDoubleChance(dc = {}) {

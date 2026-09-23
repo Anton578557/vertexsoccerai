@@ -12,7 +12,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="ui-v5.css">
-    <link rel="stylesheet" href="home.css?v=1">
+    <link rel="stylesheet" href="home.css?v=2">
 </head>
 <body>
     <div id="particles-js" aria-hidden="true"></div>
@@ -31,7 +31,12 @@
                 <span class="logo-text">VERTEX <span class="logo-accent">SOCCER AI</span></span>
             </a>
 
-            <button class="mobile-menu-button" id="mobileMenuButton" type="button" aria-label="Open menu" aria-expanded="false">☰</button>
+            <div class="header-actions" id="headerActions">
+                <a href="#" class="btn-login" id="btnLogin">Sign In</a>
+                <a href="#" class="btn-signup" id="btnSignup">Sign Up</a>
+                <a href="#" class="btn-cabinet hidden" id="btnCabinet">My Cabinet</a>
+            </div>
+            <button class="mobile-menu-button" id="mobileMenuButton" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="nav">☰</button>
 
             <nav class="nav" id="nav" aria-label="Main navigation">
                 <a href="#/" data-tab="home" class="active">Home</a>
@@ -42,9 +47,6 @@
                 <a href="#/reviews" data-tab="reviews">Reviews</a>
                 <a href="#/faq" data-tab="faq">FAQ</a>
                 <a href="#/contact" data-tab="contact">Contact</a>
-                <a href="#" class="btn-login" id="btnLogin">Sign In</a>
-                <a href="#" class="btn-signup" id="btnSignup">Sign Up</a>
-                <a href="#" class="btn-cabinet hidden" id="btnCabinet">My Cabinet</a>
             </nav>
         </div>
     </header>
@@ -109,8 +111,8 @@
                 </div>
 
                 <div class="search-box analyzer-search-box">
-                    <input type="text" id="analyzerSearch" placeholder="Borussia Dortmund vs Villarreal" autocomplete="off" spellcheck="false">
-                    <div class="suggestions" id="analyzerSuggestions"></div>
+                    <input type="text" id="analyzerSearch" placeholder="Borussia Dortmund vs Villarreal" autocomplete="off" spellcheck="false" aria-controls="analyzerSuggestions" aria-expanded="false">
+                    <div class="suggestions" id="analyzerSuggestions" aria-label="Team suggestions" aria-hidden="true"></div>
                     <button class="btn-analyze" id="btnAnalyzeMatch" type="button">⚡ RUN ANALYSIS</button>
                 </div>
 
@@ -189,22 +191,35 @@
                     <h2 class="section-title">Reviews</h2>
                     <p class="section-subtitle">Only reviews submitted by registered Vertex users.</p>
                 </div>
-                <div id="reviewsList"><div class="loading-state">Loading reviews…</div></div>
+                <div class="reviews-layout">
+                <div class="reviews-feed">
+                    <div id="reviewsList"><div class="loading-state">Loading reviews…</div></div>
+                    <div class="reviews-pagination">
+                        <span id="reviewsCount" aria-live="polite"></span>
+                        <button id="reviewsMore" class="btn-secondary hidden" type="button">Show more reviews</button>
+                    </div>
+                </div>
+                <aside class="reviews-compose">
                 <div id="reviewGuest" class="guest-action">
                     <p>Have you tried Vertex? Sign in to leave your review.</p>
                     <button class="btn-secondary" type="button" data-auth-action="reviews">Sign in to contribute</button>
                 </div>
                 <div id="reviewForm" class="review-form hidden">
                     <h3>Leave a review</h3>
-                    <div id="starContainer" class="stars" aria-label="Rating">
-                        <button class="star-rating active" data-rating="1" type="button">★</button>
-                        <button class="star-rating active" data-rating="2" type="button">★</button>
-                        <button class="star-rating active" data-rating="3" type="button">★</button>
-                        <button class="star-rating active" data-rating="4" type="button">★</button>
-                        <button class="star-rating active" data-rating="5" type="button">★</button>
+                    <div id="starContainer" class="stars" role="group" aria-label="Rating">
+                        <button class="star-rating active" data-rating="1" type="button" aria-label="1 / 5" aria-pressed="false">★</button>
+                        <button class="star-rating active" data-rating="2" type="button" aria-label="2 / 5" aria-pressed="false">★</button>
+                        <button class="star-rating active" data-rating="3" type="button" aria-label="3 / 5" aria-pressed="false">★</button>
+                        <button class="star-rating active" data-rating="4" type="button" aria-label="4 / 5" aria-pressed="false">★</button>
+                        <button class="star-rating active" data-rating="5" type="button" aria-label="5 / 5" aria-pressed="true">★</button>
                     </div>
-                    <textarea id="reviewText" placeholder="What did you like? What should Vertex improve?"></textarea>
+                    <div class="review-rating-value" id="reviewRatingValue" aria-live="polite">5 / 5</div>
+                    <label class="review-text-label" for="reviewText">Your review</label>
+                    <textarea id="reviewText" maxlength="1000" rows="5" placeholder="What did you like? What should Vertex improve?" aria-describedby="reviewCharCount"></textarea>
+                    <div class="review-char-count" id="reviewCharCount">0 / 1000</div>
                     <button class="btn-primary" id="btnSubmitReview" type="button">SUBMIT REVIEW</button>
+                </div>
+                </aside>
                 </div>
             </div>
         </section>
@@ -260,15 +275,15 @@
 
     <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
-    <script defer src="i18n.js?v=4"></script>
-    <script defer src="language-input-v2.js?v=4"></script>
+    <script defer src="i18n.js?v=5"></script>
+    <script defer src="language-input-v2.js?v=5"></script>
     <script defer src="auth-api-runtime-v1.js?v=3"></script>
-    <script defer src="analysis-ui-v4.js?v=11"></script>
+    <script defer src="analysis-ui-v4.js?v=12"></script>
     <script defer src="contact-runtime-v1.js?v=2"></script>
     <script defer src="polish-v8.js?v=11"></script>
-    <script defer src="analyzer-input-cleanup.js?v=3"></script>
+    <script defer src="analyzer-input-cleanup.js?v=4"></script>
     <script defer src="analyzer-stability-v1.js?v=5"></script>
-    <script defer src="script.js?v=13"></script>
+    <script defer src="script.js?v=14"></script>
     <script defer src="particles.js?v=13"></script>
 </body>
 </html>

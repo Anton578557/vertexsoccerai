@@ -153,7 +153,7 @@
     if (!input) return;
     const current = lang();
     input.placeholder = current === 'ru'
-      ? 'Например: Реал Мадрид против Барселоны'
+      ? 'Например: Реал Мадрид — Барселона'
       : current === 'es'
         ? 'Ejemplo: Real Madrid contra Barcelona'
         : 'Example: Real Madrid vs Barcelona';

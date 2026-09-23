@@ -9,8 +9,12 @@
   let currentUser = null;
   let selectedRating = 5;
   let suggestionTimer = null;
+  let suggestionRequest = null;
+  let suggestionRevision = 0;
   let lastAnalysis = null;
   let liveLoaded = false;
+  let reviewRows = null;
+  let reviewsVisible = 6;
 
   function ensureStylesheet(href) {
     if (document.querySelector(`link[href="${href}"]`)) return;
@@ -183,6 +187,7 @@
     byId('btnCabinet')?.classList.toggle('hidden', !currentUser);
     byId('reviewForm')?.classList.toggle('hidden', !currentUser);
     byId('reviewGuest')?.classList.toggle('hidden', Boolean(currentUser));
+    if (reviewRows) renderReviews();
     if (byId('tab-strategy')?.classList.contains('active')) renderStrategy();
   }
 
@@ -269,34 +274,45 @@
     }
   }
 
+  function matchParts(value) {
+    return String(value || '').split(/\s+(?:против|contra|versus|vs\.?|v\.?|-)\s+|\s*[–—]\s*/i);
+  }
+
   function parseMatchInput(value) {
-    const text = String(value || '').trim();
-    const parts = text.split(/\s+(?:vs\.?|v\.?|–|—)\s+/i).map((part) => part.trim()).filter(Boolean);
+    const parts = matchParts(value).map((part) => part.trim()).filter(Boolean);
     return parts.length === 2 && parts.every((part) => part.length >= 2) ? { home: parts[0], away: parts[1] } : null;
   }
 
   function suggestionQuery(value) {
-    const text = String(value || '').trim();
-    const split = text.split(/\s+(?:vs\.?|v\.?|–|—)\s+/i);
+    const split = matchParts(value);
     return split.at(-1)?.trim() || '';
   }
 
   function applySuggestion(original, teamName) {
-    const text = String(original || '').trim();
-    const match = text.match(/^(.*?\s+(?:vs\.?|v\.?|–|—)\s+)(.*)$/i);
-    return match ? `${match[1]}${teamName}` : teamName;
+    const parts = matchParts(original);
+    return parts.length === 2 ? `${parts[0].trim()} vs ${teamName}` : teamName;
+  }
+
+  function hideSuggestions(input, box) {
+    suggestionRevision += 1;
+    clearTimeout(suggestionTimer);
+    suggestionRequest?.abort();
+    box.classList.remove('active');
+    box.innerHTML = '';
+    box.setAttribute('aria-hidden', 'true');
+    input.setAttribute('aria-expanded', 'false');
   }
 
   async function showSuggestions(input, box) {
     const query = suggestionQuery(input.value);
-    if (query.length < 2) {
-      box.classList.remove('active');
-      box.innerHTML = '';
-      return;
-    }
+    if (query.length < 2 || document.activeElement !== input || document.documentElement.dataset.analysisBusy === 'true') return;
+    const revision = ++suggestionRevision;
+    const original = input.value;
+    suggestionRequest = new AbortController();
 
     try {
-      const data = await fetchJson(`/api/team-search?q=${encodeURIComponent(query)}`);
+      const data = await fetchJson(`/api/team-search?q=${encodeURIComponent(query)}`, { signal: suggestionRequest.signal });
+      if (revision !== suggestionRevision || input.value !== original || document.activeElement !== input) return;
       const teams = data.teams || [];
       if (!teams.length) throw new Error('No suggestions');
       box.innerHTML = teams.slice(0, 8).map((team) => `
@@ -306,9 +322,10 @@
         </button>
       `).join('');
       box.classList.add('active');
+      box.setAttribute('aria-hidden', 'false');
+      input.setAttribute('aria-expanded', 'true');
     } catch (_) {
-      box.classList.remove('active');
-      box.innerHTML = '';
+      if (revision === suggestionRevision) hideSuggestions(input, box);
     }
   }
 
@@ -318,13 +335,19 @@
     if (!input || !box) return;
 
     input.addEventListener('input', () => {
-      clearTimeout(suggestionTimer);
+      hideSuggestions(input, box);
       suggestionTimer = setTimeout(() => showSuggestions(input, box), 220);
     });
 
     input.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') hideSuggestions(input, box);
+      if (event.key === 'ArrowDown' && box.classList.contains('active')) {
+        event.preventDefault();
+        box.querySelector('button')?.focus();
+      }
       if (event.key === 'Enter') {
         event.preventDefault();
+        hideSuggestions(input, box);
         submitHandler();
       }
     });
@@ -333,7 +356,13 @@
       const item = event.target.closest('[data-team-name]');
       if (!item) return;
       input.value = applySuggestion(input.value, item.dataset.teamName);
-      box.classList.remove('active');
+      hideSuggestions(input, box);
+      input.focus();
+    });
+    document.addEventListener('vertex:suggestions-close', () => hideSuggestions(input, box));
+    box.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      hideSuggestions(input, box);
       input.focus();
     });
   }
@@ -740,18 +769,54 @@
     }
   }
 
+  function reviewWords() {
+    const language = window.VertexI18n?.getLanguage?.() || 'en';
+    return {
+      ru: { member: 'Участник Vertex', own: 'Ваш отзыв', more: 'Читать полностью', less: 'Свернуть', next: 'Показать ещё отзывы', count: 'Показано', of: 'из последних', empty: 'Пока нет отзывов. Поделитесь первым впечатлением о Vertex.', unavailable: 'Не удалось загрузить отзывы. Попробуйте открыть вкладку ещё раз.' },
+      es: { member: 'Miembro de Vertex', own: 'Tu reseña', more: 'Leer más', less: 'Leer menos', next: 'Mostrar más reseñas', count: 'Mostrando', of: 'de las últimas', empty: 'Aún no hay reseñas. Comparte tu experiencia con Vertex.', unavailable: 'No se pudieron cargar las reseñas. Vuelve a abrir esta sección.' },
+      en: { member: 'Vertex member', own: 'Your review', more: 'Read more', less: 'Show less', next: 'Show more reviews', count: 'Showing', of: 'of the latest', empty: 'No reviews yet. Share your experience with Vertex.', unavailable: 'Could not load reviews. Please open this section again.' }
+    }[language];
+  }
+
+  function renderReviews() {
+    if (!reviewRows) return;
+    const list = byId('reviewsList');
+    if (!list) return;
+    const words = reviewWords();
+    const locale = window.VertexI18n?.getLocale?.() || 'en-GB';
+    list.innerHTML = reviewRows.length ? reviewRows.slice(0, reviewsVisible).map((review, index) => {
+      const rating = clamp(Math.round(Number(review.rating) || 0), 0, 5);
+      const text = String(review.review_text || '').trim();
+      const long = text.length > 220 || text.split('\n').length > 4;
+      const excerpt = text.replace(/\s+/g, ' ').slice(0, 220);
+      const date = new Date(review.created_at);
+      const dateLabel = Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(date);
+      const author = currentUser?.id === review.user_id ? words.own : words.member;
+      const body = long ? `<details class="review-details"><summary><span class="review-excerpt">${escapeHtml(excerpt)}…</span><span class="review-read-more">${words.more}</span><span class="review-read-less">${words.less}</span></summary><p class="review-text">${escapeHtml(text)}</p></details>` : `<p class="review-text">${escapeHtml(text)}</p>`;
+      return `<article class="review-card"><header class="review-card-header"><span class="review-avatar" aria-hidden="true">V</span><div><strong>${escapeHtml(author)}</strong><time datetime="${escapeHtml(review.created_at || '')}">${escapeHtml(dateLabel)}</time></div><span class="review-score">${rating}<small> / 5</small></span></header><div class="review-card-stars" aria-label="${rating} / 5"><span aria-hidden="true">${'★'.repeat(rating)}<span class="review-star-empty">${'★'.repeat(5 - rating)}</span></span></div>${body}</article>`;
+    }).join('') : `<div class="empty-state"><p>${escapeHtml(words.empty)}</p></div>`;
+    byId('reviewsCount').textContent = reviewRows.length ? `${words.count} ${Math.min(reviewsVisible, reviewRows.length)} ${words.of} ${reviewRows.length}` : '';
+    byId('reviewsMore').textContent = words.next;
+    byId('reviewsMore').classList.toggle('hidden', reviewsVisible >= reviewRows.length);
+  }
+
   async function loadReviews() {
     const list = byId('reviewsList');
     if (!list) return;
     byId('reviewForm')?.classList.toggle('hidden', !currentUser);
     if (!supabaseClient) return (list.innerHTML = '<div class="empty-state"><p>Reviews database is unavailable.</p></div>');
     list.innerHTML = '<div class="loading-state">Loading reviews…</div>';
+    byId('reviewsCount').textContent = '';
+    byId('reviewsMore').classList.add('hidden');
     try {
       const { data, error } = await supabaseClient.from('reviews').select('*').order('created_at', { ascending: false }).limit(50);
       if (error) throw error;
-      list.innerHTML = data?.length ? data.map((review) => `<div class="result-row review-row"><div><strong class="review-stars">${'★'.repeat(clamp(Number(review.rating || 0), 0, 5))}</strong><p>${escapeHtml(review.review_text || '')}</p></div><small>${escapeHtml(fmtDate(review.created_at))}</small></div>`).join('') : '<div class="empty-state"><p>No reviews yet. Be the first Vertex user to leave one.</p></div>';
+      reviewRows = data || [];
+      reviewsVisible = 6;
+      renderReviews();
     } catch (error) {
-      list.innerHTML = `<div class="analysis-error"><p>${escapeHtml(error.message)}</p></div>`;
+      reviewRows = null;
+      list.innerHTML = `<div class="analysis-error"><p>${escapeHtml(reviewWords().unavailable)}</p></div>`;
     }
   }
 
@@ -759,14 +824,22 @@
     if (!currentUser) return showAccessModal('reviews');
     const text = byId('reviewText')?.value.trim();
     if (!text || text.length < 5) return showToast('Write a little more before submitting.');
+    const button = byId('btnSubmitReview');
+    if (button.disabled) return;
+    button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
     try {
       const { error } = await supabaseClient.from('reviews').insert([{ user_id: currentUser.id, rating: selectedRating, review_text: text.slice(0, 1000) }]);
       if (error) throw error;
       byId('reviewText').value = '';
+      byId('reviewCharCount').textContent = '0 / 1000';
       showToast('Review submitted.');
       loadReviews();
     } catch (error) {
       showToast(`Review failed: ${error.message}`);
+    } finally {
+      button.disabled = false;
+      button.removeAttribute('aria-busy');
     }
   }
 
@@ -863,6 +936,9 @@
     on('btnCabinet', 'click', (event) => { event.preventDefault(); showCabinet(); });
     on('btnRefreshLive', 'click', loadLiveMatches);
     on('btnSubmitReview', 'click', submitReview);
+    on('reviewsMore', 'click', () => { reviewsVisible += 6; renderReviews(); });
+    on('reviewText', 'input', () => { byId('reviewCharCount').textContent = `${byId('reviewText').value.length} / 1000`; });
+    document.addEventListener('vertex:languagechange', renderReviews);
     on('linkAbout', 'click', (event) => { event.preventDefault(); showAboutPage(); });
     on('linkTerms', 'click', (event) => { event.preventDefault(); showTermsPage(); });
     on('linkPrivacy', 'click', (event) => { event.preventDefault(); showPrivacyPage(); });
@@ -881,7 +957,11 @@
 
     qsa('.star-rating').forEach((star) => star.addEventListener('click', () => {
       selectedRating = Number(star.dataset.rating || 5);
-      qsa('.star-rating').forEach((item) => item.classList.toggle('active', Number(item.dataset.rating) <= selectedRating));
+      qsa('.star-rating').forEach((item) => {
+        item.classList.toggle('active', Number(item.dataset.rating) <= selectedRating);
+        item.setAttribute('aria-pressed', String(Number(item.dataset.rating) === selectedRating));
+      });
+      byId('reviewRatingValue').textContent = `${selectedRating} / 5`;
     }));
 
     document.addEventListener('keydown', (event) => {
@@ -909,11 +989,7 @@
     try {
       if (byId('footerYear')) byId('footerYear').textContent = new Date().getFullYear();
       bindEvents();
-      on('analyzerSearch', 'keydown', (event) => {
-        if (event.key !== 'Enter') return;
-        event.preventDefault();
-        startAnalyzerAnalysis();
-      });
+      bindSearch('analyzerSearch', 'analyzerSuggestions', startAnalyzerAnalysis);
       await initAuth();
       const initialTab = tabFromHash();
       activateTab(initialTab);
