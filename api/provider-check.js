@@ -14,7 +14,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const { payload, staleHit, cacheHit } = await cachedProviderCall({
-      cacheKey: 'system-diagnostics:v7',
+      cacheKey: 'system-diagnostics:v8',
       provider: 'Vertex Diagnostics',
       ttlSeconds: 300,
       staleSeconds: 1800,

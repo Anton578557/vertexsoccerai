@@ -96,6 +96,8 @@ test('analysis endpoint passes the same canonical teams and cache key for Russia
     } },
     '../lib/analysis-enhancer': { enhanceAnalysis: identity },
     '../lib/openfootball-history': { enrichOpenFootball: async a => a },
+    '../lib/openligadb-history': { enrichOpenLigaDb: identity },
+    '../lib/bsd-history': { enrichBsdHistory: identity },
     '../lib/espn-football': { enrichEspnAnalysis: identity },
     '../lib/sportmonks-history': { enrichSportmonksHistory: identity },
     '../lib/granular-enrichment': { enhanceGranularAnalysis: identity },

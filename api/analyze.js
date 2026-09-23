@@ -13,6 +13,8 @@ const { enforceRateLimit } = require('../lib/rate-limit');
 const { cachedProviderCall } = require('../lib/provider-cache');
 const { resolveTeamName } = require('../lib/team-aliases');
 const { enrichOpenFootball } = require('../lib/openfootball-history');
+const { enrichOpenLigaDb } = require('../lib/openligadb-history');
+const { enrichBsdHistory } = require('../lib/bsd-history');
 const { enrichEspnAnalysis } = require('../lib/espn-football');
 const { enrichSportmonksHistory } = require('../lib/sportmonks-history');
 
@@ -110,6 +112,8 @@ async function buildAnalysisCore(home, away, original = {}) {
 
   const enoughHistory = () => Math.min(analysis.form?.home?.played || 0, analysis.form?.away?.played || 0) >= 3;
   if (!enoughHistory()) analysis = await enrichOpenFootball(analysis);
+  if (!enoughHistory()) analysis = await enrichOpenLigaDb(analysis);
+  if (!enoughHistory()) analysis = await enrichBsdHistory(analysis);
   if (process.env.ESPN_FOOTBALL_ENABLED === 'true' && (!enoughHistory() || !analysis.fixture?.date)) analysis = await enrichEspnAnalysis(analysis);
   if (!enoughHistory()) analysis = await enrichSportmonksHistory(analysis);
 
@@ -168,7 +172,7 @@ module.exports = async function handler(req, res) {
   if (!home || !away || safeKey(home) === safeKey(away)) return res.status(400).json({ error: 'Choose two different teams.' });
 
   try {
-    const analysisKey = `analysis-core:v11:${safeKey(home)}:${safeKey(away)}`;
+    const analysisKey = `analysis-core:v12:${safeKey(home)}:${safeKey(away)}`;
     const cached = await cachedProviderCall({
       cacheKey: analysisKey,
       provider: 'Vertex Analysis Core',
