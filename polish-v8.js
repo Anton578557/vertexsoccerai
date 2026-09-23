@@ -354,6 +354,8 @@
     }
   };
 
+  window.VertexResponsibleContent = () => (legal[lang()] || legal.en).responsible;
+
   function openLegal(kind) {
     const copy = legal[lang()] || legal.en;
     const data = copy[kind];

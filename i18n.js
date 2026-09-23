@@ -450,6 +450,41 @@
     "PASS / WATCH / FIT decision logic": "Pasar / vigilar / adecuado"
 });
 
+  Object.assign(dictionary.ru, {
+  "Season forecasts": "Прогнозы на сезон",
+  "SEASON FORECASTS": "ПРОГНОЗЫ НА СЕЗОН",
+  "03 / SEASON": "03 / СЕЗОН",
+  "In development": "Идёт разработка",
+  "A NEW VIEW OF THE SEASON": "НОВЫЙ ВЗГЛЯД НА СЕЗОН",
+  "We are preparing season-long forecasts. This section will bring together title races, team prospects and the bigger picture.": "Готовим прогнозы на весь сезон: борьба за чемпионство, перспективы команд и общая картина турниров.",
+  "Explore Match Analyzer": "Перейти к анализу матча",
+  "A wider view of the season. This section is in development.": "Взгляд на весь сезон. Раздел находится в разработке.",
+  "Explore the section": "Открыть раздел",
+  "How to use Vertex": "Как пользоваться",
+  "Up to 2 reviews per account.": "Не более 2 отзывов с одного аккаунта.",
+  "You have published 2 of 2 reviews. Thank you for your feedback!": "Вы опубликовали 2 из 2 отзывов. Спасибо за обратную связь!",
+  "Checking your review limit…": "Проверяем количество ваших отзывов…",
+  "Your reviews: {count} of 2. Up to 2 reviews per account.": "Ваши отзывы: {count} из 2. С одного аккаунта можно оставить до двух отзывов.",
+  "Could not check your review limit. Reopen this section to retry.": "Не удалось проверить лимит отзывов. Откройте раздел повторно."
+});
+  Object.assign(dictionary.es, {
+  "Season forecasts": "Pronósticos de temporada",
+  "SEASON FORECASTS": "PRONÓSTICOS DE TEMPORADA",
+  "03 / SEASON": "03 / TEMPORADA",
+  "In development": "En desarrollo",
+  "A NEW VIEW OF THE SEASON": "UNA NUEVA VISIÓN DE LA TEMPORADA",
+  "We are preparing season-long forecasts. This section will bring together title races, team prospects and the bigger picture.": "Preparamos pronósticos para toda la temporada: la lucha por el título, las perspectivas de los equipos y una visión global de los torneos.",
+  "Explore Match Analyzer": "Ir al análisis de partidos",
+  "A wider view of the season. This section is in development.": "Una visión de toda la temporada. Sección en desarrollo.",
+  "Explore the section": "Explorar sección",
+  "How to use Vertex": "Cómo usar Vertex",
+  "Up to 2 reviews per account.": "Máximo 2 reseñas por cuenta.",
+  "You have published 2 of 2 reviews. Thank you for your feedback!": "Has publicado 2 de 2 reseñas. ¡Gracias por tu opinión!",
+  "Checking your review limit…": "Comprobando tus reseñas…",
+  "Your reviews: {count} of 2. Up to 2 reviews per account.": "Tus reseñas: {count} de 2. Puedes publicar hasta dos reseñas por cuenta.",
+  "Could not check your review limit. Reopen this section to retry.": "No se pudo comprobar el límite. Vuelve a abrir esta sección."
+});
+
   const placeholderDictionary = {
     ru: {
       'Borussia Dortmund vs Villarreal': 'Боруссия Дортмунд vs Вильярреал',

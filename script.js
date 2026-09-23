@@ -15,6 +15,9 @@
   let liveLoaded = false;
   let reviewRows = null;
   let reviewsVisible = 6;
+  let reviewAllowance = null;
+  let reviewOwner = null;
+  let reviewSubmitting = false;
 
   function ensureStylesheet(href) {
     if (document.querySelector(`link[href="${href}"]`)) return;
@@ -95,6 +98,7 @@
   }
 
   function activateTab(tabId) {
+    if (tabId === 'results') tabId = 'season';
     const target = byId(`tab-${tabId}`);
     if (!target) {
       console.warn('[Vertex] Missing tab:', tabId);
@@ -115,7 +119,6 @@
 
     if (tabId === 'leaderboard') loadLeaderboard();
     if (tabId === 'reviews') loadReviews();
-    if (tabId === 'results') loadPerformance();
     if (tabId === 'strategy') renderStrategy();
     window.VertexI18n?.apply?.(target);
     return true;
@@ -182,6 +185,13 @@
   }
 
   function updateAuthUI() {
+    window.VertexGuide?.onSession(supabaseClient, currentUser);
+    if (reviewOwner !== (currentUser?.id || null)) {
+      reviewOwner = currentUser?.id || null;
+      reviewAllowance = null;
+      renderReviewAllowance();
+      if (byId('tab-reviews')?.classList.contains('active')) setTimeout(loadReviewAllowance, 0);
+    }
     byId('btnLogin')?.classList.toggle('hidden', Boolean(currentUser));
     byId('btnSignup')?.classList.toggle('hidden', Boolean(currentUser));
     byId('btnCabinet')?.classList.toggle('hidden', !currentUser);
@@ -824,7 +834,10 @@
     byId('reviewsCount').textContent = '';
     byId('reviewsMore').classList.add('hidden');
     try {
-      const { data, error } = await supabaseClient.from('reviews').select('*').order('created_at', { ascending: false }).limit(50);
+      const [{ data, error }] = await Promise.all([
+        supabaseClient.from('reviews').select('*').order('created_at', { ascending: false }).limit(50),
+        loadReviewAllowance()
+      ]);
       if (error) throw error;
       reviewRows = data || [];
       reviewsVisible = 6;
@@ -835,13 +848,49 @@
     }
   }
 
+  function renderReviewAllowance() {
+    const t = (text,vars) => window.VertexI18n?.t?.(text,vars) || text;
+    const reached = reviewAllowance != null && reviewAllowance >= 2;
+    const pending = reviewAllowance == null;
+    const note = byId('reviewLimit');
+    if (note) {
+      note.textContent = reached ? t('You have published 2 of 2 reviews. Thank you for your feedback!')
+        : pending ? t('Checking your review limit…') : t('Your reviews: {count} of 2. Up to 2 reviews per account.',{count:reviewAllowance});
+      note.classList.toggle('reached',reached);
+    }
+    const disabled = !currentUser || pending || reached || reviewSubmitting;
+    byId('btnSubmitReview') && (byId('btnSubmitReview').disabled = disabled);
+    byId('reviewText') && (byId('reviewText').disabled = disabled);
+    qsa('.star-rating').forEach(button => { button.disabled = disabled; });
+  }
+
+  async function loadReviewAllowance() {
+    const id = currentUser?.id;
+    if (!id || !supabaseClient) { reviewAllowance = null; renderReviewAllowance(); return; }
+    try {
+      const {count,error} = await supabaseClient.from('reviews').select('id',{count:'exact',head:true}).eq('user_id',id);
+      if (currentUser?.id !== id) return;
+      if (error || count == null) throw error || new Error('Missing review count');
+      reviewAllowance = count;
+      renderReviewAllowance();
+    } catch (_) {
+      if (currentUser?.id !== id) return;
+      reviewAllowance = null;
+      renderReviewAllowance();
+      if (byId('reviewLimit')) byId('reviewLimit').textContent = window.VertexI18n?.t?.('Could not check your review limit. Reopen this section to retry.');
+    }
+  }
+
   async function submitReview() {
     if (!currentUser) return showAccessModal('reviews');
+    if (reviewAllowance >= 2) return showToast('You have published 2 of 2 reviews. Thank you for your feedback!');
+    if (reviewAllowance == null || reviewSubmitting) return;
     const text = byId('reviewText')?.value.trim();
     if (!text || text.length < 5) return showToast('Write a little more before submitting.');
     const button = byId('btnSubmitReview');
     if (button.disabled) return;
-    button.disabled = true;
+    reviewSubmitting = true;
+    renderReviewAllowance();
     button.setAttribute('aria-busy', 'true');
     try {
       const { error } = await supabaseClient.from('reviews').insert([{ user_id: currentUser.id, rating: selectedRating, review_text: text.slice(0, 1000) }]);
@@ -849,11 +898,13 @@
       byId('reviewText').value = '';
       byId('reviewCharCount').textContent = '0 / 1000';
       showToast('Review submitted.');
-      loadReviews();
+      await loadReviews();
     } catch (error) {
-      showToast(`Review failed: ${error.message}`);
+      if (String(error.message).includes('REVIEW_LIMIT_REACHED')) showToast('You have published 2 of 2 reviews. Thank you for your feedback!');
+      else showToast(`Review failed: ${error.message}`);
     } finally {
-      button.disabled = false;
+      reviewSubmitting = false;
+      await loadReviewAllowance();
       button.removeAttribute('aria-busy');
     }
   }
@@ -953,8 +1004,7 @@
     on('btnSubmitReview', 'click', submitReview);
     on('reviewsMore', 'click', () => { reviewsVisible += 6; renderReviews(); });
     on('reviewText', 'input', () => { byId('reviewCharCount').textContent = `${byId('reviewText').value.length} / 1000`; });
-    document.addEventListener('vertex:languagechange', renderReviews);
-    document.addEventListener('vertex:languagechange', () => { if (byId('tab-results')?.classList.contains('active')) loadPerformance(); });
+    document.addEventListener('vertex:languagechange', () => { renderReviews(); renderReviewAllowance(); });
     on('linkAbout', 'click', (event) => { event.preventDefault(); showAboutPage(); });
     on('linkTerms', 'click', (event) => { event.preventDefault(); showTermsPage(); });
     on('linkPrivacy', 'click', (event) => { event.preventDefault(); showPrivacyPage(); });
@@ -987,7 +1037,8 @@
   }
 
   function tabFromHash() {
-    const value = window.location.hash.replace(/^#\/?/, '').trim();
+    const raw = window.location.hash.replace(/^#\/?/, '').trim();
+    const value = raw === 'results' ? 'season' : raw;
     return byId(`tab-${value}`) ? value : 'home';
   }
 

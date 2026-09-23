@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="ui-v5.css">
     <link rel="stylesheet" href="home.css?v=3">
+    <link rel="stylesheet" href="welcome-season.css?v=1">
 </head>
 <body>
     <div id="particles-js" aria-hidden="true"></div>
@@ -42,7 +43,7 @@
                 <a href="#/" data-tab="home" class="active">Home</a>
                 <a href="#/analyzer" data-tab="analyzer">Match Analyzer</a>
                 <a href="#/strategy" data-tab="strategy">My Strategy</a>
-                <a href="#/results" data-tab="results">Results</a>
+                <a href="#/season" data-tab="season">Season forecasts</a>
                 <a href="#/leaderboard" data-tab="leaderboard">Leaderboard</a>
                 <a href="#/reviews" data-tab="reviews">Reviews</a>
                 <a href="#/faq" data-tab="faq">FAQ</a>
@@ -87,9 +88,9 @@
                             <div class="landing-card-top"><span>02 / STRATEGY</span><span aria-hidden="true">↗</span></div>
                             <h3>My Strategy</h3><p>Set your preferences for risk and markets. Keep your approach consistent.</p><span class="landing-card-link">Explore strategy</span>
                         </a>
-                        <a class="landing-card" href="#/results" data-route="results">
-                            <div class="landing-card-top"><span>03 / RESULTS</span><span aria-hidden="true">↗</span></div>
-                            <h3>Verified results</h3><p>See how model predictions compare with completed matches.</p><span class="landing-card-link">View results</span>
+                        <a class="landing-card" href="#/season" data-route="season">
+                            <div class="landing-card-top"><span>03 / SEASON</span><span aria-hidden="true">↗</span></div>
+                            <h3>Season forecasts</h3><p>A wider view of the season. This section is in development.</p><span class="landing-card-link">Explore the section</span>
                         </a>
                     </div>
                 </div>
@@ -154,26 +155,26 @@
             </div>
         </section>
 
-        <section id="tab-results" class="tab-content">
-            <div class="container section-shell">
-                <div class="section-heading">
-                    <span class="kicker">VERIFIED PERFORMANCE</span>
-                    <h2 class="section-title">Results</h2>
-                    <p class="section-subtitle">No fake 85%. Performance appears only after predictions have been matched against final results.</p>
-                </div>
-                <div id="modelPerformance" class="performance-panel">
-                    <div class="performance-hero">
-                        <span class="performance-label">MODEL STATUS</span>
-                        <strong>COLLECTING VERIFIED DATA</strong>
-                        <p>Vertex will publish accuracy only when enough real, evaluated predictions exist.</p>
-                    </div>
-                    <div id="performanceDetails" class="v8-performance"></div>
-                    <div class="performance-grid">
-                        <div><span>Evaluated</span><strong id="perfEvaluated">—</strong></div>
-                        <div><span>Correct</span><strong id="perfCorrect">—</strong></div>
-                        <div><span>Accuracy</span><strong id="perfAccuracy">—</strong></div>
-                        <div><span>Data quality</span><strong id="perfQuality">—</strong></div>
-                    </div>
+        <section id="tab-season" class="tab-content">
+            <div class="container section-shell season-shell">
+                <div class="season-preview">
+                    <span class="kicker">SEASON FORECASTS</span>
+                    <div class="season-ball-stage" aria-hidden="true"><div class="season-ball">
+                        <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <defs><radialGradient id="ball-light" cx=".32" cy=".25" r=".8"><stop stop-color="#fff"/><stop offset=".65" stop-color="#d8e9ef"/><stop offset="1" stop-color="#7196a4"/></radialGradient><clipPath id="ball-clip"><circle cx="60" cy="60" r="57"/></clipPath></defs>
+                            <circle cx="60" cy="60" r="57" fill="url(#ball-light)"/>
+                            <g clip-path="url(#ball-clip)" fill="#0a2532" stroke="#466773" stroke-width="1.3">
+                                <path d="M60 37 82 53 74 79 46 79 38 53Z"/>
+                                <path d="M40 1 61 13 80 1 60-10Z M112 27 95 34 94 55 119 67 127 36Z M103 105 80 99 66 116 77 131 110 125Z M8 105 37 99 48 119 36 132 2 124Z M5 27 25 34 26 56 0 69-6 41Z"/>
+                                <path d="M61 13 60 37M82 53 95 34M74 79 80 99M46 79 37 99M38 53 25 34" fill="none"/>
+                            </g>
+                            <circle cx="60" cy="60" r="57" stroke="#ecfaff" stroke-opacity=".4"/>
+                        </svg>
+                    </div></div>
+                    <span class="season-status">A NEW VIEW OF THE SEASON</span>
+                    <h2>In development</h2>
+                    <p>We are preparing season-long forecasts. This section will bring together title races, team prospects and the bigger picture.</p>
+                    <a class="season-back" href="#/analyzer" data-route="analyzer"><span>Explore Match Analyzer</span><span aria-hidden="true">↗</span></a>
                 </div>
             </div>
         </section>
@@ -211,6 +212,7 @@
                 </div>
                 <div id="reviewForm" class="review-form hidden">
                     <h3>Leave a review</h3>
+                    <p id="reviewLimit" class="review-limit" aria-live="polite">Up to 2 reviews per account.</p>
                     <div id="starContainer" class="stars" role="group" aria-label="Rating">
                         <button class="star-rating active" data-rating="1" type="button" aria-label="1 / 5" aria-pressed="false">★</button>
                         <button class="star-rating active" data-rating="2" type="button" aria-label="2 / 5" aria-pressed="false">★</button>
@@ -265,6 +267,7 @@
                 <span>Football Intelligence Engine</span>
             </div>
             <div class="footer-links">
+                <a href="#" id="linkGuide" data-open-guide>How to use Vertex</a>
                 <a href="#" id="linkAbout">About</a>
                 <a href="#" id="linkTerms">Terms</a>
                 <a href="#" id="linkPrivacy">Privacy</a>
@@ -280,15 +283,16 @@
 
     <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
-    <script defer src="i18n.js?v=6"></script>
+    <script defer src="i18n.js?v=7"></script>
     <script defer src="language-input-v2.js?v=5"></script>
     <script defer src="auth-api-runtime-v1.js?v=3"></script>
     <script defer src="analysis-ui-v4.js?v=15"></script>
     <script defer src="contact-runtime-v1.js?v=2"></script>
-    <script defer src="polish-v8.js?v=11"></script>
+    <script defer src="polish-v8.js?v=12"></script>
     <script defer src="analyzer-input-cleanup.js?v=4"></script>
     <script defer src="analyzer-stability-v1.js?v=5"></script>
-    <script defer src="script.js?v=16"></script>
+    <script defer src="welcome-guide.js?v=1"></script>
+    <script defer src="script.js?v=17"></script>
     <script defer src="particles.js?v=13"></script>
 </body>
 </html>
