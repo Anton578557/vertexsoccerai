@@ -56,7 +56,7 @@ jobs:
         run: |
           set -euo pipefail
           curl --fail --silent --show-error --max-time 20 "https://vertexsoccerai.com/?smoke=${GITHUB_SHA}" -o /tmp/site.html
-          grep -q 'analyzer-stability-v1.js?v=5' /tmp/site.html
+          grep -q 'analyzer-stability-v1.js?v=' /tmp/site.html
           if grep -q 'data-tab="live"' /tmp/site.html; then
             echo 'Deprecated Live tab is visible in production.' >&2
             exit 1

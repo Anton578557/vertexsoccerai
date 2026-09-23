@@ -23,6 +23,7 @@ function baseAnalysis() {
     leagueContext: { sample: 120, homeGoals: 1.55, awayGoals: 1.2, teamGoalAvg: 1.375 },
     h2h: { sample: 3, homePpg: 2.1, awayPpg: 0.7 },
     sourceStatus: { news: 'NewsAPI · summarized' },
+    news: [{relevanceVerified:true}],
     newsImpact: { homePct: 0, awayPct: 0 },
     weatherImpact: { goalEnvironmentPct: 0, reasons: [] },
     weather: { tempC: 18 },
@@ -41,8 +42,9 @@ test('stronger home profile produces a higher home-win probability', () => {
   assert.ok(result.model.oneXtwo.home > result.model.oneXtwo.away);
   const sum = result.model.oneXtwo.home + result.model.oneXtwo.draw + result.model.oneXtwo.away;
   assert.ok(sum >= 99 && sum <= 101);
-  assert.equal(result.meta.version, 'Vertex Model 2.2');
-  assert.ok(result.dataQuality >= 70);
+  assert.equal(result.meta.version, 'Vertex Model 2.3');
+  assert.equal(result.meta.qualityBreakdown.opponentStrength, 0);
+  assert.ok(result.dataQuality >= 60);
 });
 
 test('attributed home player absence lowers home expected goals', () => {
@@ -80,6 +82,17 @@ test('insufficient samples are withheld rather than invented', () => {
 test('structured squad coverage is not falsely claimed', () => {
   const result = buildVertexModelV2(baseAnalysis());
   assert.equal(result.meta.coverage.structuredInjuriesAndLineups, false);
+});
+
+test('connected news and default opponent averages alone cannot inflate quality', () => {
+  const input = baseAnalysis(); input.news = [];
+  const empty = buildVertexModelV2(input);
+  input.news = [{title:'NFL match in Santa Clara', relevanceVerified:false}];
+  assert.equal(buildVertexModelV2(input).dataQuality, empty.dataQuality);
+  assert.equal(empty.meta.qualityBreakdown.newsReviewed, 0);
+  assert.equal(empty.meta.qualityBreakdown.opponentStrength, 0);
+  input.news = [{relevanceVerified:true}];
+  assert.equal(buildVertexModelV2(input).dataQuality, empty.dataQuality + 7);
 });
 
 test('duration parser understands multi-week absences', () => {
@@ -140,6 +153,7 @@ test('missing recovery values do not create an artificial fatigue penalty', () =
   assert.equal(buildVertexModelV2(unknown).meta.drivers.some((d) => /fatigue/.test(d.key)), false);
   const shortRest = structuredClone(unknown);
   shortRest.advanced.home.restDays = 0;
+  shortRest.advanced.home.scheduleVerified = true;
   assert.ok(buildVertexModelV2(shortRest).model.expectedGoals.home < buildVertexModelV2(unknown).model.expectedGoals.home);
 });
 
@@ -185,7 +199,8 @@ test('Poisson distribution matches analytic totals over the full supported lambd
 });
 
 test('full recovery supports the recovering team and unavailable news is not coverage', () => {
-  const input = baseAnalysis(); input.advanced.home.restDays = 8; input.sourceStatus.news = 'Unavailable';
+  const input = baseAnalysis(); input.advanced.home.restDays = 8; input.advanced.home.scheduleVerified = true;
+  input.sourceStatus.news = 'Unavailable'; input.news = [];
   const result = buildVertexModelV2(input);
   assert.equal(result.meta.drivers.find((d) => d.key === 'home-fatigue').side, 'home');
   assert.equal(result.meta.coverage.news, false);

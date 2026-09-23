@@ -13,6 +13,8 @@ test('OpenLigaDB only maps official German regular leagues and correct season bo
   assert.equal(competitionCode('German Bundesliga', 'Germany'), 'bl1');
   assert.equal(competitionCode('German 2. Bundesliga', 'Germany'), 'bl2');
   assert.equal(competitionCode('3. Liga', 'Germany'), 'bl3');
+  assert.equal(competitionCode('Germany Liga 3', 'Germany'), 'bl3');
+  assert.equal(competitionCode('German 3. Liga', 'Germany'), 'bl3');
   assert.equal(competitionCode('Bundesliga', 'Austria'), null);
   assert.equal(competitionCode('DFB Pokal', 'Germany'), null);
   assert.deepEqual(seasonYears(new Date('2026-09-23')), [2026, 2025]);

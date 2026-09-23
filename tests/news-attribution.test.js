@@ -7,6 +7,16 @@ const { buildAvailabilityFromNews } = require('../lib/squad-availability');
 
 const article = title => ({ title, description: title, publishedAt: new Date(Date.now() - 3600e3).toISOString() });
 
+test('non-football namesakes, unrelated institutions and other squads cannot enter the report', () => {
+  for (const title of ['Santa Clara NFL quarterback ruled out', 'Santa Clara county foster care scores a grant',
+    'Instituto Galo of Argentina supports football nutrition research', 'Arsenal Women prepare for a WSL match',
+    'Arsenal U21 score three goals in their fixture']) {
+    assert.equal(classify(article(title), 'Santa Clara', title.includes('Arsenal') ? 'Arsenal' : 'Instituto'), null, title);
+  }
+  assert.equal(classify(article('CD Santa Clara striker returns before the Liga Portugal match'), 'Santa Clara', 'Arouca').relevanceVerified, true);
+  assert.ok(classify(article('Instituto Cordoba prepare for their next football match'), 'Instituto', 'Estudiantes Rio Cuarto'));
+});
+
 test('opponent injury headlines are context, not a team-strength penalty', () => {
   const item = classify(article('Barcelona striker ruled out against Boca Juniors'), 'Racing Club', 'Boca Juniors');
   assert.deepEqual(item.teams, ['away']);

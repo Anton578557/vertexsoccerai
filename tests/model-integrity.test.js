@@ -39,6 +39,16 @@ test('summary counts fixtures independently and scores selected probabilities wi
   assert.equal(result.calibrationStatus,'not_calibrated');
 });
 
+test('full 1X2 distribution scoring requires an original snapshot and remains separate from selected-event scoring', () => {
+  const base={fixture_key:'v23-a',fixture_date:'2026-09-20T17:00:00Z',created_at:'2026-09-20T16:00:00Z',
+    market:'1X2',model_version:'Vertex Model 2.3',predicted_probability:60,is_correct:true,actual_value:'HOME · 2-1'};
+  const result=summarizeEvaluations([{...base,forecast:{model:{oneXtwo:{home:60,draw:20,away:20}}}},
+    {...base,fixture_key:'legacy-b',forecast:null}]);
+  assert.equal(result.oneXtwoDistribution.fixtures,1);
+  assert.equal(result.oneXtwoDistribution.brierScore,.24);
+  assert.equal(result.byMarket['1X2'].brierScore,.16);
+});
+
 test('forecast recording rejects kick-off and keeps first snapshots immutable', async () => {
   const savedFetch = global.fetch, savedUrl = process.env.SUPABASE_URL, savedKey = process.env.SUPABASE_SECRET_KEY;
   process.env.SUPABASE_URL='https://test.invalid'; process.env.SUPABASE_SECRET_KEY='test-only';
@@ -49,9 +59,13 @@ test('forecast recording rejects kick-off and keeps first snapshots immutable', 
     assert.equal((await recordModelEvaluations(analysis)).reason,'fixture_started');
     assert.equal(request,null);
     analysis.fixture.date=new Date(Date.now()+3600e3).toISOString();
-    assert.equal((await recordModelEvaluations(analysis)).recorded,0);
+    analysis.engine = {modelVersion:'Vertex Model 2.3'};
+    const result = await recordModelEvaluations(analysis);
+    assert.equal(result.recorded,0); assert.equal(result.existing,true);
     assert.equal(request.headers.Prefer,'resolution=ignore-duplicates,return=representation');
     assert.equal(JSON.parse(request.body).length,1);
+    assert.equal(JSON.parse(request.body)[0].model_version,'Vertex Model 2.3');
+    assert.deepEqual(JSON.parse(request.body)[0].forecast.model,analysis.model);
   } finally {
     global.fetch=savedFetch;
     for (const [key,value] of [['SUPABASE_URL',savedUrl],['SUPABASE_SECRET_KEY',savedKey]]) if(value === undefined) delete process.env[key]; else process.env[key]=value;

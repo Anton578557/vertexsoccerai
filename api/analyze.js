@@ -13,7 +13,8 @@ const { enforceRateLimit } = require('../lib/rate-limit');
 const { cachedProviderCall } = require('../lib/provider-cache');
 const { resolveTeamName } = require('../lib/team-aliases');
 const { enrichOpenFootball } = require('../lib/openfootball-history');
-const { enrichOpenLigaDb } = require('../lib/openligadb-history');
+const { enrichOpenLigaDb, resolveOpenLigaClubs } = require('../lib/openligadb-history');
+const { needsMoreHistory, refreshScheduleContext } = require('../lib/verified-history');
 const { enrichBsdHistory } = require('../lib/bsd-history');
 const { enrichEspnAnalysis } = require('../lib/espn-football');
 const { enrichSportmonksHistory } = require('../lib/sportmonks-history');
@@ -75,23 +76,17 @@ async function attachModelContext(analysis) {
     analysis.teams.home.country || ''
   );
   if (fd?.ok) {
-    const homeSample = Number(fd.advanced?.home?.sample || 0);
-    const awaySample = Number(fd.advanced?.away?.sample || 0);
-    const currentHomeSample = Number(analysis?.advanced?.home?.sample || 0);
-    const currentAwaySample = Number(analysis?.advanced?.away?.sample || 0);
-    if (homeSample >= Math.max(3, currentHomeSample) && awaySample >= Math.max(3, currentAwaySample)) {
-      analysis.advanced = fd.advanced;
-    } else if (!analysis.advanced && homeSample >= 3 && awaySample >= 3) {
-      analysis.advanced = fd.advanced;
-    }
+    // Preserve the selected form bundle. Supplement league/H2H separately,
+    // keeping explicit provenance instead of silently replacing advanced form.
     analysis.leagueContext = fd.leagueContext || analysis.leagueContext || null;
     analysis.h2h = fd.h2h || analysis.h2h || null;
+    analysis.contextSources = {...(analysis.contextSources || {}),
+      league: fd.leagueContext ? 'Football-Data' : analysis.contextSources?.league,
+      h2h: fd.h2h?.sample ? 'Football-Data' : analysis.contextSources?.h2h};
     if (fd.penaltyModel?.ok) analysis.penaltyModel = fd.penaltyModel;
     analysis.sourceStatus = {
       ...(analysis.sourceStatus || {}),
-      vertexModelContext: fd.crossCompetitionForm
-        ? 'Football-Data cross-competition form + competition baseline + H2H'
-        : 'Football-Data competition form + league baseline + H2H',
+      vertexModelContext: `${analysis.contextSources?.form || analysis.sourceStatus.primaryFootball} · form; Football-Data · league/H2H context`,
       penaltyHistory: fd.penaltyModel?.ok ? 'Football-Data verified scored-penalty history' : (fd.penaltyModel?.reason || 'Penalty sample unavailable')
     };
     analysis.marketCoverage = {
@@ -107,13 +102,14 @@ async function attachModelContext(analysis) {
 
 async function buildAnalysisCore(home, away, original = {}) {
   let base = await buildBaseAnalysis(home, away, original);
+  base = await resolveOpenLigaClubs(base);
   base = await preResolveFixture(base);
   let analysis = await enhanceAnalysis(base);
 
   const enoughHistory = () => Math.min(analysis.form?.home?.played || 0, analysis.form?.away?.played || 0) >= 3;
-  if (!enoughHistory()) analysis = await enrichOpenFootball(analysis);
-  if (!enoughHistory()) analysis = await enrichOpenLigaDb(analysis);
-  if (!enoughHistory()) analysis = await enrichBsdHistory(analysis);
+  if (needsMoreHistory(analysis)) analysis = await enrichOpenFootball(analysis);
+  if (needsMoreHistory(analysis)) analysis = await enrichOpenLigaDb(analysis);
+  if (needsMoreHistory(analysis)) analysis = await enrichBsdHistory(analysis);
   if (process.env.ESPN_FOOTBALL_ENABLED === 'true' && (!enoughHistory() || !analysis.fixture?.date)) analysis = await enrichEspnAnalysis(analysis);
   if (!enoughHistory()) analysis = await enrichSportmonksHistory(analysis);
 
@@ -136,6 +132,7 @@ async function buildAnalysisCore(home, away, original = {}) {
   analysis = await enhanceGranularAnalysis(analysis);
   analysis = await attachModelContext(analysis);
   analysis = await enrichAvailabilityIntelligence(analysis);
+  analysis = refreshScheduleContext(analysis);
   analysis = finalizeVertexModelV2(analysis);
 
   if (analysis.penaltyModel?.ok) {
@@ -172,7 +169,7 @@ module.exports = async function handler(req, res) {
   if (!home || !away || safeKey(home) === safeKey(away)) return res.status(400).json({ error: 'Choose two different teams.' });
 
   try {
-    const analysisKey = `analysis-core:v13:${safeKey(home)}:${safeKey(away)}`;
+    const analysisKey = `analysis-core:v14:${safeKey(home)}:${safeKey(away)}`;
     const cached = await cachedProviderCall({
       cacheKey: analysisKey,
       provider: 'Vertex Analysis Core',
@@ -202,12 +199,9 @@ module.exports = async function handler(req, res) {
       penaltyHistoryModel: Boolean(analysis.penaltyModel?.ok)
     };
 
-    if (!cached.cacheHit && !cached.staleHit) {
-      const evaluationWrite = await recordModelEvaluations(analysis);
-      analysis.engine.modelSnapshotRecorded = Number(evaluationWrite.recorded || 0) > 0;
-    } else {
-      analysis.engine.modelSnapshotRecorded = Boolean(analysis.model && analysis.fixture?.date);
-    }
+    const evaluationWrite = await recordModelEvaluations(analysis);
+    analysis.engine.modelSnapshotRecorded = Boolean(evaluationWrite.recorded || evaluationWrite.existing);
+    analysis.engine.modelSnapshotStatus = evaluationWrite.reason || 'saved';
 
     return res.status(200).json({ analysis });
   } catch (error) {

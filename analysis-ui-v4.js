@@ -36,7 +36,8 @@
       probabilities: 'Вероятности исхода', form: 'Текущая форма', matches: 'матчей учтено', gf: 'Забито за матч', ga: 'Пропущено за матч', ppg: 'Очков за матч',
       why: 'Почему Vertex так считает', drivers: 'Факторы, которые реально изменили расчёт', events: 'Событийные рынки', corners: 'Угловые', cards: 'Жёлтые карточки', shots: 'Удары', sot: 'Удары в створ', offsides: 'Офсайды', fouls: 'Фолы', expected: 'Ожидание',
       penalty: 'Оценка пенальти', penaltyNote: 'Основано только на проверенной истории реализованных пенальти. Оценка намеренно консервативная.', penaltyMissing: 'Для оценки пенальти пока не хватает проверенной истории.',
-      context: 'Контекст и состав', news: 'Новости', availability: 'Доступность игроков', noNews: 'Сильных новостных сигналов, меняющих модель, не найдено.',
+      context: 'Контекст и состав', news: 'Новости', availability: 'Доступность игроков', noNews: 'Подходящих свежих футбольных новостей не найдено.',
+      squadMissing: 'Подтверждённые составы и полный список травм недоступны. Это ограничение анализа; отсутствие данных не означает, что все игроки здоровы.',
       technical: 'Технические данные', source: 'Источники', save: 'СОХРАНИТЬ АНАЛИЗ', copy: 'КОПИРОВАТЬ СВОДКУ',
       saved: 'Анализ сохранён в личный кабинет.', copied: 'Сводка анализа скопирована.', withheld: 'Прогноз не выдан',
       withheldText: 'Vertex пока не собрал достаточно проверенной истории завершённых матчей по обеим командам.',
@@ -51,7 +52,8 @@
       probabilities: 'Probabilidades del partido', form: 'Forma reciente', matches: 'partidos usados', gf: 'Goles a favor / partido', ga: 'Goles en contra / partido', ppg: 'Puntos / partido',
       why: 'Por qué Vertex piensa esto', drivers: 'Factores que realmente cambiaron el cálculo', events: 'Mercados de eventos', corners: 'Córners', cards: 'Tarjetas amarillas', shots: 'Tiros', sot: 'Tiros a puerta', offsides: 'Fueras de juego', fouls: 'Faltas', expected: 'Esperado',
       penalty: 'Estimación de penalti', penaltyNote: 'Basado solo en historial verificado de penaltis convertidos. La estimación es deliberadamente conservadora.', penaltyMissing: 'Aún no hay suficiente historial verificado para estimar penaltis.',
-      context: 'Contexto y plantilla', news: 'Noticias', availability: 'Disponibilidad de jugadores', noNews: 'Ninguna señal fuerte de noticias cambió el modelo.',
+      context: 'Contexto y plantilla', news: 'Noticias', availability: 'Disponibilidad de jugadores', noNews: 'No se encontraron noticias recientes de fútbol relevantes.',
+      squadMissing: 'No hay alineaciones confirmadas ni una lista completa de lesiones. La falta de datos no significa que todos los jugadores estén disponibles.',
       technical: 'Detalles técnicos', source: 'Fuentes', save: 'GUARDAR ANÁLISIS', copy: 'COPIAR RESUMEN',
       saved: 'Análisis guardado en Mi panel.', copied: 'Resumen copiado.', withheld: 'Pronóstico retenido',
       withheldText: 'Vertex aún no tiene suficiente historial verificado de partidos finalizados para ambos equipos.',
@@ -65,7 +67,8 @@
       probabilities: 'Match probabilities', form: 'Recent form', matches: 'matches used', gf: 'Goals scored / match', ga: 'Goals conceded / match', ppg: 'Points / match',
       why: 'Why Vertex thinks this', drivers: 'Factors that actually changed the calculation', events: 'Event markets', corners: 'Corners', cards: 'Yellow cards', shots: 'Shots', sot: 'Shots on target', offsides: 'Offsides', fouls: 'Fouls', expected: 'Expected',
       penalty: 'Penalty estimate', penaltyNote: 'Based only on verified scored-penalty history. The estimate is deliberately conservative.', penaltyMissing: 'More verified history is needed for a penalty estimate.',
-      context: 'Context and availability', news: 'News', availability: 'Player availability', noNews: 'No strong news signal changed the model.',
+      context: 'Context and availability', news: 'News', availability: 'Player availability', noNews: 'No relevant recent football news was found.',
+      squadMissing: 'Confirmed lineups and a complete injury list are unavailable. Missing data does not mean every player is available.',
       technical: 'Technical details', source: 'Sources', save: 'SAVE ANALYSIS', copy: 'COPY SUMMARY', saved: 'Analysis saved to My Cabinet.', copied: 'Analysis summary copied.', withheld: 'Prediction withheld',
       withheldText: 'Vertex does not yet have enough verified completed-match history for both teams.', noRecent: 'No recent data', noDrivers: 'No additional factor was strong enough to change the model on its own.', fixtureLimited: 'Fixture details are limited for this run', homeLabel: 'Home', awayLabel: 'Away',
       cabinet: 'My Cabinet', workspace: 'Your Vertex workspace', active: 'Account active', recent: 'Recent analyses', savedMatches: 'Saved matches', strategy: 'Strategy', activity: 'Activity', account: 'Account', language: 'Language', member: 'Member since', email: 'Email', logout: 'LOG OUT', back: 'BACK TO HOME', openStrategy: 'OPEN STRATEGY', noAnalyses: 'No analyses yet.', noSaved: 'No saved matches yet.', analyzeAgain: 'ANALYZE AGAIN', cloudError: 'Could not load cloud history; showing local data.'
@@ -271,6 +274,7 @@
     const news = Array.isArray(analysis?.news) ? analysis.news.slice(0, 3) : [];
     if (!news.length) cards.push(`<div class="v6-context-card"><span>${esc(t('news'))}</span><strong>${esc(t('noNews'))}</strong></div>`);
     else news.forEach((item) => cards.push(`<div class="v6-context-card"><span>${esc(t('news'))}</span><strong>${esc(item.title || item.signal || 'Context update')}</strong><p>${esc(item.source || 'News')}${item.publishedAt ? ` · ${esc(fmtDate(item.publishedAt))}` : ''}</p></div>`));
+    if (!analysis.vertexModel?.coverage?.structuredInjuriesAndLineups) cards.push(`<div class="v6-context-card"><span>${esc(t('availability'))}</span><p>${esc(t('squadMissing'))}</p></div>`);
     return `<section class="v6-section"><div class="v6-section-head"><div><span class="v6-section-kicker">${esc(t('context'))}</span><h4>${esc(t('news'))} · ${esc(t('availability'))}</h4></div></div><div class="v6-context-grid">${cards.join('')}</div></section>`;
   }
 

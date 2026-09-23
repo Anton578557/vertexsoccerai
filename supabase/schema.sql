@@ -57,6 +57,11 @@ create table if not exists public.model_evaluations (
   actual_value text,
   is_correct boolean,
   data_quality integer,
+  model_version text,
+  forecast jsonb,
+  checked_at timestamptz,
+  evaluation_status text not null default 'pending',
+  evaluation_source text,
   evaluated_at timestamptz,
   created_at timestamptz not null default now(),
   unique (fixture_key, market)
@@ -103,3 +108,6 @@ create policy model_evaluations_public_read on public.model_evaluations for sele
 create index if not exists analysis_history_user_created_idx on public.analysis_history(user_id, created_at desc);
 create index if not exists saved_matches_user_created_idx on public.saved_matches(user_id, created_at desc);
 create index if not exists model_evaluations_date_idx on public.model_evaluations(fixture_date desc);
+create index if not exists model_evaluations_pending_idx
+  on public.model_evaluations (checked_at asc nulls first, fixture_date asc)
+  where actual_value is null and evaluation_status = 'pending';
