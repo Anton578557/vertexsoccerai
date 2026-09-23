@@ -12,7 +12,7 @@
     link.href = href;
     document.head.appendChild(link);
   }
-  ensureStylesheet('ux-v6.css?v=8');
+  ensureStylesheet('ux-v6.css?v=9');
 
   const SUPABASE_URL = 'https://bznjdzgtiddggcdhxadj.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_kWwttoQARBmC6H_NqsEL_A_A5I7wDON';

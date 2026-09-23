@@ -954,6 +954,7 @@
     on('reviewsMore', 'click', () => { reviewsVisible += 6; renderReviews(); });
     on('reviewText', 'input', () => { byId('reviewCharCount').textContent = `${byId('reviewText').value.length} / 1000`; });
     document.addEventListener('vertex:languagechange', renderReviews);
+    document.addEventListener('vertex:languagechange', () => { if (byId('tab-results')?.classList.contains('active')) loadPerformance(); });
     on('linkAbout', 'click', (event) => { event.preventDefault(); showAboutPage(); });
     on('linkTerms', 'click', (event) => { event.preventDefault(); showTermsPage(); });
     on('linkPrivacy', 'click', (event) => { event.preventDefault(); showPrivacyPage(); });
