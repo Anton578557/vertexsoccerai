@@ -11,6 +11,7 @@
   const copy = {
     en: {
       button: 'COLLECTING DATA',
+      idle: '⚡ RUN ANALYSIS',
       kicker: 'VERTEX DATA MESH',
       title: 'Building the match intelligence layer',
       foot: 'Analysis in progress — one request at a time',
@@ -24,6 +25,7 @@
     },
     ru: {
       button: 'СОБИРАЕМ ДАННЫЕ',
+      idle: '⚡ ЗАПУСТИТЬ АНАЛИЗ',
       kicker: 'СЕТЬ ДАННЫХ VERTEX',
       title: 'Собираем картину матча',
       foot: 'Идёт анализ — одновременно выполняется только один запрос',
@@ -37,6 +39,7 @@
     },
     es: {
       button: 'RECOPILANDO DATOS',
+      idle: '⚡ EJECUTAR ANÁLISIS',
       kicker: 'RED DE DATOS VERTEX',
       title: 'Construyendo el contexto del partido',
       foot: 'Análisis en curso — una sola solicitud a la vez',
@@ -121,14 +124,13 @@
   function setButtonBusy(button, next) {
     if (!button) return;
     if (next) {
-      if (!button.dataset.vertexIdleHtml) button.dataset.vertexIdleHtml = button.innerHTML;
       button.disabled = true;
       button.setAttribute('aria-busy', 'true');
       button.innerHTML = `<span class="vertex-button-mesh" aria-hidden="true"><i></i><i></i><i></i><b></b></span><span>${currentCopy().button}</span>`;
     } else {
       button.disabled = false;
       button.setAttribute('aria-busy', 'false');
-      if (button.dataset.vertexIdleHtml) button.innerHTML = button.dataset.vertexIdleHtml;
+      button.textContent = currentCopy().idle;
     }
   }
 
@@ -225,9 +227,8 @@
   }, true);
 
   document.addEventListener('vertex:languagechange', () => {
-    if (!busy) return;
-    ['btnAnalyzeMatch', 'btnAnalyze'].forEach((id) => setButtonBusy(document.getElementById(id), true));
-    renderLoader();
+    ['btnAnalyzeMatch', 'btnAnalyze'].forEach((id) => setButtonBusy(document.getElementById(id), busy));
+    if (busy) renderLoader();
   });
 
   ensureStyle();
