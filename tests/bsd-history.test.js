@@ -14,12 +14,14 @@ test('BSD team identity rejects shared names, women, wrong countries and ambiguo
     {id:3,name:'Manchester City',country_code:'GB',is_women:true}, {id:4,name:'Manchester City',country_code:'US'}];
   assert.equal(selectTeam(rows, club, 'GB').id, 2);
   assert.equal(selectTeam([...rows,{id:5,name:'Manchester City',country_code:'GB'}], club, 'GB'), null);
+  assert.equal(selectTeam([{id:2,name:'Manchester City',country:'USA'}], club, 'GB'), null);
+  assert.equal(selectTeam([{id:928,name:'Náutico',country:'Brazil'},{id:6740,name:'Náutico-RR',country:'Brazil'}], {name:'Nautico',country:'Brazil'}, 'BR').id,928);
 });
 
 test('BSD requires finished matches, UTC, numeric scores and both exact provider identity and name', () => {
   const rows = [event({extra_time_score:'2-1',penalty_shootout:'5-4'}), event({status:'live'}), event({home_score:null}),
     event({home_score:'1'}), event({event_date:'2026-09-24T13:30:00Z'}), event({event_date:'2026-09-19T13:30:00'}),
-    event({home_team_id:999}), event({home_team:'Arsenal Women'}), event({status:'cancelled'})];
+    event({home_team_id:999}), event({home_team:'Arsenal Women'}), event({status:'cancelled'}), event({replaced_by:456})];
   const result = normalizeEvents(rows, teams[0], teams, new Date('2026-09-23'));
   assert.equal(result.length, 1); assert.equal(result[0].homeScore, 1); assert.equal(result[0].awayScore, 1);
 });
