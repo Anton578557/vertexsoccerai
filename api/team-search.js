@@ -6,7 +6,7 @@ const { enforceRateLimit } = require('../lib/rate-limit');
 const { searchClubDirectory } = require('../lib/club-directory');
 
 function isYouthOrReserve(value) {
-  return /\b(youth|academy|reserve|reserves|u\s?-?\d{2}|under\s?-?\d{2}|primavera|b team|ii)\b/i.test(String(value || ''));
+  return /\b(youth|academy|reserve|reserves|u\s?-?\d{2}|under\s?-?\d{2}|primavera|b team|ii|b$)\b/i.test(String(value || ''));
 }
 
 function mergeTeams(localNames, providerTeams, rawQuery = '') {

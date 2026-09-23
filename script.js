@@ -400,7 +400,7 @@
         return;
       }
       const script = document.createElement('script');
-      script.src = 'analysis-ui-v4.js?v=9';
+      script.src = 'analysis-ui-v4.js?v=17';
       script.async = false;
       script.onload = () => resolve(Boolean(window.VertexAnalysisUI?.acceptAnalysis));
       script.onerror = () => resolve(false);

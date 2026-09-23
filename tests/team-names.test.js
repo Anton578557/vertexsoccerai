@@ -57,6 +57,19 @@ function response() {
   return { statusCode: 200, body: null, setHeader() {}, status(code) { this.statusCode = code; return this; }, json(body) { this.body = body; return this; } };
 }
 
+test('generic club search excludes a B team unless the user explicitly asks for reserves', async () => {
+  const handler = loadHandler('api/team-search.js', {
+    '../lib/football': {clean: v => String(v || '').trim(),searchTheSportsDbTeams: async () => [{name:'Tenerife B'}]},
+    '../lib/team-aliases': {localizedSuggestions: () => [],searchQuery:q=>q},
+    '../lib/club-directory': {searchClubDirectory: async () => [{name:'C.D. Tenerife'}]},
+    '../lib/rate-limit': {enforceRateLimit:async()=>true}
+  });
+  const res=response();await handler({method:'GET',query:{q:'Club Deportivo Tenerife'}},res);
+  assert.deepEqual(Array.from(res.body.teams,t=>t.name),['C.D. Tenerife']);
+  const reserves=response();await handler({method:'GET',query:{q:'Tenerife B'}},reserves);
+  assert.ok(reserves.body.teams.some(t=>t.name === 'Tenerife B'));
+});
+
 test('Russian suggestions work without contacting an unavailable provider', async () => {
   const handler = loadHandler('api/team-search.js', {
     '../lib/football': { clean: (v) => String(v || '').trim(), searchTheSportsDbTeams: () => { throw new Error('Provider must not be called for known aliases'); } },

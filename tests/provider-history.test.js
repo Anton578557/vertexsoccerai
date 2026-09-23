@@ -11,6 +11,7 @@ const { mentions } = require('../lib/news-intelligence');
 
 test('dotted club suffixes work without merging city rivals; River news is not Colombian Millonarios news', () => {
   assert.equal(sameTeam('Luton Town F.C.', 'Luton Town'),true);
+  assert.equal(sameTeam('C.D. Tenerife', 'Tenerife'),true);
   assert.equal(sameTeam('Manchester City F.C.', 'Manchester United FC'),false);
   assert.equal(mentions('River Millonarios prepare for Huracán', 'Millonarios'),false);
   assert.equal(mentions('Cuadrado joins Millonarios for his homecoming', 'Millonarios'),true);
@@ -68,6 +69,8 @@ test('directory accepts football clubs, refuses people and ambiguous city querie
   assert.equal(chooseExactClub([club],'Example'),null);
   assert.equal(chooseExactClub([club,{...club,wikidataId:'Q999'}],'Экзампл Сити'),null);
   assert.equal(entityClub({id:'Q55',labels:{en:{value:'A Player'}},descriptions:{en:{value:'football player'}},claims:{P31:claim({id:'Q5'})}}),null);
+  assert.equal(entityClub({id:'Q56',labels:{en:{value:'2016–17 CD Tenerife season'}},descriptions:{en:{value:'Spanish football club season'}},claims:{P641:claim({id:'Q2736'})}}),null);
+  assert.equal(entityClub({id:'Q57',labels:{en:{value:'A football stadium'}},descriptions:{en:{value:'association football stadium'}},claims:{P641:claim({id:'Q2736'})}}),null);
 });
 
 test('reported names and league mapping stay distinct across countries and divisions', () => {
