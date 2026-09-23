@@ -44,12 +44,14 @@ async function preResolveFixture(base) {
   if (base.fixture?.date) return base;
   const fixture = await resolveUpcomingFixture(base.teams.home.name, base.teams.away.name, 21);
   if (!fixture) return base;
+  if (fixture.reversed) base = await buildBaseAnalysis(base.teams.away.name, base.teams.home.name);
   base.fixture = {
     ...(base.fixture || {}),
     date: fixture.date || null,
     league: fixture.league || base.fixture?.league || null,
     venue: fixture.venue || base.fixture?.venue || null,
-    source: 'Football-Data fixture resolver'
+    source: 'Football-Data fixture resolver',
+    inputReversed: Boolean(fixture.reversed)
   };
   base.sourceStatus = {
     ...(base.sourceStatus || {}),
@@ -64,7 +66,8 @@ async function attachModelContext(analysis) {
   const fd = await enrichFootballData(
     analysis.teams.home.name,
     analysis.teams.away.name,
-    analysis.fixture?.league || ''
+    analysis.fixture?.league || '',
+    analysis.teams.home.country || ''
   );
   if (fd?.ok) {
     const homeSample = Number(fd.advanced?.home?.sample || 0);
@@ -157,7 +160,7 @@ module.exports = async function handler(req, res) {
   if (!home || !away || safeKey(home) === safeKey(away)) return res.status(400).json({ error: 'Choose two different teams.' });
 
   try {
-    const analysisKey = `analysis-core:v6:${safeKey(home)}:${safeKey(away)}`;
+    const analysisKey = `analysis-core:v7:${safeKey(home)}:${safeKey(away)}`;
     const cached = await cachedProviderCall({
       cacheKey: analysisKey,
       provider: 'Vertex Analysis Core',

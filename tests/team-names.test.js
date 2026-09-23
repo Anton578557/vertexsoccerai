@@ -106,3 +106,16 @@ test('analysis endpoint passes the same canonical teams and cache key for Russia
   assert.equal(cacheKeys[0], cacheKeys[1]);
   assert.equal(cacheKeys[2], cacheKeys[3]);
 });
+
+
+test('Spanish spellings, accents and Russian variants resolve to canonical clubs', () => {
+  for (const [input, expected] of [
+    ['Bayern Múnich', 'Bayern Munich'], ['Bayern MunicH', 'Bayern Munich'],
+    ['Inter de Milán', 'Inter Milan'], ['Nápoles', 'Napoli'], ['Oporto', 'Porto'],
+    ['Atlético de Madrid', 'Atletico Madrid'], ['Спартак Москва', 'Spartak Moscow'],
+    ['Ковэнтри Сити', 'Coventry City'], ['Fortuna Colonia', 'Fortuna Koln']
+  ]) assert.equal(aliases.resolveTeamName(input), expected);
+  assert.ok(aliases.localizedSuggestions('bayern mú').includes('Bayern Munich'));
+  assert.ok(aliases.localizedSuggestions('inter de').includes('Inter Milan'));
+  assert.notEqual(aliases.resolveTeamName('Manchester'), 'Manchester City');
+});

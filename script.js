@@ -733,8 +733,23 @@
       const count = Number(summary.evaluated || 0);
       evaluated.textContent = String(count);
       correct.textContent = String(Number(summary.correct || 0));
-      accuracy.textContent = count && Number.isFinite(Number(summary.accuracy)) ? `${Math.round(Number(summary.accuracy))}%` : '—';
-      quality.textContent = Number.isFinite(Number(summary.averageDataQuality)) ? `${Math.round(Number(summary.averageDataQuality))}%` : '—';
+      accuracy.textContent = count && summary.accuracy != null && Number.isFinite(Number(summary.accuracy)) ? `${Math.round(Number(summary.accuracy))}%` : '—';
+      quality.textContent = summary.averageDataQuality != null && Number.isFinite(Number(summary.averageDataQuality)) ? `${Math.round(Number(summary.averageDataQuality))}%` : '—';
+      const details = byId('performanceDetails');
+      if (details) {
+        const language = window.VertexI18n?.getLanguage?.() || 'en';
+        const words = {
+          ru: ['Завершённых матчей', 'Результаты по рынкам', 'Выборок', 'Угадано', 'Частота попаданий', 'История ещё накапливается. Несколько рынков одного матча не являются независимыми прогнозами. Калибровка точности не выполнена.', 'Ошибка вероятностей Brier: меньше — лучше. Рассчитана для выбранного исхода каждого рынка; это не оценка всего распределения 1X2.'],
+          es: ['Partidos finalizados', 'Resultados por mercado', 'Muestras', 'Aciertos', 'Tasa observada', 'El historial sigue creciendo. Los mercados de un partido no son pronósticos independientes. La precisión aún no está calibrada.', 'Error Brier: cuanto menor, mejor. Evalúa la selección de cada mercado, no toda la distribución 1X2.'],
+          en: ['Completed fixtures', 'Results by market', 'Samples', 'Correct', 'Observed hit rate', 'History is still being collected. Markets from one match are not independent predictions. Accuracy has not been calibrated.', 'Brier error: lower is better. Scored for the selected event in each market, not the full 1X2 distribution.']
+        }[language] || [];
+        const marketNames = {
+          ru: {'1X2':'Исход 1X2', GOALS_OU_2_5:'Тотал 2,5', BTTS:'Обе забьют', DOUBLE_CHANCE:'Двойной шанс'},
+          es: {'1X2':'Resultado 1X2', GOALS_OU_2_5:'Total 2,5', BTTS:'Ambos marcan', DOUBLE_CHANCE:'Doble oportunidad'},
+          en: {'1X2':'Result 1X2', GOALS_OU_2_5:'Total 2.5', BTTS:'Both teams score', DOUBLE_CHANCE:'Double chance'}
+        };
+        details.innerHTML = `<p><strong>${words[0]}: ${Number(summary.fixtures || 0)}</strong></p><p>${words[5]}</p><div class="v8-table-wrap"><table class="v8-goal-table"><caption>${words[1]}</caption><thead><tr><th>${words[2]}</th><th>${words[3]}</th><th>${words[4]}</th><th>Brier</th></tr></thead><tbody>${Object.entries(summary.byMarket || {}).map(([market, row]) => `<tr><th scope="row">${escapeHtml(marketNames[language]?.[market] || market)} · ${Number(row.evaluated)}</th><td>${Number(row.correct)}</td><td>${row.accuracy == null ? '—' : `${Number(row.accuracy)}%`}</td><td>${row.brierScore == null ? '—' : Number(row.brierScore).toFixed(3)}</td></tr>`).join('')}</tbody></table></div><p class="v8-note">${words[6]}</p>`;
+      }
     } catch (error) {
       evaluated.textContent = '—';
       correct.textContent = '—';

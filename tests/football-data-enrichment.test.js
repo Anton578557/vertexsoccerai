@@ -46,3 +46,16 @@ test('withholds penalty probability when the verified sample is too small', () =
   );
   assert.equal(result.ok, false);
 });
+
+
+test('domestic names never reuse another country competition baseline', () => {
+  assert.equal(competitionCode('Peruvian Primera Division', 'Peru'), null);
+  assert.equal(competitionCode('Primera Division', 'Bolivia'), null);
+  assert.equal(competitionCode('Primera Division'), null);
+  assert.equal(competitionCode('Primera Division', 'Spain'), 'PD');
+  assert.equal(competitionCode('Brazilian Serie A', 'Brazil'), 'BSA');
+  assert.equal(competitionCode('Serie A', 'Brazil'), 'BSA');
+  assert.equal(competitionCode('Premier League', 'Russia'), null);
+  assert.equal(competitionCode('Bundesliga', 'Austria'), null);
+  assert.equal(competitionCode('English Premier League', 'England'), 'PL');
+});

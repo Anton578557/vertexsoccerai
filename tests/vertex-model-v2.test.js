@@ -41,7 +41,7 @@ test('stronger home profile produces a higher home-win probability', () => {
   assert.ok(result.model.oneXtwo.home > result.model.oneXtwo.away);
   const sum = result.model.oneXtwo.home + result.model.oneXtwo.draw + result.model.oneXtwo.away;
   assert.ok(sum >= 99 && sum <= 101);
-  assert.equal(result.meta.version, 'Vertex Model 2.0');
+  assert.equal(result.meta.version, 'Vertex Model 2.1');
   assert.ok(result.dataQuality >= 70);
 });
 
@@ -118,4 +118,67 @@ test('an absence that expires before kickoff is not applied', () => {
   });
   assert.equal(result.usedSignals, 0);
   assert.equal(result.home.incrementalAttackPct, 0);
+});
+
+
+test('missing recovery values do not create an artificial fatigue penalty', () => {
+  const unknown = baseAnalysis();
+  unknown.advanced.home.restDays = null;
+  unknown.advanced.away.restDays = null;
+  const absent = structuredClone(unknown);
+  delete absent.advanced.home.restDays;
+  delete absent.advanced.away.restDays;
+  assert.deepEqual(buildVertexModelV2(unknown).model, buildVertexModelV2(absent).model);
+  assert.equal(buildVertexModelV2(unknown).meta.drivers.some((d) => /fatigue/.test(d.key)), false);
+  const shortRest = structuredClone(unknown);
+  shortRest.advanced.home.restDays = 0;
+  assert.ok(buildVertexModelV2(shortRest).model.expectedGoals.home < buildVertexModelV2(unknown).model.expectedGoals.home);
+});
+
+test('unknown, blank, negative or nonnumeric goal rates withhold a forecast', () => {
+  for (const value of [null, undefined, '', ' ', -1, 'unknown', false, NaN]) {
+    const input = baseAnalysis();
+    input.form.away.avgAgainst = value;
+    assert.equal(buildVertexModelV2(input).model, null, String(value));
+  }
+  const zero = baseAnalysis();
+  zero.form.away.avgAgainst = 0;
+  assert.ok(buildVertexModelV2(zero).model);
+});
+
+test('all goal lines are complementary, monotone and agree with existing markets', () => {
+  const { model: m } = buildVertexModelV2(baseAnalysis());
+  for (const rows of [m.goalLines, m.teamGoalLines.home, m.teamGoalLines.away]) {
+    for (let i = 0; i < rows.length; i++) {
+      assert.equal(rows[i].over + rows[i].under, 100);
+      if (i) assert.ok(rows[i].over <= rows[i-1].over);
+    }
+  }
+  assert.equal(m.goalLines.find((r) => r.line === 2.5).over, m.over25);
+  assert.equal(m.teamGoalLines.home[0].over, m.extended.homeToScore);
+  assert.equal(m.teamGoalLines.home[0].under, m.extended.awayCleanSheet);
+  assert.equal(m.scoreScenarios.length, 5);
+  assert.equal(m.scoreScenarios[0].score, m.correctScore);
+  assert.ok(m.scoreScenarios.reduce((sum, row) => sum + row.probability, 0) < 100);
+});
+
+test('Poisson distribution matches analytic totals over the full supported lambda range', () => {
+  const { scoreDistribution, probabilitiesFromDistribution } = require('../lib/vertex-model-v2');
+  for (const home of [.25, .7, 1.3, 2.1, 3.8]) for (const away of [.25, .7, 1.3, 2.1, 3.8]) {
+    const cells = scoreDistribution(home, away, 0);
+    assert.ok(cells.every((cell) => cell.p >= 0 && cell.p <= 1));
+    assert.ok(Math.abs(cells.reduce((sum, cell) => sum + cell.p, 0) - 1) < 1e-12);
+    const probs = probabilitiesFromDistribution(cells);
+    const lambda = home + away;
+    const analyticOver = 1 - Math.exp(-lambda) * (1 + lambda + lambda*lambda/2);
+    assert.ok(Math.abs(probs.over25 - analyticOver) < 1e-6);
+    assert.ok(Math.abs(probs.homeWin + probs.draw + probs.awayWin - 1) < 1e-12);
+  }
+});
+
+test('full recovery supports the recovering team and unavailable news is not coverage', () => {
+  const input = baseAnalysis(); input.advanced.home.restDays = 8; input.sourceStatus.news = 'Unavailable';
+  const result = buildVertexModelV2(input);
+  assert.equal(result.meta.drivers.find((d) => d.key === 'home-fatigue').side, 'home');
+  assert.equal(result.meta.coverage.news, false);
 });
