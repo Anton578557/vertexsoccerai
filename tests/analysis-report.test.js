@@ -34,7 +34,7 @@ test('report renders all five views, safe text and valid estimates in RU/EN/ES',
     assert.ok(!/NaN|undefined|<script>/.test(html));
     assert.match(html,/&lt;script&gt;/);
     assert.match(html,/5\.5/);
-    assert.match(html,/Vertex Model 2\.1/);
+    assert.match(html,/Vertex Model 2\.2/);
   }
 });
 

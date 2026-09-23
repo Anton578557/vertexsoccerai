@@ -41,16 +41,24 @@ test('stronger home profile produces a higher home-win probability', () => {
   assert.ok(result.model.oneXtwo.home > result.model.oneXtwo.away);
   const sum = result.model.oneXtwo.home + result.model.oneXtwo.draw + result.model.oneXtwo.away;
   assert.ok(sum >= 99 && sum <= 101);
-  assert.equal(result.meta.version, 'Vertex Model 2.1');
+  assert.equal(result.meta.version, 'Vertex Model 2.2');
   assert.ok(result.dataQuality >= 70);
 });
 
-test('negative home news lowers home expected goals', () => {
+test('attributed home player absence lowers home expected goals', () => {
   const neutral = buildVertexModelV2(baseAnalysis());
   const impactedInput = baseAnalysis();
   impactedInput.newsImpact.homePct = -8;
+  impactedInput.newsImpact.verifiedAttribution = true;
   const impacted = buildVertexModelV2(impactedInput);
   assert.ok(impacted.model.expectedGoals.home < neutral.model.expectedGoals.home);
+});
+
+test('unattributed headline impact cannot alter model probabilities', () => {
+  const neutral = baseAnalysis();
+  const unverified = baseAnalysis();
+  unverified.newsImpact = {homePct: -8, awayPct: 4};
+  assert.deepEqual(buildVertexModelV2(unverified).model, buildVertexModelV2(neutral).model);
 });
 
 test('severe weather lowers the total goal environment', () => {

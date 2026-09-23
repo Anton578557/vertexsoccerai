@@ -160,7 +160,7 @@ module.exports = async function handler(req, res) {
   if (!home || !away || safeKey(home) === safeKey(away)) return res.status(400).json({ error: 'Choose two different teams.' });
 
   try {
-    const analysisKey = `analysis-core:v8:${safeKey(home)}:${safeKey(away)}`;
+    const analysisKey = `analysis-core:v9:${safeKey(home)}:${safeKey(away)}`;
     const cached = await cachedProviderCall({
       cacheKey: analysisKey,
       provider: 'Vertex Analysis Core',
