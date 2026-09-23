@@ -45,3 +45,15 @@ test('no-data report never presents missing goal rates as zero or fabricated pro
   assert.ok(!/data-market-tab|0\.00|NaN|undefined/.test(html));
   assert.match(html,/Проверьте названия/);
 });
+
+test('verified history and crest fallback are visible without unsafe HTML', () => {
+ const a=sample();
+ a.teams.away.badge='https://example.org/crest.png';
+ a.history={home:[{date:'2026-09-20',home:'Racing Club',away:'Boca Juniors',homeScore:1,awayScore:0}],away:[]};
+ const html=render('ru',a);
+ assert.match(html,/Матчи, использованные в расчёте/);
+ assert.match(html,/Football-Data.co.uk/);
+ assert.match(html,/v9-badge-fallback/);
+ assert.match(html,/data-team-badge/);
+ assert.ok(!html.includes('<script>'));
+});

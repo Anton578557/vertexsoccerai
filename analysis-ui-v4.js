@@ -12,7 +12,7 @@
     link.href = href;
     document.head.appendChild(link);
   }
-  ensureStylesheet('ux-v6.css?v=9');
+  ensureStylesheet('ux-v6.css?v=10');
 
   const SUPABASE_URL = 'https://bznjdzgtiddggcdhxadj.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_kWwttoQARBmC6H_NqsEL_A_A5I7wDON';
@@ -306,6 +306,19 @@
     return `<section class="v6-summary"><span class="v6-summary-kicker">${esc(t('summary'))}</span><h3>${esc(outcomeLabel(model.mainScenario))} <span class="v8-outcome-value">${esc(percent(bestValue))}</span></h3><div class="v8-headline-grid"><div><span>${esc(t('expectedGoals'))}</span><strong>${esc(model.expectedGoals?.home ?? '—')} : ${esc(model.expectedGoals?.away ?? '—')}</strong><small>${esc(homeName)} / ${esc(awayName)}</small></div><div><span>${esc(t('btts'))}</span><strong>${esc(percent(model.btts))}</strong><small>${esc(t('over25'))} · ${esc(percent(model.over25))}</small></div><div><span>${esc(rt('score'))}</span><strong>${esc(model.correctScore || '—')}</strong><small>${esc(percent(model.correctScoreProbability))}</small></div></div><p class="v8-verdict ${caution ? 'cautious' : ''}">${esc(rt(caution ? 'caution' : 'supported'))}</p></section><div class="v6-quality-row"><div class="v6-quality-card"><div class="v6-quality-head"><span>${esc(t('confidence'))}</span><strong>${confidence ?? '—'} / 100</strong></div><div class="v6-track"><i style="width:${confidence ?? 0}%"></i></div></div><div class="v6-quality-card"><div class="v6-quality-head"><span>${esc(t('quality'))}</span><strong>${quality} / 100</strong></div><div class="v6-track"><i style="width:${quality}%"></i></div></div></div><p class="v8-estimate-note">${esc(rt('estimates'))}</p>${renderMarkets(analysis, homeName, awayName)}`;
   }
 
+  function teamBadge(team, name) {
+    const url = safeUrl(team.badge);
+    const initials = name.split(/\s+/).filter(Boolean).slice(0,2).map(word => word[0]).join('').toUpperCase();
+    return `<span class="v9-team-badge" aria-hidden="true"><span class="v9-badge-fallback" ${url ? 'hidden' : ''}>${esc(initials)}</span>${url ? `<img data-team-badge src="${url}" alt="" referrerpolicy="no-referrer">` : ''}</span>`;
+  }
+
+  function renderHistory(analysis) {
+    if (!analysis.history?.home?.length && !analysis.history?.away?.length) return '';
+    const title = ({ru:'Матчи, использованные в расчёте',en:'Matches used in this calculation',es:'Partidos usados en el cálculo'})[lang()] || 'Matches used in this calculation';
+    const rows = side => (analysis.history?.[side] || []).map(m => `<li><time>${esc(String(m.date || '').slice(0,10))}</time><span>${esc(m.home)} — ${esc(m.away)}</span><strong>${esc(m.homeScore)} : ${esc(m.awayScore)}</strong></li>`).join('');
+    return `<details class="v6-tech v9-history"><summary>${esc(title)}</summary><div class="v6-tech-body"><p>Football-Data.co.uk</p><div class="v6-form-grid">${['home','away'].map(side => `<div><strong>${esc(analysis.teams?.[side]?.name || '')}</strong><ul>${rows(side)}</ul></div>`).join('')}</div></div></details>`;
+  }
+
   function renderAnalysis(analysis) {
     const home = analysis?.teams?.home || {};
     const away = analysis?.teams?.away || {};
@@ -315,9 +328,7 @@
     const fixtureMeta = [fixture.league, fmtDate(fixture.date), fixture.venue, fixture.city].filter(Boolean).join(' · ');
     const sourceRows = Object.entries(analysis?.sourceStatus || {}).slice(0, 12);
     const limitations = Array.isArray(analysis?.limitations) ? analysis.limitations.slice(0, 8) : [];
-    const homeBadge = safeUrl(home.badge);
-    const awayBadge = safeUrl(away.badge);
-    return `<div class="analysis-card v6-analysis-card"><div class="v6-match-head"><div class="v6-team">${homeBadge ? `<img src="${homeBadge}" alt="">` : ''}<strong>${esc(homeName)}</strong><small>${esc(home.country || '')}</small></div><div class="v6-vs">VS</div><div class="v6-team">${awayBadge ? `<img src="${awayBadge}" alt="">` : ''}<strong>${esc(awayName)}</strong><small>${esc(away.country || '')}</small></div></div><div class="v6-fixture-meta">${esc(fixtureMeta || t('fixtureLimited'))}</div>${!fixture.date ? `<p class="v8-estimate-note">${esc(rt('comparison'))}</p>` : fixture.inputReversed ? `<p class="v8-estimate-note">${esc(rt('reversed'))}</p>` : ''}${renderModel(analysis, homeName, awayName)}<section class="v6-section"><div class="v6-section-head"><div><span class="v6-section-kicker">${esc(t('form'))}</span><h4>${esc(homeName)} · ${esc(awayName)}</h4></div></div><div class="v6-form-grid">${formCard(homeName, analysis?.form?.home || {})}${formCard(awayName, analysis?.form?.away || {})}</div></section>${analysis?.model ? `<section class="v6-section"><div class="v6-section-head"><div><span class="v6-section-kicker">${esc(analysis.model?.engineVersion || 'VERTEX MODEL')}</span><h4>${esc(t('why'))}</h4></div><p>${esc(t('drivers'))}</p></div>${renderDrivers(analysis, homeName, awayName)}</section>` : ''}${!analysis.model ? renderEvents(analysis) : ''}${renderContext(analysis)}<details class="v6-tech"><summary>${esc(t('technical'))}</summary><div class="v6-tech-body">${sourceRows.length ? `<p><strong>${esc(t('source'))}:</strong> ${sourceRows.map(([k,v]) => `${esc(k)}: ${esc(v)}`).join(' · ')}</p>` : ''}${limitations.length ? `<ul>${limitations.map((item) => `<li>${esc(item)}</li>`).join('')}</ul>` : ''}</div></details><div class="v6-actions"><button class="btn-secondary" data-action="save-analysis" type="button">${esc(t('save'))}</button><button class="btn-secondary" data-action="copy-analysis" type="button">${esc(t('copy'))}</button></div></div>`;
+    return `<div class="analysis-card v6-analysis-card"><div class="v6-match-head"><div class="v6-team">${teamBadge(home, homeName)}<strong>${esc(homeName)}</strong><small>${esc(home.country || '')}</small></div><div class="v6-vs">VS</div><div class="v6-team">${teamBadge(away, awayName)}<strong>${esc(awayName)}</strong><small>${esc(away.country || '')}</small></div></div><div class="v6-fixture-meta">${esc(fixtureMeta || t('fixtureLimited'))}</div>${!fixture.date ? `<p class="v8-estimate-note">${esc(rt('comparison'))}</p>` : fixture.inputReversed ? `<p class="v8-estimate-note">${esc(rt('reversed'))}</p>` : ''}${renderModel(analysis, homeName, awayName)}<section class="v6-section"><div class="v6-section-head"><div><span class="v6-section-kicker">${esc(t('form'))}</span><h4>${esc(homeName)} · ${esc(awayName)}</h4></div></div><div class="v6-form-grid">${formCard(homeName, analysis?.form?.home || {})}${formCard(awayName, analysis?.form?.away || {})}</div></section>${analysis?.model ? `<section class="v6-section"><div class="v6-section-head"><div><span class="v6-section-kicker">${esc(analysis.model?.engineVersion || 'VERTEX MODEL')}</span><h4>${esc(t('why'))}</h4></div><p>${esc(t('drivers'))}</p></div>${renderDrivers(analysis, homeName, awayName)}</section>` : ''}${!analysis.model ? renderEvents(analysis) : ''}${renderHistory(analysis)}${renderContext(analysis)}<details class="v6-tech"><summary>${esc(t('technical'))}</summary><div class="v6-tech-body">${sourceRows.length ? `<p><strong>${esc(t('source'))}:</strong> ${sourceRows.map(([k,v]) => `${esc(k)}: ${esc(v)}`).join(' · ')}</p>` : ''}${limitations.length ? `<ul>${limitations.map((item) => `<li>${esc(item)}</li>`).join('')}</ul>` : ''}</div></details><div class="v6-actions"><button class="btn-secondary" data-action="save-analysis" type="button">${esc(t('save'))}</button><button class="btn-secondary" data-action="copy-analysis" type="button">${esc(t('copy'))}</button></div></div>`;
   }
 
   function rememberAnalysis(analysis) {
@@ -457,6 +468,14 @@
     const joined = session.user.created_at ? fmtDate(session.user.created_at) : '—';
     section.innerHTML = `<div class="v6-cabinet"><div class="v6-cabinet-hero"><div><span class="v6-section-kicker">VERTEX ACCOUNT</span><h2>${esc(t('cabinet'))}</h2><p>${esc(t('workspace'))}</p></div><div class="v6-account-badge">● ${esc(t('active'))}</div></div>${cloudError ? `<div class="v6-cabinet-empty">${esc(t('cloudError'))}</div>` : ''}<div class="v6-cabinet-stats"><div class="v6-cabinet-stat"><span>${esc(t('recent'))}</span><strong>${recent.length}</strong></div><div class="v6-cabinet-stat"><span>${esc(t('savedMatches'))}</span><strong>${saved.length}</strong></div><div class="v6-cabinet-stat"><span>${esc(t('strategy'))}</span><strong>${strategy || readLocal('vertex_strategy_profile', null) ? 'ACTIVE' : '—'}</strong></div><div class="v6-cabinet-stat"><span>${esc(t('activity'))}</span><strong>${recent.length}</strong></div></div><div class="v6-cabinet-layout"><div><section class="v6-cabinet-panel"><h3>${esc(t('recent'))}</h3>${cabinetRows(recent, t('noAnalyses'))}</section><section class="v6-cabinet-panel"><h3>${esc(t('savedMatches'))}</h3>${cabinetRows(saved, t('noSaved'))}</section></div><aside><section class="v6-cabinet-panel"><h3>${esc(t('account'))}</h3><div class="v6-setting-grid"><div class="v6-setting"><span>${esc(t('email'))}</span><strong>${esc(session.user.email || '—')}</strong></div><div class="v6-setting"><span>${esc(t('member'))}</span><strong>${esc(joined)}</strong></div><div class="v6-setting"><span>${esc(t('language'))}</span><strong>${esc(lang().toUpperCase())}</strong></div></div><div class="v6-cabinet-actions"><button class="btn-primary" type="button" data-v7-strategy>${esc(t('openStrategy'))}</button><button class="btn-secondary" type="button" data-v7-home>${esc(t('back'))}</button><button class="btn-secondary" type="button" data-v7-logout>${esc(t('logout'))}</button></div></section></aside></div></div>`;
   }
+
+  document.addEventListener('error', event => {
+    const img = event.target;
+    if (!img?.matches?.('img[data-team-badge]')) return;
+    img.hidden = true;
+    const fallback = img.parentElement?.querySelector('.v9-badge-fallback');
+    if (fallback) fallback.hidden = false;
+  }, true);
 
   document.addEventListener('vertex:analysis-ready', (event) => acceptAnalysis(event.detail?.analysis), false);
   window.VertexAnalysisUI = { acceptAnalysis };

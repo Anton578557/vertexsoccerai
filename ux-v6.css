@@ -266,3 +266,12 @@
 
 .analyzer-input-wrap { position: relative; }
 #analyzerSuggestions { top: calc(100% + 6px) !important; }
+
+/* Stable crest slot: missing artwork keeps the team label aligned. */
+.v9-team-badge { display:grid; place-items:center; width:54px; height:54px; flex:0 0 54px; }
+.v9-badge-fallback { display:grid; place-items:center; width:50px; height:54px; border:1px solid #46cddd66; border-radius:14px 14px 20px 20px; background:#123141; color:#73e6ee; font-size:18px; font-weight:800; }
+.v9-team-badge [hidden] { display:none !important; }
+.v9-history ul { padding:0; list-style:none; }
+.v9-history li { display:grid; grid-template-columns:76px minmax(0,1fr) 44px; gap:9px; padding:10px 0; border-bottom:1px solid #ffffff0d; font-size:12px; line-height:1.6; }
+.v9-history time { color:#8ca6b6; }
+.v9-history strong { white-space:nowrap; }
