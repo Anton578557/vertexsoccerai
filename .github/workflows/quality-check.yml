@@ -49,8 +49,11 @@ jobs:
           supabase_secret = re.compile(r'sb_secret_[A-Za-z0-9_-]{8,}')
           resend_secret = re.compile(r'\bre_[A-Za-z0-9_-]{16,}\b')
           provider_assignment = re.compile(
-              r'(RAPIDAPI_KEY|API_FOOTBALL_KEY|FOOTBALL_DATA_KEY|OPENWEATHER_KEY|NEWSAPI_KEY|SPORTMONKS_API_TOKEN|RESEND_API_KEY|SUPABASE_SECRET_KEY)\s*=\s*[\"\'][^\"\']{8,}[\"\']'
+              r'(RAPIDAPI_KEY|API_FOOTBALL_KEY|FOOTBALL_DATA_KEY|OPENWEATHER_KEY|NEWSAPI_KEY|SPORTMONKS_API_TOKEN|RESEND_API_KEY|SUPABASE_SECRET_KEY|BSD_API_KEY|CRON_SECRET)\s*=\s*([\"\'])([^\"\']{8,})\2'
           )
+          # Exact, inert fixtures only. Real values are still rejected in tests,
+          # and these exceptions never apply to application/configuration files.
+          test_placeholders = {'test-only', 'test-key', 'unit-test-placeholder', 'test-cron-secret'}
 
           findings = []
           for root in roots:
@@ -65,7 +68,9 @@ jobs:
                           findings.append(f'{path}:{lineno}: possible Supabase server secret')
                       if resend_secret.search(line) and 'process.env.RESEND_API_KEY' not in line:
                           findings.append(f'{path}:{lineno}: possible Resend server secret')
-                      if provider_assignment.search(line):
+                      for assignment in provider_assignment.finditer(line):
+                          if path.parts[0] == 'tests' and assignment.group(3) in test_placeholders:
+                              continue
                           findings.append(f'{path}:{lineno}: possible hardcoded provider secret')
 
           if findings:
@@ -86,7 +91,7 @@ jobs:
             echo 'Hardcoded 85% accuracy display found.' >&2
             exit 1
           fi
-          grep -q "Vertex Model 2.0" lib/vertex-model-v2.js
+          node -e "const {MODEL_VERSION}=require('./lib/vertex-model-v2'); if (!/^Vertex Model [0-9]+[.][0-9]+$/.test(MODEL_VERSION)) throw Error('Missing valid model version')"
           grep -q "finalizeVertexModelV2" api/analyze.js
 
       - name: Verify protected API auth and rate limits
