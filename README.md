@@ -2,7 +2,9 @@
 
 **Where AI Meets Football**
 
-AI-powered football match analysis. 20+ predictions per match. 80%+ accuracy.
+Football match analysis with coherent probabilities, visible data coverage and verified result history. Prediction accuracy has not yet been established on a sufficient independent sample.
+
+Project goals and durable product decisions: [PROJECT-BRIEF](docs/PROJECT-BRIEF.md).
 
 ## Current Status: FREE BETA
 

@@ -298,7 +298,11 @@
 
   function renderModel(analysis, homeName, awayName) {
     const model = analysis?.model;
-    if (!model) return `<div class="v6-withheld"><strong>${esc(t('withheld'))}</strong><p>${esc(rt('missing'))}</p><div class="v8-sample-counts"><span>${esc(homeName)}: <b>${Number(analysis.form?.home?.played || 0)}</b></span><span>${esc(awayName)}: <b>${Number(analysis.form?.away?.played || 0)}</b></span></div><p>${esc(rt('missingHelp'))}</p></div>`;
+    if (!model) {
+      const unresolved = analysis.availability?.code === 'team_unresolved';
+      const message = unresolved ? ({ru:'Не удалось однозначно определить команду. Выберите полное название из подсказок; при необходимости укажите город.',en:'A team could not be identified uniquely. Select its full name from the suggestions; include the city if needed.',es:'No se pudo identificar un equipo. Elige su nombre completo entre las sugerencias; añade la ciudad si es necesario.'})[lang()] : rt('missing');
+      return `<div class="v6-withheld"><strong>${esc(t('withheld'))}</strong><p>${esc(message)}</p><div class="v8-sample-counts"><span>${esc(homeName)}: <b>${Number(analysis.form?.home?.played || 0)}</b></span><span>${esc(awayName)}: <b>${Number(analysis.form?.away?.played || 0)}</b></span></div><p>${esc(rt('missingHelp'))}</p></div>`;
+    }
     const bestValue = Math.max(...Object.values(model.oneXtwo || {}));
     const confidence = analysis.confidence == null ? null : clamp(analysis.confidence, 0, 100);
     const quality = clamp(analysis.dataQuality, 0, 100);
@@ -316,7 +320,7 @@
     if (!analysis.history?.home?.length && !analysis.history?.away?.length) return '';
     const title = ({ru:'Матчи, использованные в расчёте',en:'Matches used in this calculation',es:'Partidos usados en el cálculo'})[lang()] || 'Matches used in this calculation';
     const rows = side => (analysis.history?.[side] || []).map(m => `<li><time>${esc(String(m.date || '').slice(0,10))}</time><span>${esc(m.home)} — ${esc(m.away)}</span><strong>${esc(m.homeScore)} : ${esc(m.awayScore)}</strong></li>`).join('');
-    return `<details class="v6-tech v9-history"><summary>${esc(title)}</summary><div class="v6-tech-body"><p>Football-Data.co.uk</p><div class="v6-form-grid">${['home','away'].map(side => `<div><strong>${esc(analysis.teams?.[side]?.name || '')}</strong><ul>${rows(side)}</ul></div>`).join('')}</div></div></details>`;
+    return `<details class="v6-tech v9-history"><summary>${esc(title)}</summary><div class="v6-tech-body"><p>${esc(analysis.history.source || analysis.sourceStatus?.primaryFootball || 'Verified results')}</p><div class="v6-form-grid">${['home','away'].map(side => `<div><strong>${esc(analysis.teams?.[side]?.name || '')}</strong><ul>${rows(side)}</ul></div>`).join('')}</div></div></details>`;
   }
 
   function renderAnalysis(analysis) {

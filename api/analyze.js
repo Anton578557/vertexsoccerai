@@ -12,6 +12,8 @@ const { requireUser } = require('../lib/api-auth');
 const { enforceRateLimit } = require('../lib/rate-limit');
 const { cachedProviderCall } = require('../lib/provider-cache');
 const { resolveTeamName } = require('../lib/team-aliases');
+const { enrichEspnAnalysis } = require('../lib/espn-football');
+const { enrichSportmonksHistory } = require('../lib/sportmonks-history');
 
 function clean(value, max = 80) {
   return String(value || '').replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, max);
@@ -100,13 +102,17 @@ async function attachModelContext(analysis) {
   return analysis;
 }
 
-async function buildAnalysisCore(home, away) {
-  let base = await buildBaseAnalysis(home, away);
+async function buildAnalysisCore(home, away, original = {}) {
+  let base = await buildBaseAnalysis(home, away, original);
   base = await preResolveFixture(base);
   let analysis = await enhanceAnalysis(base);
 
+  const enoughHistory = () => Math.min(analysis.form?.home?.played || 0, analysis.form?.away?.played || 0) >= 3;
+  if (!enoughHistory() || !analysis.fixture?.date) analysis = await enrichEspnAnalysis(analysis);
+  if (!enoughHistory()) analysis = await enrichSportmonksHistory(analysis);
+
   let apiFootballFallback = { used: false, cacheHits: 0 };
-  if (!analysis.model || !analysis.fixture?.date) {
+  if (!enoughHistory()) {
     apiFootballFallback = await enrichApiFootballFallback(analysis);
     analysis = apiFootballFallback.analysis;
 
@@ -160,20 +166,20 @@ module.exports = async function handler(req, res) {
   if (!home || !away || safeKey(home) === safeKey(away)) return res.status(400).json({ error: 'Choose two different teams.' });
 
   try {
-    const analysisKey = `analysis-core:v9:${safeKey(home)}:${safeKey(away)}`;
+    const analysisKey = `analysis-core:v10:${safeKey(home)}:${safeKey(away)}`;
     const cached = await cachedProviderCall({
       cacheKey: analysisKey,
       provider: 'Vertex Analysis Core',
       ttlSeconds: 300,
       staleSeconds: 1800,
-      loader: () => buildAnalysisCore(home, away)
+      loader: () => buildAnalysisCore(home, away, { home: homeInput, away: awayInput })
     });
 
     if (!cached.payload?.analysis) throw new Error('Analysis providers did not return a usable result.');
     const analysis = cached.payload.analysis;
     const providerMeta = cached.payload.providerMeta || {};
 
-    analysis.input = { home: homeInput, away: awayInput, resolvedHome: home, resolvedAway: away };
+    analysis.input = { home: homeInput, away: awayInput, resolvedHome: analysis.teams.home.name, resolvedAway: analysis.teams.away.name };
     analysis.engine = {
       ...(analysis.engine || {}),
       quotaPolicy: 'open-and-cached-first',

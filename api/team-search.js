@@ -3,6 +3,7 @@
 const { clean, searchTheSportsDbTeams } = require('../lib/football');
 const { localizedSuggestions, searchQuery } = require('../lib/team-aliases');
 const { enforceRateLimit } = require('../lib/rate-limit');
+const { searchClubDirectory } = require('../lib/club-directory');
 
 function isYouthOrReserve(value) {
   return /\b(youth|academy|reserve|reserves|u\s?-?\d{2}|under\s?-?\d{2}|primavera|b team|ii)\b/i.test(String(value || ''));
@@ -41,8 +42,11 @@ module.exports = async function handler(req, res) {
   if (local.length) return res.status(200).json({ teams: mergeTeams(local, [], q) });
 
   try {
-    const provider = providerQuery.length >= 2 ? await searchTheSportsDbTeams(providerQuery) : [];
-    return res.status(200).json({ teams: mergeTeams(local, provider, q) });
+    const [provider, directory] = await Promise.all([
+      providerQuery.length >= 2 ? searchTheSportsDbTeams(providerQuery).catch(() => []) : [],
+      searchClubDirectory(q)
+    ]);
+    return res.status(200).json({ teams: mergeTeams(local, [...provider, ...directory], q) });
   } catch (error) {
     console.error('team-search', error.message, { q, providerQuery });
     if (local.length) return res.status(200).json({ teams: mergeTeams(local, [], q) });

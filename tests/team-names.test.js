@@ -61,6 +61,7 @@ test('Russian suggestions work without contacting an unavailable provider', asyn
   const handler = loadHandler('api/team-search.js', {
     '../lib/football': { clean: (v) => String(v || '').trim(), searchTheSportsDbTeams: () => { throw new Error('Provider must not be called for known aliases'); } },
     '../lib/team-aliases': aliases,
+    '../lib/club-directory': { searchClubDirectory: async () => [] },
     '../lib/rate-limit': { enforceRateLimit: async () => true }
   });
   const res = response();
@@ -75,11 +76,14 @@ test('analysis endpoint passes the same canonical teams and cache key for Russia
   const identity = async (value) => value;
   const handler = loadHandler('api/analyze.js', {
     '../lib/team-aliases': aliases,
+    '../lib/club-directory': { searchClubDirectory: async () => [] },
     '../lib/base-analysis-v2': { buildBaseAnalysis: async (home, away) => {
       calls.push([home, away]);
-      return { teams: { home: { name: home }, away: { name: away } }, fixture: { date: '2026-09-25' }, model: {}, advanced: { home: {}, away: {} }, leagueContext: {} };
+      return { teams: { home: { name: home }, away: { name: away } }, fixture: { date: '2026-09-25' }, form: { home: { played: 8 }, away: { played: 8 } }, model: {}, advanced: { home: {}, away: {} }, leagueContext: {} };
     } },
     '../lib/analysis-enhancer': { enhanceAnalysis: identity },
+    '../lib/espn-football': { enrichEspnAnalysis: identity },
+    '../lib/sportmonks-history': { enrichSportmonksHistory: identity },
     '../lib/granular-enrichment': { enhanceGranularAnalysis: identity },
     '../lib/api-football-fallback': { enrichApiFootballFallback: () => { throw new Error('Unexpected fallback'); } },
     '../lib/football-data-enrichment': {},
