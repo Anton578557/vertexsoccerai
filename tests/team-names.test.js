@@ -43,7 +43,7 @@ test('Russian partial queries suggest the right club without merging different F
 
 function loadHandler(file, dependencies) {
   const context = {
-    module: { exports: {} }, console,
+    module: { exports: {} }, console, process: {env:{}},
     require(name) {
       assert.ok(name in dependencies, `Unexpected dependency ${name}`);
       return dependencies[name];
@@ -82,6 +82,7 @@ test('analysis endpoint passes the same canonical teams and cache key for Russia
       return { teams: { home: { name: home }, away: { name: away } }, fixture: { date: '2026-09-25' }, form: { home: { played: 8 }, away: { played: 8 } }, model: {}, advanced: { home: {}, away: {} }, leagueContext: {} };
     } },
     '../lib/analysis-enhancer': { enhanceAnalysis: identity },
+    '../lib/openfootball-history': { enrichOpenFootball: async a => a },
     '../lib/espn-football': { enrichEspnAnalysis: identity },
     '../lib/sportmonks-history': { enrichSportmonksHistory: identity },
     '../lib/granular-enrichment': { enhanceGranularAnalysis: identity },

@@ -6,6 +6,16 @@ const { normalizeFixture } = require('../lib/sportmonks-history');
 const { contextFromHistory, verifiedRows } = require('../lib/verified-history');
 const { entityClub, chooseExactClub } = require('../lib/club-directory');
 const { resolveTeamName } = require('../lib/team-aliases');
+const { sameTeam } = require('../lib/match-integrity');
+const { mentions } = require('../lib/news-intelligence');
+
+test('dotted club suffixes work without merging city rivals; River news is not Colombian Millonarios news', () => {
+  assert.equal(sameTeam('Luton Town F.C.', 'Luton Town'),true);
+  assert.equal(sameTeam('Manchester City F.C.', 'Manchester United FC'),false);
+  assert.equal(mentions('River Millonarios prepare for Huracán', 'Millonarios'),false);
+  assert.equal(mentions('Cuadrado joins Millonarios for his homecoming', 'Millonarios'),true);
+  assert.equal(mentions('Millonarios FC welcome River in Bogotá', 'Millonarios'),true);
+});
 
 function event(status = 'STATUS_FULL_TIME', completed = true) {
   return { id: '123', date: new Date(Date.now() - 864e5).toISOString(), competitions: [{ status: { type: { name: status, completed, state: completed ? 'post' : 'in' } }, competitors: [
@@ -78,6 +88,8 @@ test('upcoming fixture requires exact provider IDs and excludes a live or past m
 
 test('ESPN fallback delivers both teams history and badges through real adapter flow', async () => {
   const original = global.fetch;
+  const enabled = process.env.ESPN_FOOTBALL_ENABLED;
+  process.env.ESPN_FOOTBALL_ENABLED = 'true';
   global.fetch = async url => ({ ok:true, json:async()=>String(url).includes('/teams') ? {sports:[{leagues:[{teams:[
     {team:{id:'1',displayName:'Náutico',logos:[{href:'https://example.com/1.png'}]}},
     {team:{id:'2',displayName:'Sport Recife',logos:[{href:'https://example.com/2.png'}]}}
@@ -88,5 +100,5 @@ test('ESPN fallback delivers both teams history and badges through real adapter 
     assert.equal(output.teams.home.badge,'https://example.com/1.png');
     assert.equal(output.sourceStatus.primaryFootball,'ESPN');
     assert.equal(output.history.source,'ESPN');
-  } finally {global.fetch=original;}
+  } finally {global.fetch=original; if(enabled === undefined) delete process.env.ESPN_FOOTBALL_ENABLED; else process.env.ESPN_FOOTBALL_ENABLED=enabled;}
 });
