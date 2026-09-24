@@ -198,7 +198,7 @@
     byId('reviewForm')?.classList.toggle('hidden', !currentUser);
     byId('reviewGuest')?.classList.toggle('hidden', Boolean(currentUser));
     if (reviewRows) renderReviews();
-    if (byId('tab-strategy')?.classList.contains('active')) renderStrategy();
+    renderStrategy();
   }
 
   async function signup(targetTab = '') {
@@ -618,88 +618,19 @@
   }
 
   function getStrategyProfile() {
-    return currentUser ? readLocal('vertex_strategy_profile', null) : null;
+    return currentUser ? window.VertexStrategy?.profile() || null : null;
   }
 
   function renderStrategy() {
-    const target = byId('strategyContent');
-    if (!target) return;
-    const profile = getStrategyProfile();
-
-    if (!profile) {
-      target.innerHTML = `
-        <div class="trainer-card strategy-intro">
-          <span class="kicker">VERTEX STRATEGY</span>
-          <h3>Build your Vertex profile</h3>
-          <p class="strategy-copy">Set your experience, risk profile and preferred markets. Vertex uses these rules to decide when a match deserves attention and when PASS is the better decision.</p>
-          <ul class="trainer-features"><li>Personal risk framework</li><li>Preferred market filters</li><li>Data-quality threshold</li><li>PASS / WATCH / FIT decision logic</li></ul>
-          <button class="btn-primary" id="btnTryStrategy" type="button">SET UP MY PROFILE</button>
-        </div>`;
-      on('btnTryStrategy', 'click', showStrategySetup);
-      window.VertexI18n?.apply?.(target);
-      return;
-    }
-
-    const threshold = profile.risk === 'Conservative' ? 76 : profile.risk === 'Aggressive' ? 60 : 68;
-    target.innerHTML = `
-      <div class="strategy-dashboard">
-        <div class="strategy-panel"><span class="kicker">YOUR PROFILE</span><h3>${escapeHtml(profile.risk)} · ${escapeHtml(profile.experience)}</h3><div class="profile-score"><div><span>Bankroll reference</span><strong>${escapeHtml(profile.bankroll)}</strong></div><div><span>Data threshold</span><strong>${threshold}%</strong></div><div><span>Markets</span><strong>${escapeHtml(profile.markets.join(', '))}</strong></div><div><span>Objective</span><strong>${escapeHtml(profile.objective)}</strong></div></div><div class="strategy-actions"><button class="btn-secondary" data-action="edit-strategy" type="button">EDIT PROFILE</button><button class="btn-primary" data-action="scan-strategy" type="button">SCAN TODAY</button></div></div>
-        <div class="strategy-panel"><span class="kicker">VERTEX RULES</span><h3>NO CHASING. NO FORCED PICKS.</h3><ul class="strategy-rules"><li>Reject matches below ${threshold}% data quality.</li><li>Pass when recent form or team availability is too weak.</li><li>Only use markets supported by the available source data.</li><li>More matches do not mean better decisions.</li></ul></div>
-      </div><div id="strategyScanResults" class="strategy-scan-results"></div>`;
-    window.VertexI18n?.apply?.(target);
+    window.VertexStrategy?.mount(currentUser?.id || null);
   }
 
   function showStrategySetup() {
-    if (!requireAccount('strategy')) return;
-    const target = byId('strategyContent');
-    if (!target) return;
-    const previous = getStrategyProfile() || {};
-    target.innerHTML = `
-      <form class="strategy-form" id="strategyForm">
-        <div class="form-grid">
-          <div class="field"><label>Bankroll reference</label><input id="strategyBankroll" type="number" min="1" value="${escapeHtml(previous.bankroll || 1000)}"></div>
-          <div class="field"><label>Experience</label><select id="strategyExperience"><option>Beginner</option><option selected>Intermediate</option><option>Advanced</option></select></div>
-          <div class="field"><label>Risk profile</label><select id="strategyRisk"><option>Conservative</option><option selected>Balanced</option><option>Aggressive</option></select></div>
-          <div class="field"><label>Objective</label><select id="strategyObjective"><option>Protect bankroll</option><option selected>Controlled growth</option><option>Learn disciplined analysis</option></select></div>
-          <div class="field full"><label>Preferred markets</label><div class="market-options">${['1X2','Double Chance','Goals','BTTS','Corners','Cards'].map((item) => `<label class="check-chip"><input type="checkbox" name="strategyMarket" value="${item}" ${['1X2','Goals'].includes(item) ? 'checked' : ''}><span>${item}</span></label>`).join('')}</div></div>
-        </div>
-        <button class="btn-primary" type="submit">SAVE STRATEGY</button>
-      </form>`;
-    byId('strategyForm')?.addEventListener('submit', (event) => {
-      event.preventDefault();
-      if (!requireAccount('strategy')) return;
-      const profile = {
-        bankroll: Number(byId('strategyBankroll')?.value || 0),
-        experience: byId('strategyExperience')?.value || 'Intermediate',
-        risk: byId('strategyRisk')?.value || 'Balanced',
-        objective: byId('strategyObjective')?.value || 'Controlled growth',
-        markets: qsa('input[name="strategyMarket"]:checked').map((item) => item.value),
-        updatedAt: new Date().toISOString()
-      };
-      if (!profile.bankroll || !profile.markets.length) return showToast('Complete the strategy profile first.');
-      localStorage.setItem('vertex_strategy_profile', JSON.stringify(profile));
-      renderStrategy();
-      showToast('Strategy profile saved.');
-    });
-    window.VertexI18n?.apply?.(target);
+    window.VertexStrategy?.edit();
   }
 
-  async function scanStrategyMatches() {
-    if (!requireAccount('strategy')) return;
-    const target = byId('strategyScanResults');
-    if (!target) return;
-    target.innerHTML = '<div class="loading-state">Scanning today’s available fixtures…</div>';
-    try {
-      const data = await fetchJson('/api/upcoming');
-      const matches = (data.matches || []).slice(0, 12);
-      if (!matches.length) {
-        target.innerHTML = '<div class="empty-state"><h3>PASS</h3><p>No current fixtures were returned by the connected provider.</p></div>';
-        return;
-      }
-      target.innerHTML = `<div class="live-grid">${matches.map((match) => `<div class="live-card"><div class="live-meta"><span>${escapeHtml(match.league || 'Competition')}</span><span>${escapeHtml(fmtDate(match.date))}</span></div><div class="live-team-row"><strong>${escapeHtml(match.home)}</strong></div><div class="live-team-row"><strong>${escapeHtml(match.away)}</strong></div><button class="btn-secondary full-width" data-analyze-match="${escapeHtml(`${match.home} vs ${match.away}`)}" type="button">ANALYZE MATCH</button></div>`).join('')}</div>`;
-    } catch (error) {
-      target.innerHTML = `<div class="analysis-error"><strong>SCAN UNAVAILABLE</strong><p>${escapeHtml(error.message)}</p></div>`;
-    }
+  function scanStrategyMatches() {
+    window.VertexStrategy?.scan();
   }
 
   async function loadLiveMatches() {

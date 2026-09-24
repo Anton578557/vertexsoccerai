@@ -538,7 +538,7 @@
 
   function translateTextNode(node) {
     if (!node?.nodeValue || !node.parentElement) return;
-    if (['SCRIPT', 'STYLE', 'NOSCRIPT'].includes(node.parentElement.tagName)) return;
+    if (['SCRIPT', 'STYLE', 'NOSCRIPT'].includes(node.parentElement.tagName) || node.parentElement.closest('.vs-root')) return;
     if (!originalText.has(node)) originalText.set(node, node.nodeValue);
     const original = originalText.get(node);
     const trimmed = original.trim();

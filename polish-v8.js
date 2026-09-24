@@ -99,6 +99,7 @@
   }
 
   function renderStrategyProfile() {
+    if (window.VertexStrategy) return;
     const root = document.getElementById('tab-strategy');
     const target = document.getElementById('strategyContent');
     if (!root || !target) return;
@@ -187,6 +188,7 @@
   }
 
   function localizeStrategyScan() {
+    if (window.VertexStrategy) return;
     const box = document.getElementById('strategyScanResults');
     if (!box) return;
     const copy = strategyCopy[lang()] || strategyCopy.en;

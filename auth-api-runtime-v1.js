@@ -6,7 +6,7 @@
 
   const SUPABASE_URL = 'https://bznjdzgtiddggcdhxadj.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_kWwttoQARBmC6H_NqsEL_A_A5I7wDON';
-  const PROTECTED = new Set(['/api/analyze', '/api/upcoming', '/api/live']);
+  const PROTECTED = new Set(['/api/analyze', '/api/upcoming', '/api/live', '/api/strategy']);
 
   let client = null;
   let accessToken = null;
