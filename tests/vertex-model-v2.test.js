@@ -42,7 +42,7 @@ test('stronger home profile produces a higher home-win probability', () => {
   assert.ok(result.model.oneXtwo.home > result.model.oneXtwo.away);
   const sum = result.model.oneXtwo.home + result.model.oneXtwo.draw + result.model.oneXtwo.away;
   assert.ok(sum >= 99 && sum <= 101);
-  assert.equal(result.meta.version, 'Vertex Model 2.3');
+  assert.equal(result.meta.version, 'Vertex Model 2.4');
   assert.equal(result.meta.qualityBreakdown.opponentStrength, 0);
   assert.ok(result.dataQuality >= 60);
 });

@@ -28,6 +28,9 @@ test('CSV competition mapping is country aware and keeps division 2 separate',()
  assert.equal(leagueCode('Serie A','Brazil'),'BRA');
  assert.equal(leagueCode('2. Bundesliga','Germany'),'D2');
  assert.equal(leagueCode('Japanese J2 League','Japan'),null);
+ assert.equal(leagueCode('English League 1','England'),'E2');
+ assert.equal(leagueCode('English League 2','England'),'E3');
+ assert.equal(leagueCode('League 1','Japan'),null);
 });
 
 test('international CSV headers parse and absent event stats stay missing',()=>{

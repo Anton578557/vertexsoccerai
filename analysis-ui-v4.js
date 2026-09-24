@@ -187,6 +187,8 @@
     "scoreShort": "Marcadores posibles"
   }
 };
+  const sampleCopy = {"ru": {"period": "Период выборки", "historicalAverage": "Среднее в истории за матч", "oldCards": "Это историческая справка. Недостаточно свежей статистики обеих команд для оценки карточек в предстоящем матче."}, "en": {"period": "Sample period", "historicalAverage": "Historical average per match", "oldCards": "Historical reference only. There are not enough recent statistics for both teams to estimate cards in the upcoming match."}, "es": {"period": "Período de la muestra", "historicalAverage": "Media histórica por partido", "oldCards": "Solo referencia histórica. Faltan estadísticas recientes de ambos equipos para estimar las tarjetas del próximo partido."}};
+  for (const language of Object.keys(sampleCopy)) Object.assign(detailCopy[language], sampleCopy[language]);
   for (const language of Object.keys(detailCopy)) Object.assign(reportCopy[language], detailCopy[language]);
   const rt = (key) => (reportCopy[lang()] || reportCopy.en)[key] || key;
   const common = (key) => window.VertexI18n?.t?.(key) || window.VertexLocaleContent?.text(key,lang()) || key;
@@ -317,13 +319,18 @@
     const g = analysis.granularModel;
     const yellow = g?.cards;
     const sample = yellow?.sample;
+    const dates = metric => metric?.from && metric?.through ? `<p class="v8-note">${esc(rt('period'))}: ${esc(historyDate(metric.from))} — ${esc(historyDate(metric.through))}</p>` : '';
+    const yellowHistory = ['home','away'].map(side => {
+      const metric = g?.yellowHistory?.[side];
+      return metric ? `<div class="v10-card-history"><strong>${esc(analysis.teams?.[side]?.name)}</strong><p>${esc(rt('historicalAverage'))}: <b>${esc(num(metric.for,1))}</b> · ${esc(rt('sample'))}: ${esc(num(metric.n))}</p>${dates(metric)}</div>` : '';
+    }).join('');
     const yellowBody = yellow ? eventCard(t('cards'), yellow, [['O3.5', yellow.over35], ['O4.5', yellow.over45], ['O5.5', yellow.over55]]) +
-      (sample ? `<p class="v8-note">${esc(rt('sample'))}: ${esc(num(sample.home))} / ${esc(num(sample.away))}</p>` : '') : `<p class="v8-note">${esc(rt('missingCards'))}</p>`;
+      (sample ? `<p class="v8-note">${esc(rt('sample'))}: ${esc(num(sample.home))} / ${esc(num(sample.away))}</p>` : '') + dates(g?.yellowHistory?.home) : yellowHistory ? yellowHistory + `<p class="v8-note">${esc(rt('oldCards'))}</p>` : `<p class="v8-note">${esc(rt('missingCards'))}</p>`;
     const redBody = ['home', 'away'].map(side => {
       const metric = g?.redCards?.[side];
-      return `<div class="v10-card-history"><strong>${esc(analysis.teams?.[side]?.name || t(side === 'home' ? 'homeLabel' : 'awayLabel'))}</strong>${metric ? `<p>${esc(rt('redCount'))}: <b>${esc(num(metric.matchesWithRed))} / ${esc(num(metric.sample))}</b></p><p>${esc(rt('historyOnly'))}: <b>${esc(percent(metric.observedFrequency))}</b></p>` : `<p>${esc(rt('missingCards'))}</p>`}</div>`;
+      return `<div class="v10-card-history"><strong>${esc(analysis.teams?.[side]?.name || t(side === 'home' ? 'homeLabel' : 'awayLabel'))}</strong>${metric ? `<p>${esc(rt('redCount'))}: <b>${esc(num(metric.matchesWithRed))} / ${esc(num(metric.sample))}</b></p><p>${esc(rt('historyOnly'))}: <b>${esc(percent(metric.observedFrequency))}</b></p>${dates(metric)}` : `<p>${esc(rt('missingCards'))}</p>`}</div>`;
     }).join('');
-    return `<div class="v8-market-grid v8-two"><section class="v8-market-tile v10-yellow"><h5>${esc(t('cards'))}</h5>${yellowBody}<p class="v8-note">${esc(rt('cardsNote'))}</p></section><section class="v8-market-tile v10-red"><h5>${esc(rt('redCards'))}</h5>${redBody}<p class="v8-note">${esc(rt('redNote'))}</p></section></div><p class="v8-note">${esc(t('source'))}: ${esc(g?.source || '—')}</p>`;
+    return `<div class="v8-market-grid v8-two"><section class="v8-market-tile v10-yellow"><h5>${esc(t('cards'))}</h5>${yellowBody}${yellow ? `<p class="v8-note">${esc(rt('cardsNote'))}</p>` : ''}</section><section class="v8-market-tile v10-red"><h5>${esc(rt('redCards'))}</h5>${redBody}<p class="v8-note">${esc(rt('redNote'))}</p></section></div><p class="v8-note">${esc(t('source'))}: ${esc(g?.source || '—')}</p>`;
   }
 
   function renderDrivers(analysis, home, away) {

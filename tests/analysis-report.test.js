@@ -35,7 +35,7 @@ test('report renders all seven views, safe text and valid estimates in RU/EN/ES'
     assert.ok(!/NaN|undefined|<script>/.test(html));
     assert.match(html,/&lt;script&gt;/);
     assert.match(html,language==='en'?/5\.5/:/5,5/);
-    assert.match(html,/Vertex Model 2\.3/);
+    assert.match(html,/Vertex Model 2\.4/);
   }
 });
 

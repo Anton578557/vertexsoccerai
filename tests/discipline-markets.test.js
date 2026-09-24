@@ -12,12 +12,12 @@ const rows = [
 ];
 test('event averages use the same paired valid sample; missing counts are not zeros',()=>{
  const p=teamProfile(rows,'Arsenal');
- assert.deepEqual(p.yellowCards,{for:3,against:2,n:3});
- assert.deepEqual(p.redCards,{for:0,against:1/3,n:3});
+ assert.deepEqual(p.yellowCards,{for:3,against:2,n:3,from:null,through:null});
+ assert.deepEqual(p.redCards,{for:0,against:1/3,n:3,from:null,through:null});
  assert.equal(p.shots.for,null); assert.equal(p.shots.n,0);
 });
 test('red-card history distinguishes zero observed dismissals from missing history',()=>{
- assert.deepEqual(redCardHistory(rows,'Arsenal'),{sample:3,matchesWithRed:0,observedFrequency:0,average:0});
+ assert.deepEqual(redCardHistory(rows,'Arsenal'),{sample:3,matchesWithRed:0,observedFrequency:0,average:0,from:null,through:null});
  assert.equal(redCardHistory(rows.slice(0,2),'Arsenal'),null);
 });
 test('handicaps and winning margins agree with the score distribution and complementary outcomes',()=>{
@@ -37,4 +37,16 @@ test('the modal score follows the distribution, not a constant 1–1',()=>{
   assert.ok(Math.abs(grid.reduce((sum,c)=>sum+c.p,0)-1)<1e-9);
  }
  assert.ok(modes.size>=4);
+});
+
+test('old event statistics cannot become current probabilities or increase model quality',()=>{
+ const {freshMetric,expectedPair}=require('../lib/football-data-uk');
+ const recent={n:12,for:2,against:3,through:new Date(Date.now()-7*864e5).toISOString()};
+ const old={...recent,through:new Date(Date.now()-120*864e5).toISOString()};
+ assert.equal(freshMetric(recent),true);assert.equal(freshMetric(old),false);
+ assert.equal(expectedPair({yellowCards:recent},{yellowCards:old},'yellowCards').total,null);
+ const base={teams:{home:{name:'A'},away:{name:'B'}},form:{home:{played:8,avgFor:1.6,avgAgainst:1,ppg:1.8},away:{played:8,avgFor:1.2,avgAgainst:1.6,ppg:1.2}}};
+ const before=buildVertexModelV2(base);
+ const after=buildVertexModelV2({...base,granularModel:{ok:true,forecastsAvailable:false,redCards:{},shotsOnTarget:{expectedHome:6,expectedAway:1}}});
+ assert.deepEqual(after.model,before.model);assert.equal(after.dataQuality,before.dataQuality);
 });

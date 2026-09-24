@@ -7,7 +7,7 @@ const p = core.profile({risk:'Balanced',experience:'Intermediate',markets:['Goal
 function analysis() {
   return {fixture:{date:'2026-09-25T18:00:00Z',league:'Premier League'}, teams:{home:{name:'Chelsea',country:'England'},away:{name:'Arsenal',country:'England'}},
     generatedAt:'2026-09-24T11:30:00Z',model:{oneXtwo:{home:47,draw:27,away:26},over25:61,under25:39,btts:63,noBtts:37,doubleChance:{oneX:74,xTwo:53,oneTwo:73}},
-    dataQuality:78,form:{home:{played:8},away:{played:8}},contextSources:{form:'BSD'},engine:{modelVersion:'Vertex Model 2.3'}};
+    dataQuality:78,form:{home:{played:8},away:{played:8}},contextSources:{form:'BSD'},engine:{modelVersion:'Vertex Model 2.4'}};
 }
 test('strategy uses the chosen market, not the largest probability across unequal markets',()=>{
   const a=core.assess(analysis(),p,{},now);
@@ -46,7 +46,7 @@ test('shortlist filters cancelled, live, undated, past and duplicate fixtures by
   const list=[base,{...base},...['CANCELLED','POSTPONED','LIVE'].map(status=>({...base,status})),{...base,date:null},{...base,date:'2026-09-20'},{...base,date:'2026-10-02'},{...base,country:'Kenya'}];
   assert.deepEqual(core.fixtures(list,p,now),[base]);
 });
-function journal(correct,i=0){return {selected_at:'2026-09-21T08:00:00Z',evaluation:{fixture_date:new Date(now-(i+1)*3600000).toISOString(),is_correct:correct,model_version:'Vertex Model 2.3',market:'1X2'}};}
+function journal(correct,i=0){return {selected_at:'2026-09-21T08:00:00Z',evaluation:{fixture_date:new Date(now-(i+1)*3600000).toISOString(),is_correct:correct,model_version:'Vertex Model 2.4',market:'1X2'}};}
 test('pending and late selections are never counted as failed predictions',()=>{
   const r=core.review([journal(true),journal(null),{...journal(null),evaluation:{...journal(null).evaluation,evaluation_status:"excluded_late"}},{...journal(false),selected_at:'2026-09-25T12:00:00Z'}, {...journal(false),evaluation:{...journal(false).evaluation,model_version:null}}],now);
   assert.equal(r.settled,1);assert.equal(r.correct,1);assert.equal(r.pending,1);assert.equal(r.cautious,false);assert.equal(r.accuracy,null);
@@ -81,8 +81,8 @@ test('strategy API enforces auth, private cache and server-owned forecast storag
   const events=[]; let authorized=false;
   const liveDate=new Date(Date.now()+86400000).toISOString();
   const a=analysis();a.fixture.date=liveDate;a.generatedAt=new Date().toISOString();
-  const forecast={...a,version:'Vertex Model 2.3'};
-  const row={id:'fixture-evaluation',fixture_key:'key',fixture_date:liveDate,created_at:new Date().toISOString(),model_version:'Vertex Model 2.3',forecast,market:'GOALS_OU_2_5',predicted_value:'OVER',predicted_probability:61,is_correct:null};
+  const forecast={...a,version:'Vertex Model 2.4'};
+  const row={id:'fixture-evaluation',fixture_key:'key',fixture_date:liveDate,created_at:new Date().toISOString(),model_version:'Vertex Model 2.4',forecast,market:'GOALS_OU_2_5',predicted_value:'OVER',predicted_probability:61,is_correct:null};
   try{
     require.cache[authPath].exports={requireUser:async(req,res)=>{if(!authorized){res.status(401).json({error:'AUTH_REQUIRED'});return null;}return{id:'owner-A'};}};
     require.cache[ratePath].exports={enforceRateLimit:async()=>true};delete require.cache[apiPath];
