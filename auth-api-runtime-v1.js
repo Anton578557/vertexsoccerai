@@ -20,6 +20,7 @@
         auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
       });
       window.__vertexApiAuthClient = client;
+      window.__vertexSupabaseClient = client;
       readyPromise = client.auth.getSession()
         .then(({ data }) => { accessToken = data?.session?.access_token || null; })
         .catch(() => { accessToken = null; });

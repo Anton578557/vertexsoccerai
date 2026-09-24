@@ -101,9 +101,11 @@ jobs:
           grep -q "requireUser" api/analyze.js
           grep -q "requireUser" api/live.js
           grep -q "requireUser" api/upcoming.js
+          grep -q "requireUser" api/strategy.js
           grep -q "enforceRateLimit" api/analyze.js
           grep -q "enforceRateLimit" api/live.js
           grep -q "enforceRateLimit" api/upcoming.js
+          grep -q "enforceRateLimit" api/strategy.js
           test -f lib/api-auth.js
           test -f lib/rate-limit.js
           test -f auth-api-runtime-v1.js

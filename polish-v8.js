@@ -408,7 +408,8 @@
     if (cabinetSession?.user) return;
     try {
       if (!cabinetDb && window.supabase?.createClient) {
-        cabinetDb = window.supabase.createClient('https://bznjdzgtiddggcdhxadj.supabase.co', 'sb_publishable_kWwttoQARBmC6H_NqsEL_A_A5I7wDON', { auth: { persistSession: true, autoRefreshToken: false, detectSessionInUrl: false } });
+        cabinetDb = window.__vertexSupabaseClient || window.__vertexApiAuthClient || window.supabase.createClient('https://bznjdzgtiddggcdhxadj.supabase.co', 'sb_publishable_kWwttoQARBmC6H_NqsEL_A_A5I7wDON', { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+        window.__vertexSupabaseClient = cabinetDb;
       }
       const result = await Promise.race([
         cabinetDb?.auth?.getSession?.(),
