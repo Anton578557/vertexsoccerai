@@ -290,12 +290,11 @@
   }
 
   function matchParts(value) {
-    return String(value || '').split(/\s+(?:против|contra|versus|vs\.?|v\.?|-)\s+|\s*[–—]\s*/i);
+    return window.VertexMatchInput.parts(value);
   }
 
   function parseMatchInput(value) {
-    const parts = matchParts(value).map((part) => part.trim()).filter(Boolean);
-    return parts.length === 2 && parts.every((part) => part.length >= 2) ? { home: parts[0], away: parts[1] } : null;
+    return window.VertexMatchInput.parse(value);
   }
 
   function suggestionQuery(value) {
@@ -405,7 +404,7 @@
         return;
       }
       const script = document.createElement('script');
-      script.src = 'analysis-ui-v4.js?v=19';
+      script.src = 'analysis-ui-v4.js?v=20';
       script.async = false;
       script.onload = () => resolve(Boolean(window.VertexAnalysisUI?.acceptAnalysis));
       script.onerror = () => resolve(false);

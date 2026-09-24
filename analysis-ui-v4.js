@@ -12,7 +12,7 @@
     link.href = href;
     document.head.appendChild(link);
   }
-  ensureStylesheet('ux-v6.css?v=10');
+  ensureStylesheet('ux-v6.css?v=11');
 
   const SUPABASE_URL = 'https://bznjdzgtiddggcdhxadj.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_kWwttoQARBmC6H_NqsEL_A_A5I7wDON';
@@ -125,6 +125,69 @@
       penaltyExact: 'At least one scored penalty', score: 'Likely score', guide: 'Probability distribution'
     }
   };
+  const detailCopy = {
+  "ru": {
+    "handicaps": "Форы и разница",
+    "discipline": "Карточки",
+    "handicap": "Фора хозяев",
+    "handicapNote": "К голам хозяев прибавляется указанная фора. Противоположная фора гостей показана справа. Половинные линии исключают возврат.",
+    "margins": "Разница голов",
+    "oneGoal": "в 1 гол",
+    "twoGoals": "в 2 гола",
+    "threeGoals": "в 3+ гола",
+    "otherScores": "Остальные счета",
+    "scoreHint": "Даже самый вероятный отдельный счёт обычно имеет небольшой шанс. Сравнивайте несколько сценариев.",
+    "redCards": "Красные карточки",
+    "historyOnly": "Частота в истории, не прогноз",
+    "redNote": "Показаны матчи, в которых команда получила хотя бы одну красную карточку. Ноль удалений в выборке не означает нулевой риск. Данных о судье и подтверждённых составах здесь нет.",
+    "cardsNote": "Оценка жёлтых карточек по статистике обеих команд. Упрощённая модель количества, без поправки на судью; точность этих вероятностей ещё не проверена.",
+    "sample": "Матчей со статистикой",
+    "missingCards": "Источник не предоставил достаточно проверенной статистики карточек.",
+    "redCount": "Матчи с удалением",
+    "scoreShort": "Возможные счета"
+  },
+  "en": {
+    "handicaps": "Handicaps & margins",
+    "discipline": "Cards",
+    "handicap": "Home handicap",
+    "handicapNote": "Add the handicap to the home goals. The opposite away handicap is shown on the right. Half-goal lines have no push.",
+    "margins": "Winning margin",
+    "oneGoal": "by 1 goal",
+    "twoGoals": "by 2 goals",
+    "threeGoals": "by 3+ goals",
+    "otherScores": "Other scores",
+    "scoreHint": "Even the most likely individual score usually has a small chance. Compare several scenarios.",
+    "redCards": "Red cards",
+    "historyOnly": "Historical frequency, not a forecast",
+    "redNote": "Matches in which the team received at least one red card. No dismissals in the sample does not mean zero risk. Referee and confirmed lineup data are not included.",
+    "cardsNote": "Yellow-card estimates from both teams’ history. A simple count model without referee adjustment; these probabilities have not yet been validated.",
+    "sample": "Matches with statistics",
+    "missingCards": "The source has not provided enough verified card statistics.",
+    "redCount": "Matches with a dismissal",
+    "scoreShort": "Possible scores"
+  },
+  "es": {
+    "handicaps": "Hándicaps y margen",
+    "discipline": "Tarjetas",
+    "handicap": "Hándicap local",
+    "handicapNote": "Suma el hándicap a los goles locales. A la derecha figura el hándicap opuesto del visitante. Las líneas de medio gol no tienen devolución.",
+    "margins": "Margen de victoria",
+    "oneGoal": "por 1 gol",
+    "twoGoals": "por 2 goles",
+    "threeGoals": "por 3+ goles",
+    "otherScores": "Otros marcadores",
+    "scoreHint": "Incluso el marcador individual más probable suele tener pocas posibilidades. Compara varios escenarios.",
+    "redCards": "Tarjetas rojas",
+    "historyOnly": "Frecuencia histórica, no un pronóstico",
+    "redNote": "Partidos en los que el equipo recibió al menos una tarjeta roja. Ninguna expulsión en la muestra no significa riesgo cero. No se incluyen datos del árbitro ni alineaciones confirmadas.",
+    "cardsNote": "Estimaciones de amarillas según el historial de ambos equipos. Modelo de conteo sencillo sin ajuste por árbitro; estas probabilidades aún no se han validado.",
+    "sample": "Partidos con estadísticas",
+    "missingCards": "La fuente no ha proporcionado suficientes estadísticas verificadas de tarjetas.",
+    "redCount": "Partidos con expulsión",
+    "scoreShort": "Marcadores posibles"
+  }
+};
+  for (const language of Object.keys(detailCopy)) Object.assign(reportCopy[language], detailCopy[language]);
   const rt = (key) => (reportCopy[lang()] || reportCopy.en)[key] || key;
   const common = (key) => window.VertexI18n?.t?.(key) || window.VertexLocaleContent?.text(key,lang()) || key;
   const diagnostic = value => window.VertexLocaleContent?.diagnostic(value,lang()) || value;
@@ -241,14 +304,26 @@
     const cards = [];
     if (g?.ok) {
       cards.push(eventCard(t('corners'), g.corners, [['O7.5', g.corners?.over75], ['O8.5', g.corners?.over85], ['O9.5', g.corners?.over95]]));
-      cards.push(eventCard(t('cards'), g.cards, [['O3.5', g.cards?.over35], ['O4.5', g.cards?.over45], ['O5.5', g.cards?.over55]]));
       cards.push(eventCard(t('shots'), g.shots, [['O21.5', g.shots?.over215], ['O23.5', g.shots?.over235], ['O25.5', g.shots?.over255]]));
       cards.push(eventCard(t('sot'), g.shotsOnTarget, [['O6.5', g.shotsOnTarget?.over65], ['O7.5', g.shotsOnTarget?.over75], ['O8.5', g.shotsOnTarget?.over85]]));
       cards.push(eventCard(t('offsides'), g.offsides, [['O2.5', g.offsides?.over25], ['O3.5', g.offsides?.over35], ['O4.5', g.offsides?.over45]]));
       cards.push(eventCard(t('fouls'), g.fouls));
     }
     if (p?.ok) cards.push(`<div class="v6-event-card v6-penalty-card"><div class="v6-event-top"><span>${esc(rt('penaltyExact'))}</span><strong>${p?.ok ? `${Math.round(Number(p.probabilityPct || 0))}%` : '—'}</strong></div>${p?.ok ? `<div class="v6-event-split"><span>${esc(t('homeLabel'))}: <b>${Math.round(Number(p.homeProbabilityPct || 0))}%</b></span><span>${esc(t('awayLabel'))}: <b>${Math.round(Number(p.awayProbabilityPct || 0))}%</b></span></div><p class="v6-event-note">${esc(t('penaltyNote'))}</p>` : `<p class="v6-event-note">${esc(t('penaltyMissing'))}</p>`}</div>`);
-    return `<section class="v6-section"><div class="v6-section-head"><div><span class="v6-section-kicker">${esc(t('events'))}</span><h4>${esc(t('corners'))} · ${esc(t('cards'))} · ${esc(t('shots'))} · ${esc(t('penalty'))}</h4></div></div><div class="v6-event-grid">${cards.filter(Boolean).join('') || `<p class="v8-note">${esc(rt('noEvents'))}</p>`}</div></section>`;
+    return `<section class="v6-section"><div class="v6-section-head"><div><span class="v6-section-kicker">${esc(t('events'))}</span><h4>${esc(t('corners'))} · ${esc(t('shots'))} · ${esc(t('penalty'))}</h4></div></div><div class="v6-event-grid">${cards.filter(Boolean).join('') || `<p class="v8-note">${esc(rt('noEvents'))}</p>`}</div></section>`;
+  }
+
+  function renderDiscipline(analysis) {
+    const g = analysis.granularModel;
+    const yellow = g?.cards;
+    const sample = yellow?.sample;
+    const yellowBody = yellow ? eventCard(t('cards'), yellow, [['O3.5', yellow.over35], ['O4.5', yellow.over45], ['O5.5', yellow.over55]]) +
+      (sample ? `<p class="v8-note">${esc(rt('sample'))}: ${esc(num(sample.home))} / ${esc(num(sample.away))}</p>` : '') : `<p class="v8-note">${esc(rt('missingCards'))}</p>`;
+    const redBody = ['home', 'away'].map(side => {
+      const metric = g?.redCards?.[side];
+      return `<div class="v10-card-history"><strong>${esc(analysis.teams?.[side]?.name || t(side === 'home' ? 'homeLabel' : 'awayLabel'))}</strong>${metric ? `<p>${esc(rt('redCount'))}: <b>${esc(num(metric.matchesWithRed))} / ${esc(num(metric.sample))}</b></p><p>${esc(rt('historyOnly'))}: <b>${esc(percent(metric.observedFrequency))}</b></p>` : `<p>${esc(rt('missingCards'))}</p>`}</div>`;
+    }).join('');
+    return `<div class="v8-market-grid v8-two"><section class="v8-market-tile v10-yellow"><h5>${esc(t('cards'))}</h5>${yellowBody}<p class="v8-note">${esc(rt('cardsNote'))}</p></section><section class="v8-market-tile v10-red"><h5>${esc(rt('redCards'))}</h5>${redBody}<p class="v8-note">${esc(rt('redNote'))}</p></section></div><p class="v8-note">${esc(t('source'))}: ${esc(g?.source || '—')}</p>`;
   }
 
   function renderDrivers(analysis, home, away) {
@@ -310,8 +385,13 @@
     const goals = `<div class="v8-market-grid v8-two">${tile(rt('goals'), goalTable(goalLines))}${tile(t('btts'), marketRows([[rt('yes'), m.btts], [rt('no'), m.noBtts]]))}</div>`;
     const teamLines = (side) => m.teamGoalLines?.[side] || [{line: .5, over: ex[`${side}ToScore`], under: ex[`${side}ToScore`] == null ? null : 100-ex[`${side}ToScore`]}, {line: 1.5, over: ex[`${side}Over15`], under: ex[`${side}Over15`] == null ? null : 100-ex[`${side}Over15`]}];
     const teams = `<div class="v8-market-grid v8-two">${tile(home, goalTable(teamLines('home')) + marketRows([[rt('clean'), ex.homeCleanSheet]]))}${tile(away, goalTable(teamLines('away')) + marketRows([[rt('clean'), ex.awayCleanSheet]]))}</div>`;
-    const scores = `<div class="v8-score-grid">${(m.scoreScenarios || [{score: m.correctScore, probability: m.correctScoreProbability}]).map((row, i) => `<div class="v8-score-card"><span>0${i + 1}</span><strong>${esc(row.score)}</strong><b>${esc(percent(row.probability))}</b></div>`).join('')}</div><p class="v8-note">${esc(rt('scoreNote'))}</p>`;
-    const panels = [['outcomes', outcomes], ['goals', goals], ['teams', teams], ['scores', scores], ['extra', renderEvents(analysis)]];
+    const scores = `<div class="v8-score-grid">${(m.scoreScenarios || [{score: m.correctScore, probability: m.correctScoreProbability}]).map((row, i) => `<div class="v8-score-card"><span>0${i + 1}</span><strong>${esc(row.score)}</strong><b>${esc(percent(row.probability))}</b></div>`).join('')}</div>${m.otherScoreProbability != null ? marketRows([[rt('otherScores'), m.otherScoreProbability]]) : ''}<p class="v8-note">${esc(rt('scoreNote'))} ${esc(rt('scoreHint'))}</p>`;
+    const margins = m.winningMargins || {};
+    const signed = value => `${value > 0 ? '+' : ''}${num(value,1)}`;
+    const handicap = `<div class="v8-table-wrap"><table class="v8-goal-table"><thead><tr><th>${esc(home)}</th><th>${esc(rt('yes'))}</th><th>${esc(away)}</th><th>${esc(rt('yes'))}</th></tr></thead><tbody>${(m.handicapLines || []).map(row => `<tr><th scope="row">${esc(signed(row.line))}</th><td>${esc(percent(row.home))}</td><th scope="row">${esc(signed(-row.line))}</th><td>${esc(percent(row.away))}</td></tr>`).join('')}</tbody></table></div>`;
+    const marginRows = [[t('draw'), margins.draw], ...['home','away'].flatMap(side => [['One','oneGoal'],['Two','twoGoals'],['ThreePlus','threeGoals']].map(([key,label]) => [`${side === 'home' ? home : away} · ${rt(label)}`, margins[`${side}${key}`]]))];
+    const handicaps = `<div class="v8-market-grid v8-two">${tile(rt('handicap'), handicap, rt('handicapNote'))}${tile(rt('margins'), marketRows(marginRows))}</div>`;
+    const panels = [['outcomes', outcomes], ['goals', goals], ['teams', teams], ['scores', scores], ['handicaps', handicaps], ['discipline', renderDiscipline(analysis)], ['extra', renderEvents(analysis)]];
     return `<section class="v8-explorer"><div class="v6-section-head"><div><span class="v6-section-kicker">${esc(rt('guide'))}</span><h4>${esc(rt('more'))}</h4></div></div><div class="v8-market-tabs" role="group" aria-label="${esc(rt('markets'))}">${panels.map(([key], i) => `<button type="button" data-market-tab="${key}" aria-controls="v8-panel-${key}" aria-pressed="${i === 0}">${esc(rt(key))}</button>`).join('')}</div>${panels.map(([key, html], i) => `<div id="v8-panel-${key}" class="v8-market-panel" data-market-panel="${key}" ${i ? 'hidden' : ''}>${html}</div>`).join('')}</section>`;
   }
 
@@ -327,13 +407,14 @@
     const confidence = analysis.confidence == null ? null : clamp(analysis.confidence, 0, 100);
     const quality = clamp(analysis.dataQuality, 0, 100);
     const caution = analysis.vertexModel?.decision?.action === 'PASS';
-    return `<section class="v6-summary"><span class="v6-summary-kicker">${esc(t('summary'))}</span><h3>${esc(outcomeLabel(model.mainScenario))} <span class="v8-outcome-value">${esc(percent(bestValue))}</span></h3><div class="v8-headline-grid"><div><span>${esc(t('expectedGoals'))}</span><strong>${esc(num(model.expectedGoals?.home,2))} : ${esc(num(model.expectedGoals?.away,2))}</strong><small>${esc(homeName)} / ${esc(awayName)}</small></div><div><span>${esc(t('btts'))}</span><strong>${esc(percent(model.btts))}</strong><small>${esc(t('over25'))} · ${esc(percent(model.over25))}</small></div><div><span>${esc(rt('score'))}</span><strong>${esc(model.correctScore || '—')}</strong><small>${esc(percent(model.correctScoreProbability))}</small></div></div><p class="v8-verdict ${caution ? 'cautious' : ''}">${esc(rt(caution ? 'caution' : 'supported'))}</p></section><div class="v6-quality-row"><div class="v6-quality-card"><div class="v6-quality-head"><span>${esc(t('confidence'))}</span><strong>${confidence ?? '—'} / 100</strong></div><div class="v6-track"><i style="width:${confidence ?? 0}%"></i></div></div><div class="v6-quality-card"><div class="v6-quality-head"><span>${esc(t('quality'))}</span><strong>${quality} / 100</strong></div><div class="v6-track"><i style="width:${quality}%"></i></div></div></div><p class="v8-estimate-note">${esc(rt('estimates'))}</p>${renderMarkets(analysis, homeName, awayName)}`;
+    return `<section class="v6-summary"><span class="v6-summary-kicker">${esc(t('summary'))}</span><h3>${esc(outcomeLabel(model.mainScenario))} <span class="v8-outcome-value">${esc(percent(bestValue))}</span></h3><div class="v8-headline-grid"><div><span>${esc(t('expectedGoals'))}</span><strong>${esc(num(model.expectedGoals?.home,2))} : ${esc(num(model.expectedGoals?.away,2))}</strong><small>${esc(homeName)} / ${esc(awayName)}</small></div><div><span>${esc(t('btts'))}</span><strong>${esc(percent(model.btts))}</strong><small>${esc(t('over25'))} · ${esc(percent(model.over25))}</small></div><div><span>${esc(rt('scoreShort'))}</span><ul class="v10-score-preview">${(model.scoreScenarios || [{score:model.correctScore,probability:model.correctScoreProbability}]).slice(0,3).map(row => `<li><b>${esc(row.score || '—')}</b><span>${esc(percent(row.probability))}</span></li>`).join('')}</ul><small>${esc(rt('scoreHint'))}</small></div></div><p class="v8-verdict ${caution ? 'cautious' : ''}">${esc(rt(caution ? 'caution' : 'supported'))}</p></section><div class="v6-quality-row"><div class="v6-quality-card"><div class="v6-quality-head"><span>${esc(t('confidence'))}</span><strong>${confidence ?? '—'} / 100</strong></div><div class="v6-track"><i style="width:${confidence ?? 0}%"></i></div></div><div class="v6-quality-card"><div class="v6-quality-head"><span>${esc(t('quality'))}</span><strong>${quality} / 100</strong></div><div class="v6-track"><i style="width:${quality}%"></i></div></div></div><p class="v8-estimate-note">${esc(rt('estimates'))}</p>${renderMarkets(analysis, homeName, awayName)}`;
   }
 
   function teamBadge(team, name) {
-    const url = safeUrl(team.badge);
+    const candidates = [...new Set([team.badge, ...(team.badgeCandidates || [])])].filter(value => { try { return new URL(value).protocol === 'https:'; } catch (_) { return false; } }).slice(0,3);
+    const url = candidates[0] || '';
     const initials = name.split(/\s+/).filter(Boolean).slice(0,2).map(word => word[0]).join('').toUpperCase();
-    return `<span class="v9-team-badge" aria-hidden="true"><span class="v9-badge-fallback" ${url ? 'hidden' : ''}>${esc(initials)}</span>${url ? `<img data-team-badge src="${url}" alt="" referrerpolicy="no-referrer">` : ''}</span>`;
+    return `<span class="v9-team-badge" aria-hidden="true"><span class="v9-badge-fallback" ${url ? 'hidden' : ''}>${esc(initials)}</span>${url ? `<img data-team-badge data-badge-candidates="${esc(JSON.stringify(candidates.slice(1)))}" src="${esc(url)}" alt="" referrerpolicy="no-referrer">` : ''}</span>`;
   }
 
   function renderHistory(analysis) {
@@ -352,7 +433,7 @@
     const fixtureMeta = [fixture.league, fmtDate(fixture.date), fixture.venue, fixture.city].filter(Boolean).join(' · ');
     const sourceRows = Object.entries(analysis?.sourceStatus || {}).slice(0, 12);
     const limitations = Array.isArray(analysis?.limitations) ? analysis.limitations.slice(0, 8) : [];
-    return `<div class="analysis-card v6-analysis-card" data-i18n-owned><div class="v6-match-head"><div class="v6-team">${teamBadge(home, homeName)}<strong>${esc(homeName)}</strong><small>${esc(country(home.country))}</small></div><div class="v6-vs">VS</div><div class="v6-team">${teamBadge(away, awayName)}<strong>${esc(awayName)}</strong><small>${esc(country(away.country))}</small></div></div><div class="v6-fixture-meta">${esc(fixtureMeta || t('fixtureLimited'))}</div>${!fixture.date ? `<p class="v8-estimate-note">${esc(rt('comparison'))}</p>` : fixture.inputReversed ? `<p class="v8-estimate-note">${esc(rt('reversed'))}</p>` : ''}${renderModel(analysis, homeName, awayName)}<section class="v6-section"><div class="v6-section-head"><div><span class="v6-section-kicker">${esc(t('form'))}</span><h4>${esc(homeName)} · ${esc(awayName)}</h4></div></div><div class="v6-form-grid">${formCard(homeName, analysis?.form?.home || {})}${formCard(awayName, analysis?.form?.away || {})}</div></section>${analysis?.model ? `<section class="v6-section"><div class="v6-section-head"><div><span class="v6-section-kicker">${esc(analysis.model?.engineVersion || 'VERTEX MODEL')}</span><h4>${esc(t('why'))}</h4></div><p>${esc(t('drivers'))}</p></div>${renderDrivers(analysis, homeName, awayName)}</section>` : ''}${!analysis.model ? renderEvents(analysis) : ''}${renderHistory(analysis)}${renderContext(analysis)}<details class="v6-tech"><summary>${esc(t('technical'))}</summary><div class="v6-tech-body">${sourceRows.length ? `<p><strong>${esc(t('source'))}:</strong> ${sourceRows.map(([k,v]) => `${esc(common(window.VertexLocaleContent?.sourceKeys[k] || 'Source status'))}: ${esc(diagnostic(v))}`).join(' · ')}</p>` : ''}${limitations.length ? `<ul>${limitations.map((item) => `<li>${esc(diagnostic(item))}</li>`).join('')}</ul>` : ''}</div></details><div class="v6-actions"><button class="btn-secondary" data-action="save-analysis" type="button">${esc(t('save'))}</button><button class="btn-secondary" data-action="copy-analysis" type="button">${esc(t('copy'))}</button></div></div>`;
+    return `<div class="analysis-card v6-analysis-card" data-i18n-owned><div class="v6-match-head"><div class="v6-team">${teamBadge(home, homeName)}<strong>${esc(homeName)}</strong><small>${esc(country(home.country))}</small></div><div class="v6-vs">VS</div><div class="v6-team">${teamBadge(away, awayName)}<strong>${esc(awayName)}</strong><small>${esc(country(away.country))}</small></div></div><div class="v6-fixture-meta">${esc(fixtureMeta || t('fixtureLimited'))}</div>${!fixture.date ? `<p class="v8-estimate-note">${esc(rt('comparison'))}</p>` : fixture.inputReversed ? `<p class="v8-estimate-note">${esc(rt('reversed'))}</p>` : ''}${renderModel(analysis, homeName, awayName)}<section class="v6-section"><div class="v6-section-head"><div><span class="v6-section-kicker">${esc(t('form'))}</span><h4>${esc(homeName)} · ${esc(awayName)}</h4></div></div><div class="v6-form-grid">${formCard(homeName, analysis?.form?.home || {})}${formCard(awayName, analysis?.form?.away || {})}</div></section>${analysis?.model ? `<section class="v6-section"><div class="v6-section-head"><div><span class="v6-section-kicker">${esc(analysis.model?.engineVersion || 'VERTEX MODEL')}</span><h4>${esc(t('why'))}</h4></div><p>${esc(t('drivers'))}</p></div>${renderDrivers(analysis, homeName, awayName)}</section>` : ''}${!analysis.model ? `<section class="v8-explorer"><h4>${esc(rt('discipline'))}</h4>${renderDiscipline(analysis)}</section>${renderEvents(analysis)}` : ''}${renderHistory(analysis)}${renderContext(analysis)}<details class="v6-tech"><summary>${esc(t('technical'))}</summary><div class="v6-tech-body">${sourceRows.length ? `<p><strong>${esc(t('source'))}:</strong> ${sourceRows.map(([k,v]) => `${esc(common(window.VertexLocaleContent?.sourceKeys[k] || 'Source status'))}: ${esc(diagnostic(v))}`).join(' · ')}</p>` : ''}${limitations.length ? `<ul>${limitations.map((item) => `<li>${esc(diagnostic(item))}</li>`).join('')}</ul>` : ''}</div></details><div class="v6-actions"><button class="btn-secondary" data-action="save-analysis" type="button">${esc(t('save'))}</button><button class="btn-secondary" data-action="copy-analysis" type="button">${esc(t('copy'))}</button></div></div>`;
   }
 
   function rememberAnalysis(analysis) {
@@ -496,6 +577,11 @@
   document.addEventListener('error', event => {
     const img = event.target;
     if (!img?.matches?.('img[data-team-badge]')) return;
+    let candidates = [];
+    try { candidates = JSON.parse(img.dataset.badgeCandidates || '[]'); } catch (_) {}
+    const next = candidates.shift();
+    img.dataset.badgeCandidates = JSON.stringify(candidates);
+    if (next && /^https:\/\//.test(next)) { img.src = next; return; }
     img.hidden = true;
     const fallback = img.parentElement?.querySelector('.v9-badge-fallback');
     if (fallback) fallback.hidden = false;

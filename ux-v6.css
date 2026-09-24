@@ -275,3 +275,15 @@
 .v9-history li { display:grid; grid-template-columns:76px minmax(0,1fr) 44px; gap:9px; padding:10px 0; border-bottom:1px solid #ffffff0d; font-size:12px; line-height:1.6; }
 .v9-history time { color:#8ca6b6; }
 .v9-history strong { white-space:nowrap; }
+
+/* Compact score scenarios and clearly separated discipline history. */
+.v10-score-preview { list-style:none; margin:10px 0; padding:0; }
+.v10-score-preview li { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:6px 0; border-bottom:1px solid #25404e; }
+.v10-score-preview b { font-size:20px; color:#eefbff; font-variant-numeric:tabular-nums; }
+.v10-score-preview li span { color:#7bdde9; font-size:14px; }
+.v10-yellow { border-top:3px solid #f1cc63; }
+.v10-red { border-top:3px solid #fa7783; }
+.v10-card-history { padding:12px 0; border-bottom:1px solid #25404e; }
+.v10-card-history p { color:#a8bdca; font-size:13px; line-height:1.7; margin:8px 0; }
+.v8-market-tile .v6-event-card { padding:0; border:0; background:transparent; }
+@media (max-width:600px) { .v8-market-tabs button { padding:9px 12px; font-size:13px; } }

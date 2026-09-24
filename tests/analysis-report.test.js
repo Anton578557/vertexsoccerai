@@ -25,11 +25,11 @@ function sample() {
   });
 }
 
-test('report renders all five views, safe text and valid estimates in RU/EN/ES', () => {
+test('report renders all seven views, safe text and valid estimates in RU/EN/ES', () => {
   for (const language of ['ru','en','es']) {
     const html = render(language,sample());
-    assert.equal((html.match(/data-market-tab=/g)||[]).length,5);
-    assert.equal((html.match(/data-market-panel=/g)||[]).length,5);
+    assert.equal((html.match(/data-market-tab=/g)||[]).length,7);
+    assert.equal((html.match(/data-market-panel=/g)||[]).length,7);
     assert.equal((html.match(/class="v8-score-card"/g)||[]).length,5);
     assert.equal((html.match(/aria-pressed="true"/g)||[]).length,1);
     assert.ok(!/NaN|undefined|<script>/.test(html));
@@ -77,4 +77,13 @@ test('reports translate diagnostics and dates while preserving club and source q
     assert.match(html,/Brighton/);
     assert.ok(!/Invalid Date|NaN|undefined/.test(html));
   }
+});
+
+test('score alternatives and honest card coverage are rendered in every language',()=>{
+ for(const [language,red,missing] of [['ru','Красные карточки','не прогноз'],['en','Red cards','not a forecast'],['es','Tarjetas rojas','no un pronóstico']]){
+  const a=sample(); a.granularModel={ok:true,source:'Football-Data.co.uk',redCards:{home:{sample:10,matchesWithRed:0,observedFrequency:0}}};
+  const html=render(language,a);
+  assert.match(html,/v10-score-preview/);assert.ok(html.includes(red));assert.ok(html.includes(missing));
+  assert.match(html,/0 \/ 10/);assert.ok(!/NaN|undefined/.test(html));
+ }
 });

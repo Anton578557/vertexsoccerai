@@ -9,6 +9,8 @@ const event = (overrides = {}) => ({id:123, home_team:'Arsenal', away_team:'Chel
 const analysis = () => ({teams:{home:{name:'Arsenal',country:'England'},away:{name:'Chelsea',country:'England'}},fixture:{},form:{home:{played:0},away:{played:0}},sourceStatus:{}});
 
 test('BSD team identity rejects shared names, women, wrong countries and ambiguous exact identities', () => {
+  assert.equal(selectTeam([{id:1,name:'Junior',country_code:'CO'}],{name:'Atletico Junior'},undefined).id,1);
+  assert.equal(selectTeam([{id:1,name:'Junior'},{id:2,name:'Junior'}],{name:'Junior'},undefined),null);
   const club = {name:'Manchester City',country:'England'};
   const rows = [{id:1,name:'Manchester United',country_code:'GB'}, {id:2,name:'Manchester City',country_code:'GB'},
     {id:3,name:'Manchester City',country_code:'GB',is_women:true}, {id:4,name:'Manchester City',country_code:'US'}];
@@ -58,6 +60,15 @@ test('BSD is inert without a key or explicit enablement; verified history uses t
     assert.equal(result.history.source,'BSD'); assert.equal(result.form.home.played,6); assert.equal(result.form.away.played,6);
     assert.equal(result.leagueContext,null); assert.equal(urls.length,4);
     await enrichBsdHistory(analysis()); assert.equal(urls.length,4);
+    const withoutCountry = analysis();
+    delete withoutCountry.teams.home.country; delete withoutCountry.teams.away.country;
+    const recovered = await enrichBsdHistory(withoutCountry);
+    assert.equal(recovered.form.home.played,6);
+    assert.equal(recovered.teams.home.country,'England');
+    assert.equal(recovered.teams.home.resolved,true);
+    assert.equal(recovered.teams.home.badge,'https://sports.bzzoiro.com/img/team/101/');
+    assert.equal(urls.length,6);
+
   } finally {
     global.fetch=original;
     if (key===undefined) delete process.env.BSD_API_KEY; else process.env.BSD_API_KEY=key;

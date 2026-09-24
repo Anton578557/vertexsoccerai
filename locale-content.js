@@ -134,7 +134,7 @@
   for (const [en,ru,es] of entries) { catalogue.ru[en]=ru;catalogue.es[en]=es; }
   const text = (key, language='en', vars={}) => Object.entries(vars).reduce((s,[k,v])=>s.replaceAll(`{${k}}`,String(v)),catalogue[language]?.[key]||key);
 
-  const sourceKeys = {primaryFootball:'Primary football data',teamMetadata:'Team metadata',weather:'Weather',news:'News',footballData:'Football-Data',competitionCode:'League code',openResults:'Football-Data.co.uk',openFootball:'OpenFootball',openLigaDb:'OpenLigaDB',bsd:'BSD',bsdHistory:'BSD',sportmonks:'Sportmonks',espn:'ESPN',apiFootball:'API-Football',vertexModelContext:'Model context',fixtureResolver:'Scheduled fixture',playerAvailability:'Player availability',penaltyHistory:'Penalty history'};
+  const sourceKeys = {primaryFootball:'Primary football data',teamMetadata:'Team metadata',weather:'Weather',news:'News',footballData:'Football-Data',competitionCode:'League code',openResults:'Football-Data.co.uk',footballDataCoUk:'Football-Data.co.uk',eventStatsStorage:'Source status',openFootball:'OpenFootball',openLigaDb:'OpenLigaDB',bsd:'BSD',bsdHistory:'BSD',sportmonks:'Sportmonks',espn:'ESPN',apiFootball:'API-Football',vertexModelContext:'Model context',fixtureResolver:'Scheduled fixture',playerAvailability:'Player availability',penaltyHistory:'Penalty history'};
   const statuses = {
     awaiting_verification:['Awaiting verification','Ожидает проверки','Pendiente de verificación'],
     upstream_unavailable:['Source unavailable','Источник недоступен','Fuente no disponible'],
