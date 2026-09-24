@@ -18,6 +18,7 @@
   let reviewAllowance = null;
   let reviewOwner = null;
   let reviewSubmitting = false;
+  let leaderboardRows = null;
 
   function ensureStylesheet(href) {
     if (document.querySelector(`link[href="${href}"]`)) return;
@@ -52,19 +53,21 @@
   }
 
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+  const tr = (text,vars={}) => window.VertexI18n?.t(text,vars) || text;
+  const errorKey = (error,fallback) => window.VertexI18n?.errorKey(error,fallback) || fallback;
+  function localizedHTML(target,html) { if(target){target.innerHTML=html;window.VertexI18n?.apply(target);} }
 
   function fmtDate(value) {
     if (!value) return '';
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return '';
-    return new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+    return new Intl.DateTimeFormat(window.VertexI18n?.getLocale() || 'en-GB', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
   }
 
   function showToast(message, ms = 3400) {
     const toast = byId('toast');
     if (!toast) return;
-    const localized = window.VertexI18n?.t ? window.VertexI18n.t(message) : message;
-    toast.textContent = localized;
+    if(window.VertexI18n) window.VertexI18n.setText(toast,message); else toast.textContent=message;
     toast.classList.remove('hidden');
     clearTimeout(showToast.timer);
     showToast.timer = setTimeout(() => toast.classList.add('hidden'), ms);
@@ -75,6 +78,8 @@
     const content = byId('modalContent');
     if (!overlay || !content) return;
     content.innerHTML = html;
+    delete content.dataset.legalKind;
+    content.removeAttribute('data-i18n-owned');
     window.VertexI18n?.apply?.(content);
     overlay.classList.remove('hidden');
     requestAnimationFrame(() => content.querySelector('input, button, select, textarea')?.focus());
@@ -220,7 +225,7 @@
         showToast('Verification email sent. Confirm your email, then sign in.', 6000);
       }
     } catch (error) {
-      showToast(`Sign up failed: ${error.message}`, 5000);
+      showToast(errorKey(error,'Could not create your account. Please try again.'), 5000);
     }
   }
 
@@ -239,7 +244,7 @@
       showToast('Signed in. Vertex is unlocked.');
       if (targetTab) activateTab(targetTab);
     } catch (error) {
-      showToast(`Sign in failed: ${error.message}`, 5000);
+      showToast(errorKey(error,'Could not sign in. Please try again.'), 5000);
     }
   }
 
@@ -328,7 +333,7 @@
       box.innerHTML = teams.slice(0, 8).map((team) => `
         <button class="suggestion-item" type="button" data-team-name="${escapeHtml(team.name)}">
           <strong>${escapeHtml(team.name)}</strong>
-          <small>${escapeHtml([team.league, team.country].filter(Boolean).join(' · '))}</small>
+          <small>${escapeHtml([team.league, window.VertexLocaleContent?.country(team.country,window.VertexI18n.getLanguage()) || team.country].filter(Boolean).join(' · '))}</small>
         </button>
       `).join('');
       box.classList.add('active');
@@ -400,7 +405,7 @@
         return;
       }
       const script = document.createElement('script');
-      script.src = 'analysis-ui-v4.js?v=17';
+      script.src = 'analysis-ui-v4.js?v=19';
       script.async = false;
       script.onload = () => resolve(Boolean(window.VertexAnalysisUI?.acceptAnalysis));
       script.onerror = () => resolve(false);
@@ -523,7 +528,7 @@
 
       try {
         const uiReady = await ensureAnalysisUi();
-        if (!state) target.innerHTML = '<div class="loading-state">Collecting match data and calculating the Vertex model…</div>';
+        if (!state) localizedHTML(target,'<div class="loading-state">Collecting match data and calculating the Vertex model…</div>');
 
         // Vercel Fluid Compute allows the server enough time for cold provider calls.
         // Keep a client-side upper bound so a broken upstream can never leave the UI stuck.
@@ -541,7 +546,7 @@
         if (uiReady && window.VertexAnalysisUI?.acceptAnalysis) {
           window.VertexAnalysisUI.acceptAnalysis(data.analysis);
         } else {
-          target.innerHTML = renderAnalysis(data.analysis);
+          localizedHTML(target,renderAnalysis(data.analysis));
           rememberAnalysis(data.analysis);
         }
 
@@ -551,8 +556,8 @@
         // Give Chromium a paint opportunity before re-enabling particles/buttons.
         await new Promise((resolve) => requestAnimationFrame(() => resolve()));
       } catch (error) {
-        const message = error?.message || 'Analysis failed.';
-        target.innerHTML = `<div class="analysis-error"><strong>ANALYSIS UNAVAILABLE</strong><p>${escapeHtml(message)}</p></div>`;
+        const message = errorKey(error,'Analysis is temporarily unavailable. Please try again.');
+        localizedHTML(target,`<div class="analysis-error"><strong>ANALYSIS UNAVAILABLE</strong><p data-i18n="${escapeHtml(message)}">${escapeHtml(tr(message))}</p></div>`);
       } finally {
         await new Promise((resolve) => requestAnimationFrame(() => resolve()));
         state?.end?.();
@@ -605,9 +610,9 @@
     if (!lastAnalysis) return;
     const summary = [
       `Vertex Soccer AI — ${analysisKey(lastAnalysis)}`,
-      `Data quality: ${lastAnalysis.dataQuality ?? '—'}%`,
-      lastAnalysis.confidence != null ? `Confidence: ${lastAnalysis.confidence}%` : null,
-      lastAnalysis.model ? `Main scenario: ${lastAnalysis.model.mainScenario}` : 'Prediction withheld: insufficient verified data'
+      `${tr('Data quality')}: ${lastAnalysis.dataQuality ?? '—'}%`,
+      lastAnalysis.confidence != null ? `${tr('Confidence')}: ${lastAnalysis.confidence}%` : null,
+      lastAnalysis.model ? `${tr('Main scenario')}: ${lastAnalysis.model.mainScenario}` : tr('Prediction withheld: insufficient verified data')
     ].filter(Boolean).join('\n');
     try {
       await navigator.clipboard.writeText(summary);
@@ -711,17 +716,26 @@
     }
   }
 
+  function renderLeaderboard() {
+    if (!leaderboardRows) return;
+    const target=byId('leaderboard');
+    const html=leaderboardRows.length ? leaderboardRows.map((row,index)=>`<div class="result-row"><span>#${index+1} ${escapeHtml(tr('Vertex member'))}</span><strong>${escapeHtml(tr('{count} analyses',{count:Number(row.analyses_count||0)}))}</strong></div>`).join('') : `<div class="empty-state"><p>${escapeHtml(tr('No analysis activity yet.'))}</p></div>`;
+    target.innerHTML=`<div data-i18n-owned>${html}</div>`;
+  }
+
   async function loadLeaderboard() {
     const target = byId('leaderboard');
     if (!target) return;
-    if (!supabaseClient) return (target.innerHTML = '<div class="empty-state"><p>Community database is unavailable.</p></div>');
-    target.innerHTML = '<div class="loading-state">Loading community activity…</div>';
+    if (!supabaseClient) return localizedHTML(target,'<div class="empty-state"><p>Community database is unavailable.</p></div>');
+    localizedHTML(target,'<div class="loading-state">Loading community activity…</div>');
     try {
       const { data, error } = await supabaseClient.from('activity').select('user_id, analyses_count').order('analyses_count', { ascending: false }).limit(20);
       if (error) throw error;
-      target.innerHTML = data?.length ? data.map((row, index) => `<div class="result-row"><span>#${index + 1} Vertex Member</span><strong>${Number(row.analyses_count || 0)} analyses</strong></div>`).join('') : '<div class="empty-state"><p>No analysis activity yet.</p></div>';
+      leaderboardRows=data||[];
+      renderLeaderboard();
     } catch (error) {
-      target.innerHTML = `<div class="analysis-error"><p>${escapeHtml(error.message)}</p></div>`;
+      leaderboardRows=null;
+      localizedHTML(target,'<div class="analysis-error"><p>Could not load community activity. Please try again.</p></div>');
     }
   }
 
@@ -748,8 +762,8 @@
       const date = new Date(review.created_at);
       const dateLabel = Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(date);
       const author = currentUser?.id === review.user_id ? words.own : words.member;
-      const body = long ? `<details class="review-details"><summary><span class="review-excerpt">${escapeHtml(excerpt)}…</span><span class="review-read-more">${words.more}</span><span class="review-read-less">${words.less}</span></summary><p class="review-text">${escapeHtml(text)}</p></details>` : `<p class="review-text">${escapeHtml(text)}</p>`;
-      return `<article class="review-card"><header class="review-card-header"><span class="review-avatar" aria-hidden="true">V</span><div><strong>${escapeHtml(author)}</strong><time datetime="${escapeHtml(review.created_at || '')}">${escapeHtml(dateLabel)}</time></div><span class="review-score">${rating}<small> / 5</small></span></header><div class="review-card-stars" aria-label="${rating} / 5"><span aria-hidden="true">${'★'.repeat(rating)}<span class="review-star-empty">${'★'.repeat(5 - rating)}</span></span></div>${body}</article>`;
+      const body = long ? `<details class="review-details"><summary><span class="review-excerpt" translate="no">${escapeHtml(excerpt)}…</span><span class="review-read-more">${words.more}</span><span class="review-read-less">${words.less}</span></summary><p class="review-text" translate="no">${escapeHtml(text)}</p></details>` : `<p class="review-text" translate="no">${escapeHtml(text)}</p>`;
+      return `<article class="review-card"><header class="review-card-header"><span class="review-avatar" aria-hidden="true">V</span><div><strong>${escapeHtml(author)}</strong><time datetime="${escapeHtml(review.created_at || '')}">${escapeHtml(dateLabel)}</time></div><span class="review-score">${rating}<small> / 5</small></span></header><div class="review-card-stars" aria-label="${escapeHtml(tr('Rating: {count} out of 5',{count:rating}))}"><span aria-hidden="true">${'★'.repeat(rating)}<span class="review-star-empty">${'★'.repeat(5 - rating)}</span></span></div>${body}</article>`;
     }).join('') : `<div class="empty-state"><p>${escapeHtml(words.empty)}</p></div>`;
     byId('reviewsCount').textContent = reviewRows.length ? `${words.count} ${Math.min(reviewsVisible, reviewRows.length)} ${words.of} ${reviewRows.length}` : '';
     byId('reviewsMore').textContent = words.next;
@@ -760,8 +774,8 @@
     const list = byId('reviewsList');
     if (!list) return;
     byId('reviewForm')?.classList.toggle('hidden', !currentUser);
-    if (!supabaseClient) return (list.innerHTML = '<div class="empty-state"><p>Reviews database is unavailable.</p></div>');
-    list.innerHTML = '<div class="loading-state">Loading reviews…</div>';
+    if (!supabaseClient) return localizedHTML(list,'<div class="empty-state"><p>Reviews database is unavailable.</p></div>');
+    localizedHTML(list,'<div class="loading-state">Loading reviews…</div>');
     byId('reviewsCount').textContent = '';
     byId('reviewsMore').classList.add('hidden');
     try {
@@ -775,7 +789,7 @@
       renderReviews();
     } catch (error) {
       reviewRows = null;
-      list.innerHTML = `<div class="analysis-error"><p>${escapeHtml(reviewWords().unavailable)}</p></div>`;
+      localizedHTML(list,'<div class="analysis-error"><p>Could not load reviews. Please open this section again.</p></div>');
     }
   }
 
@@ -832,7 +846,7 @@
       await loadReviews();
     } catch (error) {
       if (String(error.message).includes('REVIEW_LIMIT_REACHED')) showToast('You have published 2 of 2 reviews. Thank you for your feedback!');
-      else showToast(`Review failed: ${error.message}`);
+      else showToast(errorKey(error,'Could not publish the review. Please try again.'));
     } finally {
       reviewSubmitting = false;
       await loadReviewAllowance();
@@ -935,7 +949,10 @@
     on('btnSubmitReview', 'click', submitReview);
     on('reviewsMore', 'click', () => { reviewsVisible += 6; renderReviews(); });
     on('reviewText', 'input', () => { byId('reviewCharCount').textContent = `${byId('reviewText').value.length} / 1000`; });
-    document.addEventListener('vertex:languagechange', () => { renderReviews(); renderReviewAllowance(); });
+    document.addEventListener('vertex:languagechange', () => {
+      renderReviews(); renderReviewAllowance(); renderLeaderboard();
+      qsa('.star-rating').forEach(button => button.setAttribute('aria-label',tr('Rate {count} out of 5',{count:button.dataset.rating})));
+    });
     on('linkAbout', 'click', (event) => { event.preventDefault(); showAboutPage(); });
     on('linkTerms', 'click', (event) => { event.preventDefault(); showTermsPage(); });
     on('linkPrivacy', 'click', (event) => { event.preventDefault(); showPrivacyPage(); });

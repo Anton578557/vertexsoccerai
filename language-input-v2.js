@@ -89,6 +89,7 @@
     let node;
     while ((node = walker.nextNode())) {
       const raw = node.nodeValue || '';
+      if (node.parentElement?.closest('[data-i18n-owned], [translate="no"], .vs-root, script, style')) continue;
       const trimmed = raw.trim();
       if (!trimmed) continue;
       const base = allBase.get(trimmed);
@@ -112,9 +113,9 @@
     buttons.setAttribute('role', 'group');
     buttons.setAttribute('aria-label', 'Language');
     buttons.innerHTML = `
-      <button type="button" data-vertex-lang="en" title="English"><span>EN</span></button>
-      <button type="button" data-vertex-lang="ru" title="Русский"><span>RU</span></button>
-      <button type="button" data-vertex-lang="es" title="Español"><span>ES</span></button>`;
+      <button type="button" data-vertex-lang="en" title="English" translate="no"><span>EN</span></button>
+      <button type="button" data-vertex-lang="ru" title="Русский" translate="no"><span>RU</span></button>
+      <button type="button" data-vertex-lang="es" title="Español" translate="no"><span>ES</span></button>`;
     wrap.appendChild(buttons);
 
     buttons.addEventListener('click', (event) => {
@@ -127,6 +128,7 @@
 
   function syncLanguageButtons() {
     const current = lang();
+    document.querySelector('.vertex-lang-buttons')?.setAttribute('aria-label',window.VertexI18n?.t('Language') || 'Language');
     document.querySelectorAll('[data-vertex-lang]').forEach((button) => {
       const active = button.dataset.vertexLang === current;
       button.classList.toggle('active', active);
@@ -151,6 +153,7 @@
   function updateAnalyzerPlaceholder() {
     const input = document.getElementById('analyzerSearch');
     if (!input) return;
+    input.setAttribute('data-i18n-owned','');
     const current = lang();
     input.placeholder = current === 'ru'
       ? 'Например: Реал Мадрид — Барселона'

@@ -43,7 +43,7 @@
       withheldText: 'Vertex пока не собрал достаточно проверенной истории завершённых матчей по обеим командам.',
       noRecent: 'Нет свежих данных', noDrivers: 'Дополнительные факторы не были достаточно сильными, чтобы отдельно изменить модель.',
       fixtureLimited: 'Данные о матче ограничены для этого расчёта', homeLabel: 'Хозяева', awayLabel: 'Гости',
-      cabinet: 'Личный кабинет', workspace: 'Ваше рабочее пространство Vertex', active: 'Аккаунт активен', recent: 'Последние анализы', savedMatches: 'Сохранённые матчи', strategy: 'Стратегия', activity: 'Активность', account: 'Аккаунт', language: 'Язык', member: 'Дата регистрации', email: 'Email', logout: 'ВЫЙТИ', back: 'НА ГЛАВНУЮ', openStrategy: 'ОТКРЫТЬ СТРАТЕГИЮ', noAnalyses: 'Анализов пока нет.', noSaved: 'Сохранённых матчей пока нет.', analyzeAgain: 'АНАЛИЗИРОВАТЬ СНОВА', cloudError: 'Не удалось загрузить облачную историю; показываем локальные данные.'
+      cabinet: 'Личный кабинет', workspace: 'Ваше рабочее пространство Vertex', active: 'Аккаунт активен', recent: 'Последние анализы', savedMatches: 'Сохранённые матчи', strategy: 'Стратегия', activity: 'Активность', account: 'Аккаунт', language: 'Язык', member: 'Дата регистрации', email: 'Электронная почта', logout: 'ВЫЙТИ', back: 'НА ГЛАВНУЮ', openStrategy: 'ОТКРЫТЬ СТРАТЕГИЮ', noAnalyses: 'Анализов пока нет.', noSaved: 'Сохранённых матчей пока нет.', analyzeAgain: 'АНАЛИЗИРОВАТЬ СНОВА', cloudError: 'Не удалось загрузить облачную историю; показываем локальные данные.'
     },
     es: {
       home: 'Victoria local', draw: 'Empate', away: 'Victoria visitante', summary: 'Lo que ve Vertex',
@@ -59,7 +59,7 @@
       withheldText: 'Vertex aún no tiene suficiente historial verificado de partidos finalizados para ambos equipos.',
       noRecent: 'Sin datos recientes', noDrivers: 'Ningún factor adicional fue lo bastante fuerte como para cambiar el modelo por sí solo.',
       fixtureLimited: 'Los detalles del partido son limitados en este cálculo', homeLabel: 'Local', awayLabel: 'Visitante',
-      cabinet: 'Mi panel', workspace: 'Tu espacio de trabajo Vertex', active: 'Cuenta activa', recent: 'Análisis recientes', savedMatches: 'Partidos guardados', strategy: 'Estrategia', activity: 'Actividad', account: 'Cuenta', language: 'Idioma', member: 'Miembro desde', email: 'Email', logout: 'CERRAR SESIÓN', back: 'VOLVER AL INICIO', openStrategy: 'ABRIR ESTRATEGIA', noAnalyses: 'Aún no hay análisis.', noSaved: 'Aún no hay partidos guardados.', analyzeAgain: 'ANALIZAR DE NUEVO', cloudError: 'No se pudo cargar el historial en la nube; mostramos datos locales.'
+      cabinet: 'Mi panel', workspace: 'Tu espacio de trabajo Vertex', active: 'Cuenta activa', recent: 'Análisis recientes', savedMatches: 'Partidos guardados', strategy: 'Estrategia', activity: 'Actividad', account: 'Cuenta', language: 'Idioma', member: 'Miembro desde', email: 'Correo electrónico', logout: 'CERRAR SESIÓN', back: 'VOLVER AL INICIO', openStrategy: 'ABRIR ESTRATEGIA', noAnalyses: 'Aún no hay análisis.', noSaved: 'Aún no hay partidos guardados.', analyzeAgain: 'ANALIZAR DE NUEVO', cloudError: 'No se pudo cargar el historial en la nube; mostramos datos locales.'
     },
     en: {
       home: 'Home win', draw: 'Draw', away: 'Away win', summary: 'What Vertex sees',
@@ -126,7 +126,11 @@
     }
   };
   const rt = (key) => (reportCopy[lang()] || reportCopy.en)[key] || key;
-  const percent = (value) => value != null && value !== '' && Number.isFinite(Number(value)) ? `${Number(value)}%` : '—';
+  const common = (key) => window.VertexI18n?.t?.(key) || window.VertexLocaleContent?.text(key,lang()) || key;
+  const diagnostic = value => window.VertexLocaleContent?.diagnostic(value,lang()) || value;
+  const country = value => window.VertexLocaleContent?.country(value,lang()) || value;
+  const num = (value,digits=0) => value!=null && value!=='' && Number.isFinite(Number(value)) ? new Intl.NumberFormat(locale(),{minimumFractionDigits:digits,maximumFractionDigits:digits}).format(Number(value)) : '—';
+  const percent = (value) => value != null && value !== '' && Number.isFinite(Number(value)) ? `${num(value,Number.isInteger(Number(value))?0:1)}%` : '—';
 
   const t = (key) => (copy[lang()] || copy.en)[key] || copy.en[key] || key;
 
@@ -135,6 +139,11 @@
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return '';
     return new Intl.DateTimeFormat(locale(), { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+  }
+
+  function historyDate(value) {
+    const date=new Date(value);
+    return !value || Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat(locale(),{dateStyle:'medium',timeZone:'UTC'}).format(date);
   }
 
   function safeUrl(value) {
@@ -168,7 +177,10 @@
   function toast(message, ms = 3400) {
     const node = document.getElementById('toast');
     if (!node) return;
-    node.textContent = message;
+    const key=Object.keys(copy.en).find(key=>(copy[lang()]||copy.en)[key]===message);
+    if(key&&window.VertexI18n?.setLocalizedText) window.VertexI18n.setLocalizedText(node,Object.fromEntries(['en','ru','es'].map(code=>[code,copy[code][key]||copy.en[key]])));
+    else if(window.VertexI18n?.setText) window.VertexI18n.setText(node,message);
+    else node.textContent=message;
     node.classList.remove('hidden');
     clearTimeout(toast.timer);
     toast.timer = setTimeout(() => node.classList.add('hidden'), ms);
@@ -191,7 +203,7 @@
   }
 
   function formCard(team, stats = {}) {
-    const metric = (value) => Number(stats.played) > 0 && value != null && value !== '' && Number.isFinite(Number(value)) ? Number(value).toFixed(2) : '—';
+    const metric = (value) => Number(stats.played) > 0 && value != null && value !== '' && Number.isFinite(Number(value)) ? num(value,2) : '—';
     return `<div class="v6-form-card"><div class="v6-form-title"><strong>${esc(team)}</strong><span>${Number(stats.played || 0)} ${esc(t('matches'))}</span></div><div class="v6-form-pills">${formPills(stats)}</div><div class="v6-form-metrics"><div><span>${esc(t('gf'))}</span><strong>${metric(stats.avgFor)}</strong></div><div><span>${esc(t('ga'))}</span><strong>${metric(stats.avgAgainst)}</strong></div><div><span>${esc(t('ppg'))}</span><strong>${metric(stats.ppg)}</strong></div></div></div>`;
   }
 
@@ -209,9 +221,9 @@
   function marketLineLabel(label) {
     const match = String(label || '').match(/^O(\d+(?:\.\d+)?)$/i);
     if (!match) return String(label || '');
-    if (lang() === 'ru') return `Больше ${match[1]}`;
-    if (lang() === 'es') return `Más de ${match[1]}`;
-    return `Over ${match[1]}`;
+    if (lang() === 'ru') return `Больше ${num(match[1],1)}`;
+    if (lang() === 'es') return `Más de ${num(match[1],1)}`;
+    return `Over ${num(match[1],1)}`;
   }
 
   function eventLines(rows) {
@@ -220,7 +232,7 @@
 
   function eventCard(label, metric, rows = []) {
     if (!metric) return '';
-    return `<div class="v6-event-card"><div class="v6-event-top"><span>${esc(label)}</span><strong>${esc(t('expected'))} ${metric.expectedTotal != null && Number.isFinite(Number(metric.expectedTotal)) ? Number(metric.expectedTotal).toFixed(1) : '—'}</strong></div><div class="v6-event-split"><span>${esc(t('homeLabel'))}: <b>${metric.expectedHome != null && Number.isFinite(Number(metric.expectedHome)) ? Number(metric.expectedHome).toFixed(1) : '—'}</b></span><span>${esc(t('awayLabel'))}: <b>${metric.expectedAway != null && Number.isFinite(Number(metric.expectedAway)) ? Number(metric.expectedAway).toFixed(1) : '—'}</b></span></div>${rows.length ? eventLines(rows) : ''}</div>`;
+    return `<div class="v6-event-card"><div class="v6-event-top"><span>${esc(label)}</span><strong>${esc(t('expected'))} ${metric.expectedTotal != null && Number.isFinite(Number(metric.expectedTotal)) ? num(metric.expectedTotal,1) : '—'}</strong></div><div class="v6-event-split"><span>${esc(t('homeLabel'))}: <b>${metric.expectedHome != null && Number.isFinite(Number(metric.expectedHome)) ? num(metric.expectedHome,1) : '—'}</b></span><span>${esc(t('awayLabel'))}: <b>${metric.expectedAway != null && Number.isFinite(Number(metric.expectedAway)) ? num(metric.expectedAway,1) : '—'}</b></span></div>${rows.length ? eventLines(rows) : ''}</div>`;
   }
 
   function renderEvents(analysis) {
@@ -250,7 +262,7 @@
     return `<div class="v6-driver-list">${rows.map((driver) => {
       const side = driver.side === 'home' ? home : driver.side === 'away' ? away : `${home} / ${away}`;
       const label = labels[lang()]?.[driver.key] || labels.en[driver.key] || driver.label || driver.key || 'Vertex';
-      return `<div class="v6-driver"><span class="v6-driver-icon">•</span><div><strong>${esc(label)} · ${esc(side)}</strong><small>${esc(driver.source || 'Vertex')}</small></div><b>${Number(driver.magnitudePct || 0)}%</b></div>`;
+      return `<div class="v6-driver"><span class="v6-driver-icon">•</span><div><strong>${esc(label)} · ${esc(side)}</strong><small>${esc(diagnostic(driver.source || 'Vertex'))}</small></div><b>${num(driver.magnitudePct || 0,1)}%</b></div>`;
     }).join('')}</div>`;
   }
 
@@ -273,7 +285,10 @@
     }
     const news = Array.isArray(analysis?.news) ? analysis.news.slice(0, 3) : [];
     if (!news.length) cards.push(`<div class="v6-context-card"><span>${esc(t('news'))}</span><strong>${esc(t('noNews'))}</strong></div>`);
-    else news.forEach((item) => cards.push(`<div class="v6-context-card"><span>${esc(t('news'))}</span><strong>${esc(item.title || item.signal || 'Context update')}</strong><p>${esc(item.source || 'News')}${item.publishedAt ? ` · ${esc(fmtDate(item.publishedAt))}` : ''}</p></div>`));
+    else news.forEach((item) => {
+      const url=safeUrl(item.url || item.link);
+      cards.push(`<div class="v6-context-card"><span>${esc(t('news'))}</span><strong>${esc(common('Context update'))}</strong><p>${esc(item.source || t('news'))}${item.publishedAt ? ` · ${esc(fmtDate(item.publishedAt))}` : ''}</p><details><summary>${esc(common('Original article'))} · ${esc(common('Source language'))}</summary><p translate="no">${esc(item.title || item.signal || '')}</p>${url?`<a href="${url}" target="_blank" rel="noopener noreferrer">${esc(common('Read original'))}</a>`:''}</details></div>`);
+    });
     if (!analysis.vertexModel?.coverage?.structuredInjuriesAndLineups) cards.push(`<div class="v6-context-card"><span>${esc(t('availability'))}</span><p>${esc(t('squadMissing'))}</p></div>`);
     return `<section class="v6-section"><div class="v6-section-head"><div><span class="v6-section-kicker">${esc(t('context'))}</span><h4>${esc(t('news'))} · ${esc(t('availability'))}</h4></div></div><div class="v6-context-grid">${cards.join('')}</div></section>`;
   }
@@ -283,7 +298,7 @@
   }
 
   function goalTable(lines = []) {
-    return `<div class="v8-table-wrap"><table class="v8-goal-table"><thead><tr><th scope="col">${esc(rt('line'))}</th><th scope="col">${esc(rt('over'))}</th><th scope="col">${esc(rt('under'))}</th></tr></thead><tbody>${lines.map((row) => `<tr><th scope="row">${esc(row.line)}</th><td>${esc(percent(row.over))}</td><td>${esc(percent(row.under))}</td></tr>`).join('')}</tbody></table></div>`;
+    return `<div class="v8-table-wrap"><table class="v8-goal-table"><thead><tr><th scope="col">${esc(rt('line'))}</th><th scope="col">${esc(rt('over'))}</th><th scope="col">${esc(rt('under'))}</th></tr></thead><tbody>${lines.map((row) => `<tr><th scope="row">${esc(num(row.line,1))}</th><td>${esc(percent(row.over))}</td><td>${esc(percent(row.under))}</td></tr>`).join('')}</tbody></table></div>`;
   }
 
   function renderMarkets(analysis, home, away) {
@@ -312,7 +327,7 @@
     const confidence = analysis.confidence == null ? null : clamp(analysis.confidence, 0, 100);
     const quality = clamp(analysis.dataQuality, 0, 100);
     const caution = analysis.vertexModel?.decision?.action === 'PASS';
-    return `<section class="v6-summary"><span class="v6-summary-kicker">${esc(t('summary'))}</span><h3>${esc(outcomeLabel(model.mainScenario))} <span class="v8-outcome-value">${esc(percent(bestValue))}</span></h3><div class="v8-headline-grid"><div><span>${esc(t('expectedGoals'))}</span><strong>${esc(model.expectedGoals?.home ?? '—')} : ${esc(model.expectedGoals?.away ?? '—')}</strong><small>${esc(homeName)} / ${esc(awayName)}</small></div><div><span>${esc(t('btts'))}</span><strong>${esc(percent(model.btts))}</strong><small>${esc(t('over25'))} · ${esc(percent(model.over25))}</small></div><div><span>${esc(rt('score'))}</span><strong>${esc(model.correctScore || '—')}</strong><small>${esc(percent(model.correctScoreProbability))}</small></div></div><p class="v8-verdict ${caution ? 'cautious' : ''}">${esc(rt(caution ? 'caution' : 'supported'))}</p></section><div class="v6-quality-row"><div class="v6-quality-card"><div class="v6-quality-head"><span>${esc(t('confidence'))}</span><strong>${confidence ?? '—'} / 100</strong></div><div class="v6-track"><i style="width:${confidence ?? 0}%"></i></div></div><div class="v6-quality-card"><div class="v6-quality-head"><span>${esc(t('quality'))}</span><strong>${quality} / 100</strong></div><div class="v6-track"><i style="width:${quality}%"></i></div></div></div><p class="v8-estimate-note">${esc(rt('estimates'))}</p>${renderMarkets(analysis, homeName, awayName)}`;
+    return `<section class="v6-summary"><span class="v6-summary-kicker">${esc(t('summary'))}</span><h3>${esc(outcomeLabel(model.mainScenario))} <span class="v8-outcome-value">${esc(percent(bestValue))}</span></h3><div class="v8-headline-grid"><div><span>${esc(t('expectedGoals'))}</span><strong>${esc(num(model.expectedGoals?.home,2))} : ${esc(num(model.expectedGoals?.away,2))}</strong><small>${esc(homeName)} / ${esc(awayName)}</small></div><div><span>${esc(t('btts'))}</span><strong>${esc(percent(model.btts))}</strong><small>${esc(t('over25'))} · ${esc(percent(model.over25))}</small></div><div><span>${esc(rt('score'))}</span><strong>${esc(model.correctScore || '—')}</strong><small>${esc(percent(model.correctScoreProbability))}</small></div></div><p class="v8-verdict ${caution ? 'cautious' : ''}">${esc(rt(caution ? 'caution' : 'supported'))}</p></section><div class="v6-quality-row"><div class="v6-quality-card"><div class="v6-quality-head"><span>${esc(t('confidence'))}</span><strong>${confidence ?? '—'} / 100</strong></div><div class="v6-track"><i style="width:${confidence ?? 0}%"></i></div></div><div class="v6-quality-card"><div class="v6-quality-head"><span>${esc(t('quality'))}</span><strong>${quality} / 100</strong></div><div class="v6-track"><i style="width:${quality}%"></i></div></div></div><p class="v8-estimate-note">${esc(rt('estimates'))}</p>${renderMarkets(analysis, homeName, awayName)}`;
   }
 
   function teamBadge(team, name) {
@@ -324,8 +339,8 @@
   function renderHistory(analysis) {
     if (!analysis.history?.home?.length && !analysis.history?.away?.length) return '';
     const title = ({ru:'Матчи, использованные в расчёте',en:'Matches used in this calculation',es:'Partidos usados en el cálculo'})[lang()] || 'Matches used in this calculation';
-    const rows = side => (analysis.history?.[side] || []).map(m => `<li><time>${esc(String(m.date || '').slice(0,10))}</time><span>${esc(m.home)} — ${esc(m.away)}</span><strong>${esc(m.homeScore)} : ${esc(m.awayScore)}</strong></li>`).join('');
-    return `<details class="v6-tech v9-history"><summary>${esc(title)}</summary><div class="v6-tech-body"><p>${esc(analysis.history.source || analysis.sourceStatus?.primaryFootball || 'Verified results')}</p><div class="v6-form-grid">${['home','away'].map(side => `<div><strong>${esc(analysis.teams?.[side]?.name || '')}</strong><ul>${rows(side)}</ul></div>`).join('')}</div></div></details>`;
+    const rows = side => (analysis.history?.[side] || []).map(m => `<li><time>${esc(historyDate(m.date))}</time><span>${esc(m.home)} — ${esc(m.away)}</span><strong>${esc(m.homeScore)} : ${esc(m.awayScore)}</strong></li>`).join('');
+    return `<details class="v6-tech v9-history"><summary>${esc(title)}</summary><div class="v6-tech-body"><p>${esc(diagnostic(analysis.history.source || analysis.sourceStatus?.primaryFootball || 'Verified results'))}</p><div class="v6-form-grid">${['home','away'].map(side => `<div><strong>${esc(analysis.teams?.[side]?.name || '')}</strong><ul>${rows(side)}</ul></div>`).join('')}</div></div></details>`;
   }
 
   function renderAnalysis(analysis) {
@@ -337,7 +352,7 @@
     const fixtureMeta = [fixture.league, fmtDate(fixture.date), fixture.venue, fixture.city].filter(Boolean).join(' · ');
     const sourceRows = Object.entries(analysis?.sourceStatus || {}).slice(0, 12);
     const limitations = Array.isArray(analysis?.limitations) ? analysis.limitations.slice(0, 8) : [];
-    return `<div class="analysis-card v6-analysis-card"><div class="v6-match-head"><div class="v6-team">${teamBadge(home, homeName)}<strong>${esc(homeName)}</strong><small>${esc(home.country || '')}</small></div><div class="v6-vs">VS</div><div class="v6-team">${teamBadge(away, awayName)}<strong>${esc(awayName)}</strong><small>${esc(away.country || '')}</small></div></div><div class="v6-fixture-meta">${esc(fixtureMeta || t('fixtureLimited'))}</div>${!fixture.date ? `<p class="v8-estimate-note">${esc(rt('comparison'))}</p>` : fixture.inputReversed ? `<p class="v8-estimate-note">${esc(rt('reversed'))}</p>` : ''}${renderModel(analysis, homeName, awayName)}<section class="v6-section"><div class="v6-section-head"><div><span class="v6-section-kicker">${esc(t('form'))}</span><h4>${esc(homeName)} · ${esc(awayName)}</h4></div></div><div class="v6-form-grid">${formCard(homeName, analysis?.form?.home || {})}${formCard(awayName, analysis?.form?.away || {})}</div></section>${analysis?.model ? `<section class="v6-section"><div class="v6-section-head"><div><span class="v6-section-kicker">${esc(analysis.model?.engineVersion || 'VERTEX MODEL')}</span><h4>${esc(t('why'))}</h4></div><p>${esc(t('drivers'))}</p></div>${renderDrivers(analysis, homeName, awayName)}</section>` : ''}${!analysis.model ? renderEvents(analysis) : ''}${renderHistory(analysis)}${renderContext(analysis)}<details class="v6-tech"><summary>${esc(t('technical'))}</summary><div class="v6-tech-body">${sourceRows.length ? `<p><strong>${esc(t('source'))}:</strong> ${sourceRows.map(([k,v]) => `${esc(k)}: ${esc(v)}`).join(' · ')}</p>` : ''}${limitations.length ? `<ul>${limitations.map((item) => `<li>${esc(item)}</li>`).join('')}</ul>` : ''}</div></details><div class="v6-actions"><button class="btn-secondary" data-action="save-analysis" type="button">${esc(t('save'))}</button><button class="btn-secondary" data-action="copy-analysis" type="button">${esc(t('copy'))}</button></div></div>`;
+    return `<div class="analysis-card v6-analysis-card" data-i18n-owned><div class="v6-match-head"><div class="v6-team">${teamBadge(home, homeName)}<strong>${esc(homeName)}</strong><small>${esc(country(home.country))}</small></div><div class="v6-vs">VS</div><div class="v6-team">${teamBadge(away, awayName)}<strong>${esc(awayName)}</strong><small>${esc(country(away.country))}</small></div></div><div class="v6-fixture-meta">${esc(fixtureMeta || t('fixtureLimited'))}</div>${!fixture.date ? `<p class="v8-estimate-note">${esc(rt('comparison'))}</p>` : fixture.inputReversed ? `<p class="v8-estimate-note">${esc(rt('reversed'))}</p>` : ''}${renderModel(analysis, homeName, awayName)}<section class="v6-section"><div class="v6-section-head"><div><span class="v6-section-kicker">${esc(t('form'))}</span><h4>${esc(homeName)} · ${esc(awayName)}</h4></div></div><div class="v6-form-grid">${formCard(homeName, analysis?.form?.home || {})}${formCard(awayName, analysis?.form?.away || {})}</div></section>${analysis?.model ? `<section class="v6-section"><div class="v6-section-head"><div><span class="v6-section-kicker">${esc(analysis.model?.engineVersion || 'VERTEX MODEL')}</span><h4>${esc(t('why'))}</h4></div><p>${esc(t('drivers'))}</p></div>${renderDrivers(analysis, homeName, awayName)}</section>` : ''}${!analysis.model ? renderEvents(analysis) : ''}${renderHistory(analysis)}${renderContext(analysis)}<details class="v6-tech"><summary>${esc(t('technical'))}</summary><div class="v6-tech-body">${sourceRows.length ? `<p><strong>${esc(t('source'))}:</strong> ${sourceRows.map(([k,v]) => `${esc(common(window.VertexLocaleContent?.sourceKeys[k] || 'Source status'))}: ${esc(diagnostic(v))}`).join(' · ')}</p>` : ''}${limitations.length ? `<ul>${limitations.map((item) => `<li>${esc(diagnostic(item))}</li>`).join('')}</ul>` : ''}</div></details><div class="v6-actions"><button class="btn-secondary" data-action="save-analysis" type="button">${esc(t('save'))}</button><button class="btn-secondary" data-action="copy-analysis" type="button">${esc(t('copy'))}</button></div></div>`;
   }
 
   function rememberAnalysis(analysis) {
@@ -434,7 +449,7 @@
     if (!window.VertexAccess?.requireAccount('analyzer')) return;
     if (!lastAnalysis) return;
     const text = [`Vertex Soccer AI — ${lastAnalysis.teams.home.name} vs ${lastAnalysis.teams.away.name}`, `${t('quality')}: ${lastAnalysis.dataQuality ?? '—'}%`, `${t('confidence')}: ${lastAnalysis.confidence ?? '—'}%`, `${t('likely')}: ${outcomeLabel(lastAnalysis.model?.mainScenario)}`].join('\n');
-    try { await navigator.clipboard.writeText(text); toast(t('copied')); } catch (_) {}
+    try { await navigator.clipboard.writeText(text); toast(t('copied')); } catch (_) { toast('Clipboard permission is unavailable.'); }
   }
 
   function ensureCabinetSection() {
@@ -457,7 +472,7 @@
     document.querySelectorAll('.nav a[data-tab]').forEach((node) => node.classList.remove('active'));
     section.classList.add('active'); cabinetOpen = true;
     if (history.replaceState) history.replaceState(null, '', '#/cabinet');
-    section.innerHTML = `<div class="v6-cabinet"><div class="v6-cabinet-loading">${esc(t('workspace'))}</div></div>`;
+    section.innerHTML = `<div class="v6-cabinet" data-i18n-owned><div class="v6-cabinet-loading">${esc(t('workspace'))}</div></div>`;
 
     const client = getDb();
     let session = null, cloudHistory = [], cloudSaved = [], strategy = null, cloudError = false;
@@ -475,7 +490,7 @@
     const localHistory = readLocal('vertex_recent_analyses', []); const localSaved = readLocal('vertex_saved_analyses', []);
     const recent = [...cloudHistory, ...localHistory].slice(0, 20); const saved = [...cloudSaved, ...localSaved].slice(0, 20);
     const joined = session.user.created_at ? fmtDate(session.user.created_at) : '—';
-    section.innerHTML = `<div class="v6-cabinet"><div class="v6-cabinet-hero"><div><span class="v6-section-kicker">VERTEX ACCOUNT</span><h2>${esc(t('cabinet'))}</h2><p>${esc(t('workspace'))}</p></div><div class="v6-account-badge">● ${esc(t('active'))}</div></div>${cloudError ? `<div class="v6-cabinet-empty">${esc(t('cloudError'))}</div>` : ''}<div class="v6-cabinet-stats"><div class="v6-cabinet-stat"><span>${esc(t('recent'))}</span><strong>${recent.length}</strong></div><div class="v6-cabinet-stat"><span>${esc(t('savedMatches'))}</span><strong>${saved.length}</strong></div><div class="v6-cabinet-stat"><span>${esc(t('strategy'))}</span><strong>${strategy || readLocal('vertex_strategy_profile', null) ? 'ACTIVE' : '—'}</strong></div><div class="v6-cabinet-stat"><span>${esc(t('activity'))}</span><strong>${recent.length}</strong></div></div><div class="v6-cabinet-layout"><div><section class="v6-cabinet-panel"><h3>${esc(t('recent'))}</h3>${cabinetRows(recent, t('noAnalyses'))}</section><section class="v6-cabinet-panel"><h3>${esc(t('savedMatches'))}</h3>${cabinetRows(saved, t('noSaved'))}</section></div><aside><section class="v6-cabinet-panel"><h3>${esc(t('account'))}</h3><div class="v6-setting-grid"><div class="v6-setting"><span>${esc(t('email'))}</span><strong>${esc(session.user.email || '—')}</strong></div><div class="v6-setting"><span>${esc(t('member'))}</span><strong>${esc(joined)}</strong></div><div class="v6-setting"><span>${esc(t('language'))}</span><strong>${esc(lang().toUpperCase())}</strong></div></div><div class="v6-cabinet-actions"><button class="btn-primary" type="button" data-v7-strategy>${esc(t('openStrategy'))}</button><button class="btn-secondary" type="button" data-v7-home>${esc(t('back'))}</button><button class="btn-secondary" type="button" data-v7-logout>${esc(t('logout'))}</button></div></section></aside></div></div>`;
+    section.innerHTML = `<div class="v6-cabinet" data-i18n-owned><div class="v6-cabinet-hero"><div><span class="v6-section-kicker">${esc(common('VERTEX ACCOUNT'))}</span><h2>${esc(t('cabinet'))}</h2><p>${esc(t('workspace'))}</p></div><div class="v6-account-badge">● ${esc(t('active'))}</div></div>${cloudError ? `<div class="v6-cabinet-empty">${esc(t('cloudError'))}</div>` : ''}<div class="v6-cabinet-stats"><div class="v6-cabinet-stat"><span>${esc(t('recent'))}</span><strong>${recent.length}</strong></div><div class="v6-cabinet-stat"><span>${esc(t('savedMatches'))}</span><strong>${saved.length}</strong></div><div class="v6-cabinet-stat"><span>${esc(t('strategy'))}</span><strong>${strategy || readLocal('vertex_strategy_profile', null) ? t('active') : '—'}</strong></div><div class="v6-cabinet-stat"><span>${esc(t('activity'))}</span><strong>${recent.length}</strong></div></div><div class="v6-cabinet-layout"><div><section class="v6-cabinet-panel"><h3>${esc(t('recent'))}</h3>${cabinetRows(recent, t('noAnalyses'))}</section><section class="v6-cabinet-panel"><h3>${esc(t('savedMatches'))}</h3>${cabinetRows(saved, t('noSaved'))}</section></div><aside><section class="v6-cabinet-panel"><h3>${esc(t('account'))}</h3><div class="v6-setting-grid"><div class="v6-setting"><span>${esc(t('email'))}</span><strong>${esc(session.user.email || '—')}</strong></div><div class="v6-setting"><span>${esc(t('member'))}</span><strong>${esc(joined)}</strong></div><div class="v6-setting"><span>${esc(t('language'))}</span><strong>${esc(lang().toUpperCase())}</strong></div></div><div class="v6-cabinet-actions"><button class="btn-primary" type="button" data-v7-strategy>${esc(t('openStrategy'))}</button><button class="btn-secondary" type="button" data-v7-home>${esc(t('back'))}</button><button class="btn-secondary" type="button" data-v7-logout>${esc(t('logout'))}</button></div></section></aside></div></div>`;
   }
 
   document.addEventListener('error', event => {

@@ -365,23 +365,26 @@
     const modal = document.getElementById('modalContent');
     if (!data || !overlay || !modal) return;
     modal.className = 'modal vertex-legal-v8';
+    modal.dataset.legalKind=kind;
+    modal.setAttribute('data-i18n-owned','');
     modal.innerHTML = `<div class="v8-legal-scroll"><div class="v8-legal-head"><span class="v8-legal-kicker">${esc(data.kicker)}</span><h2>${esc(data.title)}</h2><p>${esc(data.lead)}</p></div><div class="v8-legal-grid">${data.sections.map(([title, body]) => `<section class="v8-legal-card"><h3>${esc(title)}</h3><p>${esc(body)}</p></section>`).join('')}</div><div class="v8-legal-warning">${esc(data.warning)}</div><div class="v8-legal-actions"><button type="button" data-modal-action="close">${esc(copy.close)}</button></div></div>`;
     overlay.classList.remove('hidden');
   }
 
   const cabinetCopy = {
     en: { kicker:'VERTEX ACCOUNT', title:'My Cabinet', subtitle:'Your analysis workspace', active:'● ACCOUNT ACTIVE', recent:'Recent analyses', saved:'Saved matches', strategy:'Strategy', activity:'Activity', account:'Account', email:'Email', language:'Language', openStrategy:'OPEN STRATEGY', home:'BACK TO HOME', logout:'LOG OUT', emptyRecent:'No analyses yet. Run Match Analyzer and they will appear here.', emptySaved:'No saved matches yet.', again:'ANALYZE AGAIN', enabled:'ACTIVE', disabled:'NOT SET' },
-    ru: { kicker:'АККАУНТ VERTEX', title:'Личный кабинет', subtitle:'Ваше пространство для аналитики', active:'● АККАУНТ АКТИВЕН', recent:'Последние анализы', saved:'Сохранённые матчи', strategy:'Стратегия', activity:'Активность', account:'Аккаунт', email:'Email', language:'Язык', openStrategy:'ОТКРЫТЬ СТРАТЕГИЮ', home:'НА ГЛАВНУЮ', logout:'ВЫЙТИ', emptyRecent:'Анализов пока нет. Запустите анализ матча, и они появятся здесь.', emptySaved:'Сохранённых матчей пока нет.', again:'АНАЛИЗИРОВАТЬ СНОВА', enabled:'АКТИВНА', disabled:'НЕ НАСТРОЕНА' },
-    es: { kicker:'CUENTA VERTEX', title:'Mi panel', subtitle:'Tu espacio de análisis', active:'● CUENTA ACTIVA', recent:'Análisis recientes', saved:'Partidos guardados', strategy:'Estrategia', activity:'Actividad', account:'Cuenta', email:'Email', language:'Idioma', openStrategy:'ABRIR ESTRATEGIA', home:'VOLVER AL INICIO', logout:'CERRAR SESIÓN', emptyRecent:'Aún no hay análisis. Ejecuta Match Analyzer y aparecerán aquí.', emptySaved:'Aún no hay partidos guardados.', again:'ANALIZAR DE NUEVO', enabled:'ACTIVA', disabled:'NO CONFIGURADA' }
+    ru: { kicker:'АККАУНТ VERTEX', title:'Личный кабинет', subtitle:'Ваше пространство для аналитики', active:'● АККАУНТ АКТИВЕН', recent:'Последние анализы', saved:'Сохранённые матчи', strategy:'Стратегия', activity:'Активность', account:'Аккаунт', email:'Электронная почта', language:'Язык', openStrategy:'ОТКРЫТЬ СТРАТЕГИЮ', home:'НА ГЛАВНУЮ', logout:'ВЫЙТИ', emptyRecent:'Анализов пока нет. Запустите анализ матча, и они появятся здесь.', emptySaved:'Сохранённых матчей пока нет.', again:'АНАЛИЗИРОВАТЬ СНОВА', enabled:'АКТИВНА', disabled:'НЕ НАСТРОЕНА' },
+    es: { kicker:'CUENTA VERTEX', title:'Mi panel', subtitle:'Tu espacio de análisis', active:'● CUENTA ACTIVA', recent:'Análisis recientes', saved:'Partidos guardados', strategy:'Estrategia', activity:'Actividad', account:'Cuenta', email:'Correo electrónico', language:'Idioma', openStrategy:'ABRIR ESTRATEGIA', home:'VOLVER AL INICIO', logout:'CERRAR SESIÓN', emptyRecent:'Aún no hay análisis. Ejecuta Match Analyzer y aparecerán aquí.', emptySaved:'Aún no hay partidos guardados.', again:'ANALIZAR DE NUEVO', enabled:'ACTIVA', disabled:'NO CONFIGURADA' }
   };
   let cabinetSection = null;
   let cabinetSession = null;
   let cabinetDb = null;
 
   function matchName(row) { return row?.match || [row?.home_team, row?.away_team].filter(Boolean).join(' vs ') || '—'; }
+  function formatCabinetDate(value) { const date=new Date(value);return value&&!Number.isNaN(date.getTime()) ? new Intl.DateTimeFormat(lang(),{dateStyle:'medium',timeStyle:'short'}).format(date) : '—'; }
   function listRows(rows, empty, buttonText) {
     if (!rows?.length) return `<div class="v8-cabinet-empty">${esc(empty)}</div>`;
-    return `<div class="v8-cabinet-list">${rows.slice(0, 8).map((row) => `<div class="v8-cabinet-row"><div><strong>${esc(matchName(row))}</strong><small>${esc(row.created_at || row.date || row.savedAt || '')}</small></div><button type="button" data-v8-analyze="${esc(matchName(row))}">${esc(buttonText)}</button></div>`).join('')}</div>`;
+    return `<div class="v8-cabinet-list">${rows.slice(0, 8).map((row) => `<div class="v8-cabinet-row"><div><strong>${esc(matchName(row))}</strong><small>${esc(formatCabinetDate(row.created_at || row.date || row.savedAt))}</small></div><button type="button" data-v8-analyze="${esc(matchName(row))}">${esc(buttonText)}</button></div>`).join('')}</div>`;
   }
 
   function renderFastCabinet() {
@@ -399,7 +402,7 @@
     document.querySelectorAll('.nav a[data-tab]').forEach((node) => node.classList.remove('active'));
     cabinetSection.classList.add('active');
     history.replaceState?.(null, '', '#/cabinet');
-    cabinetSection.innerHTML = `<div class="v8-cabinet"><div class="v8-cabinet-hero"><div><span class="kicker">${esc(copy.kicker)}</span><h2>${esc(copy.title)}</h2><p>${esc(copy.subtitle)}</p></div><div class="v8-account-pill">${esc(copy.active)}</div></div><div class="v8-cabinet-stats"><div class="v8-cabinet-stat"><span>${esc(copy.recent)}</span><strong>${recent.length}</strong></div><div class="v8-cabinet-stat"><span>${esc(copy.saved)}</span><strong>${saved.length}</strong></div><div class="v8-cabinet-stat"><span>${esc(copy.strategy)}</span><strong>${esc(profile ? copy.enabled : copy.disabled)}</strong></div><div class="v8-cabinet-stat"><span>${esc(copy.activity)}</span><strong>${recent.length}</strong></div></div><div class="v8-cabinet-grid"><div><section class="v8-cabinet-panel"><h3>${esc(copy.recent)}</h3>${listRows(recent, copy.emptyRecent, copy.again)}</section><section class="v8-cabinet-panel" style="margin-top:14px"><h3>${esc(copy.saved)}</h3>${listRows(saved, copy.emptySaved, copy.again)}</section></div><aside><section class="v8-cabinet-panel"><h3>${esc(copy.account)}</h3><div class="v8-cabinet-account"><div><span>${esc(copy.email)}</span><strong id="v8CabinetEmail">${esc(cabinetSession?.user?.email || '—')}</strong></div><div><span>${esc(copy.language)}</span><strong>${esc(lang().toUpperCase())}</strong></div><div><span>${esc(copy.strategy)}</span><strong>${esc(profile ? copy.enabled : copy.disabled)}</strong></div></div><div class="v8-cabinet-actions"><button class="btn-primary" type="button" data-v8-strategy>${esc(copy.openStrategy)}</button><button class="btn-secondary" type="button" data-v8-home>${esc(copy.home)}</button><button class="btn-secondary" type="button" data-v8-logout>${esc(copy.logout)}</button></div></section></aside></div></div>`;
+    cabinetSection.innerHTML = `<div class="v8-cabinet" data-i18n-owned><div class="v8-cabinet-hero"><div><span class="kicker">${esc(copy.kicker)}</span><h2>${esc(copy.title)}</h2><p>${esc(copy.subtitle)}</p></div><div class="v8-account-pill">${esc(copy.active)}</div></div><div class="v8-cabinet-stats"><div class="v8-cabinet-stat"><span>${esc(copy.recent)}</span><strong>${recent.length}</strong></div><div class="v8-cabinet-stat"><span>${esc(copy.saved)}</span><strong>${saved.length}</strong></div><div class="v8-cabinet-stat"><span>${esc(copy.strategy)}</span><strong>${esc(profile ? copy.enabled : copy.disabled)}</strong></div><div class="v8-cabinet-stat"><span>${esc(copy.activity)}</span><strong>${recent.length}</strong></div></div><div class="v8-cabinet-grid"><div><section class="v8-cabinet-panel"><h3>${esc(copy.recent)}</h3>${listRows(recent, copy.emptyRecent, copy.again)}</section><section class="v8-cabinet-panel" style="margin-top:14px"><h3>${esc(copy.saved)}</h3>${listRows(saved, copy.emptySaved, copy.again)}</section></div><aside><section class="v8-cabinet-panel"><h3>${esc(copy.account)}</h3><div class="v8-cabinet-account"><div><span>${esc(copy.email)}</span><strong id="v8CabinetEmail">${esc(cabinetSession?.user?.email || '—')}</strong></div><div><span>${esc(copy.language)}</span><strong>${esc(lang().toUpperCase())}</strong></div><div><span>${esc(copy.strategy)}</span><strong>${esc(profile ? copy.enabled : copy.disabled)}</strong></div></div><div class="v8-cabinet-actions"><button class="btn-primary" type="button" data-v8-strategy>${esc(copy.openStrategy)}</button><button class="btn-secondary" type="button" data-v8-home>${esc(copy.home)}</button><button class="btn-secondary" type="button" data-v8-logout>${esc(copy.logout)}</button></div></section></aside></div></div>`;
     window.scrollTo({ top: 0, behavior: 'auto' });
     hydrateCabinetSession();
   }
@@ -459,6 +462,9 @@
       renderStrategyProfile();
       localizeStrategyScan();
       removeBetaAndPolishFooter();
+      const modal=document.getElementById('modalContent');
+      if (modal?.dataset.legalKind && !document.getElementById('modalOverlay')?.classList.contains('hidden')) openLegal(modal.dataset.legalKind);
+      if (cabinetSection?.classList.contains('active')) renderFastCabinet();
     }, 0);
   });
 

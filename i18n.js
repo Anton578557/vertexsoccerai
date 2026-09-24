@@ -485,16 +485,19 @@
   "Could not check your review limit. Reopen this section to retry.": "No se pudo comprobar el límite. Vuelve a abrir esta sección."
 });
 
+  Object.assign(dictionary.ru, window.VertexLocaleContent?.catalogue.ru || {});
+  Object.assign(dictionary.es, window.VertexLocaleContent?.catalogue.es || {});
+
   const placeholderDictionary = {
     ru: {
       'Borussia Dortmund vs Villarreal': 'Боруссия Дортмунд vs Вильярреал',
-      'Email': 'Email',
+      'Email': 'Электронная почта',
       'Password · minimum 6 characters': 'Пароль · минимум 6 символов',
       'What did you like? What should Vertex improve?': 'Что вам понравилось? Что Vertex стоит улучшить?'
     },
     es: {
       'Borussia Dortmund vs Villarreal': 'Borussia Dortmund vs Villarreal',
-      'Email': 'Email',
+      'Email': 'Correo electrónico',
       'Password · minimum 6 characters': 'Contraseña · mínimo 6 caracteres',
       'What did you like? What should Vertex improve?': '¿Qué te gustó? ¿Qué debería mejorar Vertex?'
     }
@@ -508,8 +511,9 @@
   })();
 
   const originalText = new WeakMap();
-  const originalPlaceholder = new WeakMap();
-  let observer = null;
+  const originalAttributes = new WeakMap();
+  const bindings = new WeakMap();
+  const ownedSelector = '[data-i18n-owned], [translate="no"], .vs-root';
   let applying = false;
 
   function translatePattern(text, lang) {
@@ -538,33 +542,62 @@
 
   function translateTextNode(node) {
     if (!node?.nodeValue || !node.parentElement) return;
-    if (['SCRIPT', 'STYLE', 'NOSCRIPT'].includes(node.parentElement.tagName) || node.parentElement.closest('.vs-root')) return;
-    if (!originalText.has(node)) originalText.set(node, node.nodeValue);
-    const original = originalText.get(node);
+    if (['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEXTAREA'].includes(node.parentElement.tagName) || node.parentElement.closest(ownedSelector)) return;
+    if (node.parentElement.closest('[data-i18n]')) return;
+    const previous = originalText.get(node);
+    const original = previous && node.nodeValue === previous.last ? previous.source : node.nodeValue;
     const trimmed = original.trim();
     if (!trimmed) return;
     const translated = t(trimmed);
     node.nodeValue = preserveWhitespace(original, translated);
+    originalText.set(node, {source: original, last: node.nodeValue});
   }
 
   function translateElementAttributes(root) {
-    const elements = root.querySelectorAll ? root.querySelectorAll('input[placeholder], textarea[placeholder]') : [];
+    const attributes = ['placeholder','title','aria-label','alt'];
+    const selector = attributes.map(name => `[${name}]`).join(',');
+    const elements = [...(root.matches?.(selector) ? [root] : []), ...(root.querySelectorAll?.(selector) || [])];
     elements.forEach((el) => {
-      if (!originalPlaceholder.has(el)) originalPlaceholder.set(el, el.getAttribute('placeholder') || '');
-      const original = originalPlaceholder.get(el);
-      el.setAttribute('placeholder', current === 'en' ? original : (placeholderDictionary[current]?.[original] || original));
+      if (el.closest(ownedSelector)) return;
+      const records = originalAttributes.get(el) || {};
+      for (const name of attributes) {
+        if (!el.hasAttribute(name)) continue;
+        const raw = el.getAttribute(name) || '';
+        const previous = records[name];
+        const source = previous && raw === previous.last ? previous.source : raw;
+        const translated = name === 'placeholder' ? (placeholderDictionary[current]?.[source] || t(source)) : t(source);
+        el.setAttribute(name, translated);
+        records[name] = {source, last:translated};
+      }
+      originalAttributes.set(el,records);
     });
+  }
+
+  function setText(element, source, vars = {}) {
+    if (!element) return;
+    element.setAttribute('data-i18n',source);
+    bindings.set(element,{vars});
+    element.textContent=t(source,vars);
+  }
+  function setLocalizedText(element,translations) {
+    if (!element) return;
+    element.setAttribute('data-i18n',translations.en);
+    bindings.set(element,{translations});
+    element.textContent=translations[current] || translations.en;
   }
 
   function apply(root = document.body) {
     if (!root || applying) return;
     applying = true;
     try {
+      const bound = [...(root.matches?.('[data-i18n]') ? [root] : []), ...(root.querySelectorAll?.('[data-i18n]') || [])];
+      bound.forEach(el => { if (!el.closest(ownedSelector)) { const binding=bindings.get(el)||{};el.textContent=binding.translations?.[current] || t(el.getAttribute('data-i18n'),binding.vars||{}); } });
       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
       let node;
       while ((node = walker.nextNode())) translateTextNode(node);
       translateElementAttributes(root);
       document.documentElement.lang = current;
+      document.title=t('Vertex Soccer AI — Football Intelligence Engine');
       const select = document.getElementById('vertexLanguageSelect');
       if (select && select.value !== current) select.value = current;
     } finally {
@@ -611,7 +644,10 @@
     apply(document.body);
   }
 
-  window.VertexI18n = { t, setLanguage, getLanguage, getLocale, apply };
+  const diagnostic = text => window.VertexLocaleContent?.diagnostic(text,current) || t(text);
+  const errorKey = (error,fallback) => window.VertexLocaleContent?.errorKey(error,fallback) || fallback || 'Analysis is temporarily unavailable. Please try again.';
+  const number = (value,digits=0) => value != null && value !== '' && Number.isFinite(Number(value)) ? new Intl.NumberFormat(getLocale(),{minimumFractionDigits:digits,maximumFractionDigits:digits}).format(Number(value)) : '—';
+  window.VertexI18n = { t, setText, setLocalizedText, setLanguage, getLanguage, getLocale, apply, diagnostic, errorKey, number };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 })();

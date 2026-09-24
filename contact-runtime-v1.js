@@ -16,11 +16,18 @@
 
   const copy = {
     en: { name: 'Name', namePh: 'Your name', email: 'Email', message: 'Message', messagePh: 'Describe the issue, match or question…', send: 'SEND MESSAGE', sending: 'SENDING…', invalid: 'Enter your name, a valid email and a message.', invalidToast: 'Please complete the contact form.', sendingStatus: 'Sending securely through Vertex…', sent: 'Message sent. We will reply by email.', sentToast: 'Message sent successfully.', failed: 'Message delivery failed. Please try again.' },
-    ru: { name: 'Имя', namePh: 'Ваше имя', email: 'Email', message: 'Сообщение', messagePh: 'Опишите проблему, матч или вопрос…', send: 'ОТПРАВИТЬ СООБЩЕНИЕ', sending: 'ОТПРАВЛЯЕМ…', invalid: 'Укажите имя, корректный email и сообщение.', invalidToast: 'Заполните форму обратной связи.', sendingStatus: 'Безопасно отправляем сообщение через Vertex…', sent: 'Сообщение отправлено. Мы ответим по email.', sentToast: 'Сообщение успешно отправлено.', failed: 'Не удалось отправить сообщение. Попробуйте позже.' },
-    es: { name: 'Nombre', namePh: 'Tu nombre', email: 'Email', message: 'Mensaje', messagePh: 'Describe el problema, partido o pregunta…', send: 'ENVIAR MENSAJE', sending: 'ENVIANDO…', invalid: 'Introduce tu nombre, un email válido y un mensaje.', invalidToast: 'Completa el formulario de contacto.', sendingStatus: 'Enviando de forma segura a través de Vertex…', sent: 'Mensaje enviado. Responderemos por email.', sentToast: 'Mensaje enviado correctamente.', failed: 'No se pudo enviar el mensaje. Inténtalo más tarde.' }
+    ru: { name: 'Имя', namePh: 'Ваше имя', email: 'Электронная почта', message: 'Сообщение', messagePh: 'Опишите проблему, матч или вопрос…', send: 'ОТПРАВИТЬ СООБЩЕНИЕ', sending: 'ОТПРАВЛЯЕМ…', invalid: 'Укажите имя, корректную почту и сообщение.', invalidToast: 'Заполните форму обратной связи.', sendingStatus: 'Безопасно отправляем сообщение через Vertex…', sent: 'Сообщение отправлено. Мы ответим по электронной почте.', sentToast: 'Сообщение успешно отправлено.', failed: 'Не удалось отправить сообщение. Попробуйте позже.' },
+    es: { name: 'Nombre', namePh: 'Tu nombre', email: 'Correo electrónico', message: 'Mensaje', messagePh: 'Describe el problema, partido o pregunta…', send: 'ENVIAR MENSAJE', sending: 'ENVIANDO…', invalid: 'Introduce tu nombre, un correo válido y un mensaje.', invalidToast: 'Completa el formulario de contacto.', sendingStatus: 'Enviando de forma segura a través de Vertex…', sent: 'Mensaje enviado. Responderemos por correo electrónico.', sentToast: 'Mensaje enviado correctamente.', failed: 'No se pudo enviar el mensaje. Inténtalo más tarde.' }
   };
   const lang = () => window.VertexI18n?.getLanguage?.() || localStorage.getItem('vertex_language') || 'en';
   const t = () => copy[lang()] || copy.en;
+  let statusKey = '', statusError = null;
+
+  function showStatus(key,error=null) {
+    statusKey=key; statusError=error;
+    const el=document.getElementById('contactStatus');
+    if(el) el.textContent=error ? window.VertexI18n.t(window.VertexI18n.errorKey(error,copy.en.failed)) : t()[key] || '';
+  }
 
   function localizeForm() {
     const form = document.getElementById('vertexContactForm');
@@ -35,13 +42,14 @@
     const button = form.querySelector('#contactSubmit');
     if (name) name.placeholder = text.namePh;
     if (message) message.placeholder = text.messagePh;
-    if (button && !button.disabled) button.textContent = text.send;
+    if (button) button.textContent = button.disabled ? text.sending : text.send;
+    showStatus(statusKey,statusError);
   }
 
   function toast(message, ms = 3600) {
     const el = document.getElementById('toast');
     if (!el) return;
-    el.textContent = message;
+    window.VertexI18n.setText(el,message);
     el.classList.remove('hidden');
     clearTimeout(toast.timer);
     toast.timer = setTimeout(() => el.classList.add('hidden'), ms);
@@ -56,6 +64,7 @@
 
     const shell = document.createElement('div');
     shell.className = 'vertex-contact-shell';
+    shell.setAttribute('data-i18n-owned','');
     shell.innerHTML = `
       <form id="vertexContactForm" class="vertex-contact-form" novalidate>
         <div class="vertex-contact-grid">
@@ -88,23 +97,21 @@
     event.preventDefault();
     const form = event.currentTarget;
     const button = form.querySelector('#contactSubmit');
-    const status = form.querySelector('#contactStatus');
     const name = form.querySelector('#contactName')?.value.trim() || '';
     const email = form.querySelector('#contactEmail')?.value.trim() || '';
     const message = form.querySelector('#contactMessage')?.value.trim() || '';
 
     if (!name || !/^\S+@\S+\.\S+$/.test(email) || message.length < 5) {
-      if (status) status.textContent = t().invalid;
-      toast(t().invalidToast);
+      showStatus('invalid');
+      toast(copy.en.invalidToast);
       return;
     }
 
-    const original = button?.textContent || t().send;
     if (button) {
       button.disabled = true;
       button.textContent = t().sending;
     }
-    if (status) status.textContent = t().sendingStatus;
+    showStatus('sendingStatus');
 
     try {
       const response = await fetch('/api/contact', {
@@ -113,18 +120,18 @@
         body: JSON.stringify({ name, email, message })
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data?.error || `Request failed (${response.status})`);
+      if (!response.ok) { const error=new Error(data?.error || 'Request failed');error.status=response.status;throw error; }
 
       form.reset();
-      if (status) status.textContent = t().sent;
-      toast(t().sentToast);
+      showStatus('sent');
+      toast(copy.en.sentToast);
     } catch (error) {
-      if (status) status.textContent = error?.message || t().failed;
-      toast(t().failed, 5000);
+      showStatus('failed',error);
+      toast(window.VertexI18n.errorKey(error,copy.en.failed), 5000);
     } finally {
       if (button) {
         button.disabled = false;
-        button.textContent = original;
+        button.textContent = t().send;
       }
     }
   }

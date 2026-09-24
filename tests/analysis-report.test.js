@@ -7,7 +7,8 @@ const { finalizeVertexModelV2 } = require('../lib/vertex-model-v2');
 
 function render(language, analysis) {
   const output = { innerHTML: '', dataset: {} };
-  const window = { location: {origin:'https://test.invalid'}, VertexI18n:{getLanguage:()=>language} };
+  const localeContent=require('../locale-content');
+  const window = { VertexLocaleContent:localeContent, location: {origin:'https://test.invalid'}, VertexI18n:{getLanguage:()=>language,t:(key)=>localeContent.text(key,language)} };
   const context = {
     window, URL, Intl, Date, console, CustomEvent: class {},
     localStorage: {getItem:()=>null},
@@ -33,7 +34,7 @@ test('report renders all five views, safe text and valid estimates in RU/EN/ES',
     assert.equal((html.match(/aria-pressed="true"/g)||[]).length,1);
     assert.ok(!/NaN|undefined|<script>/.test(html));
     assert.match(html,/&lt;script&gt;/);
-    assert.match(html,/5\.5/);
+    assert.match(html,language==='en'?/5\.5/:/5,5/);
     assert.match(html,/Vertex Model 2\.3/);
   }
 });
@@ -56,4 +57,24 @@ test('verified history and crest fallback are visible without unsafe HTML', () =
  assert.match(html,/v9-badge-fallback/);
  assert.match(html,/data-team-badge/);
  assert.ok(!html.includes('<script>'));
+});
+
+test('reports translate diagnostics and dates while preserving club and source quotations',()=>{
+  const a=sample();
+  a.teams.home.country='England';
+  a.sourceStatus={bsd:'awaiting_verification',vertexModelContext:'BSD · verified regulation-time results'};
+  a.limitations=['Weather was not included in this run.'];
+  a.news=[{title:'Original headline in English',source:'BBC',url:'https://example.org/article',publishedAt:'2026-09-24T12:00:00Z'}];
+  a.history={source:'BSD',home:[{date:'invalid-date',home:'Brighton',away:'Fulham',homeScore:1,awayScore:0}],away:[]};
+  for(const language of ['ru','es']) {
+    const html=render(language,a);
+    assert.ok(!html.includes('awaiting_verification'));
+    assert.ok(!html.includes('verified regulation-time results'));
+    assert.ok(!html.includes('Weather was not included in this run.'));
+    assert.match(html,/<p translate="no">Original headline in English<\/p>/);
+    assert.match(html,language==='ru'?/Оригинал статьи/:/Artículo original/);
+    assert.match(html,language==='ru'?/Англия/:/Inglaterra/);
+    assert.match(html,/Brighton/);
+    assert.ok(!/Invalid Date|NaN|undefined/.test(html));
+  }
 });

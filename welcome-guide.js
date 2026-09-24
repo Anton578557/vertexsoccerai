@@ -8,7 +8,7 @@
         ['Анализ матча', 'Введите хозяев и гостей, выберите команды из подсказок и нажмите «Запустить анализ». Названия можно вводить на русском, английском и испанском.'],
         ['Читайте отчёт', 'Переключайте исходы, тоталы, голы команд и варианты счёта. Проверяйте форму, качество данных и использованные матчи. Если истории мало, прогноз не выдаётся.'],
         ['Моя стратегия и кабинет', 'Настройте риск и интересующие рынки в «Моей стратегии». Сохраняйте нужные анализы — к ним можно вернуться в личном кабинете.'],
-        ['Остальные разделы', '«Прогнозы на сезон» пока в разработке. В «Отзывах» можно оставить до двух отзывов со звёздами. Ответы — в FAQ, связь с нами — в «Контактах».']
+        ['Остальные разделы', '«Прогнозы на сезон» пока в разработке. В «Отзывах» можно оставить до двух отзывов со звёздами. Ответы — в разделе «Вопросы», связь с нами — в «Контактах».']
       ],
       note: 'Проценты — оценки модели, а не гарантия результата. Индекс уверенности не равен измеренной точности.',
       next: 'Далее — важное об использовании', back: 'Назад', done: 'Понятно, начинаем', later: 'Позже', progress: 'Шаг', reopen: 'Памятка всегда доступна по ссылке «Как пользоваться» внизу сайта.'
@@ -30,7 +30,7 @@
         ['Analizar partido', 'Introduce el local y el visitante, elige los equipos sugeridos y pulsa Analizar. Puedes escribir los nombres en español, ruso e inglés.'],
         ['Lee el informe', 'Explora resultados, totales, goles por equipo y marcadores. Revisa la forma, la calidad de los datos y los partidos utilizados. Sin historial suficiente, no se emite un pronóstico.'],
         ['Mi estrategia y Mi panel', 'Configura el riesgo y los mercados en Mi estrategia. Guarda los análisis que te interesen y vuelve a ellos en Mi panel.'],
-        ['Más secciones', 'Los pronósticos de temporada están en desarrollo. Puedes publicar hasta dos reseñas con estrellas. Consulta FAQ o escríbenos desde Contacto.']
+        ['Más secciones', 'Los pronósticos de temporada están en desarrollo. Puedes publicar hasta dos reseñas con estrellas. Consulta Preguntas o escríbenos desde Contacto.']
       ],
       note: 'Los porcentajes son estimaciones, no garantías. El índice de confianza no es la precisión medida de los pronósticos.',
       next: 'Siguiente — uso responsable', back: 'Atrás', done: 'Entendido, empecemos', later: 'Más tarde', progress: 'Paso', reopen: 'Puedes volver a esta guía desde “Cómo usar Vertex” al pie de la página.'
@@ -64,6 +64,7 @@
       dialog.id = 'vertexGuide';
       dialog.className = 'vertex-guide';
       dialog.setAttribute('aria-labelledby','guideTitle');
+      dialog.setAttribute('data-i18n-owned','');
       dialog.addEventListener('click', async event => {
         const action = event.target.closest('[data-guide]')?.dataset.guide;
         if (action === 'later') dialog.close();
