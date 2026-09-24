@@ -76,6 +76,21 @@ test('BSD is inert without a key or explicit enablement; verified history uses t
   }
 });
 
+test('BSD retries a verified provider alias after the primary full name has no matches',async()=>{
+ const original=global.fetch, key=process.env.BSD_API_KEY, enabled=process.env.BSD_FOOTBALL_ENABLED;
+ const queries=[];
+ global.fetch=async(url)=>{ const u=new URL(url);queries.push(u.searchParams.get('name'));
+  return {ok:true,json:async()=>({next:null,results:u.searchParams.get('name')==='junior'?[{id:700,name:'Junior',country_code:'CO'}]:[]})};
+ };
+ try {
+  process.env.BSD_API_KEY='unit-test-placeholder';process.env.BSD_FOOTBALL_ENABLED='true';
+  const a=analysis();a.teams={home:{name:'Atlético Junior',country:'Colombia'},away:{name:'Unknown FC',country:'Colombia'}};
+  const result=await enrichBsdHistory(a);
+  assert.ok(queries.includes('junior'));assert.equal(result.teams.home.bsdId,700);assert.equal(result.teams.home.resolved,true);
+  assert.equal(result.sourceStatus.bsd,'teams_unavailable');
+ } finally {global.fetch=original;if(key===undefined)delete process.env.BSD_API_KEY;else process.env.BSD_API_KEY=key;if(enabled===undefined)delete process.env.BSD_FOOTBALL_ENABLED;else process.env.BSD_FOOTBALL_ENABLED=enabled;}
+});
+
 test('BSD quota failures stop subsequent network attempts instead of polling a depleted free account', async () => {
   const original=global.fetch, key=process.env.BSD_API_KEY, enabled=process.env.BSD_FOOTBALL_ENABLED;
   let calls=0;
