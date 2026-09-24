@@ -9,6 +9,7 @@
 })(typeof window === 'object' ? window : this, function () {
   const entries = [
     ['Language','Язык','Idioma'],
+    ['SIGN UP','ЗАРЕГИСТРИРОВАТЬСЯ','REGISTRARSE'],
     ['FAQ','Вопросы','Preguntas'],
     ['EMAIL','ЭЛЕКТРОННАЯ ПОЧТА','CORREO ELECTRÓNICO'],
     ['VERTEX STRATEGY','СТРАТЕГИЯ VERTEX','ESTRATEGIA VERTEX'],

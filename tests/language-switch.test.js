@@ -108,3 +108,18 @@ test('provider diagnostics, errors and countries are localized without changing 
   assert.equal(content.country('England','es'),'Inglaterra');
   assert.equal(content.country('Japan','ru'),'Япония');
 });
+
+test('all literal labels and placeholders in access, login and signup dialogs have translations',()=>{
+  const {api,body}=setup();
+  const source=fs.readFileSync(require.resolve('../script.js'),'utf8');
+  const dialogs=source.slice(source.indexOf('function showAccessModal'),source.indexOf('async function initAuth'));
+  const labels=[...dialogs.matchAll(/>([^<>`$]+)</g)].map(m=>m[1].trim()).filter(Boolean);
+  assert.ok(labels.includes('SIGN UP'));
+  for(const lang of ['ru','es']) {
+    for(const label of labels) assert.notEqual(api.t(label,{},lang),label,`${lang}: ${label}`);
+    const placeholders=[...dialogs.matchAll(/placeholder="([^"]+)"/g)].map(m=>m[1]);
+    const inputs=placeholders.map(placeholder=>body.append(new Element('input','',{placeholder})));
+    api.setLanguage(lang);
+    inputs.forEach((input,i)=>assert.notEqual(input.getAttribute('placeholder'),placeholders[i]));
+  }
+});

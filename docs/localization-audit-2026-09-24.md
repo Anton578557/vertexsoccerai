@@ -26,12 +26,12 @@ untranslated accessibility labels and raw provider diagnostics.
 
 ## Validation
 
-- All 99 Node tests pass, including locale round trips, asynchronous replacement,
+- All 100 Node tests pass, including locale round trips, asynchronous replacement,
   bound messages, attributes, ownership, diagnostics and multilingual reports.
 - All repository quality workflow checks pass locally.
 - No database, authentication policy, provider configuration or model probability
   calculation changes are included.
-- Public routes and dialogs are browser-checked in all three languages. Signed-in
+- All 24 public route/language combinations are browser-checked, with no horizontal overflow at the tested desktop width. Contact validation and loaded leaderboard entries switch language immediately. The final signup button omission was also corrected. Signed-in
   account and strategy renderers are reviewed in code; no test account is created.
 
 When adding UI copy, keep canonical keys for asynchronous messages. Components
