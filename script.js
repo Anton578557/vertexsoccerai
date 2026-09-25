@@ -18,7 +18,6 @@
   let reviewAllowance = null;
   let reviewOwner = null;
   let reviewSubmitting = false;
-  let leaderboardRows = null;
 
   function ensureStylesheet(href) {
     if (document.querySelector(`link[href="${href}"]`)) return;
@@ -122,7 +121,6 @@
     if (history.replaceState) history.replaceState(null, '', tabId === 'home' ? '#/' : `#/${tabId}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    if (tabId === 'leaderboard') loadLeaderboard();
     if (tabId === 'reviews') loadReviews();
     if (tabId === 'strategy') renderStrategy();
     window.VertexI18n?.apply?.(target);
@@ -746,29 +744,6 @@
     }
   }
 
-  function renderLeaderboard() {
-    if (!leaderboardRows) return;
-    const target=byId('leaderboard');
-    const html=leaderboardRows.length ? leaderboardRows.map((row,index)=>`<div class="result-row"><span>#${index+1} ${escapeHtml(tr('Vertex member'))}</span><strong>${escapeHtml(tr('{count} analyses',{count:Number(row.analyses_count||0)}))}</strong></div>`).join('') : `<div class="empty-state"><p>${escapeHtml(tr('No analysis activity yet.'))}</p></div>`;
-    target.innerHTML=`<div data-i18n-owned>${html}</div>`;
-  }
-
-  async function loadLeaderboard() {
-    const target = byId('leaderboard');
-    if (!target) return;
-    if (!supabaseClient) return localizedHTML(target,'<div class="empty-state"><p>Community database is unavailable.</p></div>');
-    localizedHTML(target,'<div class="loading-state">Loading community activity…</div>');
-    try {
-      const { data, error } = await supabaseClient.from('activity').select('user_id, analyses_count').order('analyses_count', { ascending: false }).limit(20);
-      if (error) throw error;
-      leaderboardRows=data||[];
-      renderLeaderboard();
-    } catch (error) {
-      leaderboardRows=null;
-      localizedHTML(target,'<div class="analysis-error"><p>Could not load community activity. Please try again.</p></div>');
-    }
-  }
-
   function reviewWords() {
     const language = window.VertexI18n?.getLanguage?.() || 'en';
     return {
@@ -991,7 +966,7 @@
     on('reviewsMore', 'click', () => { reviewsVisible += 6; renderReviews(); });
     on('reviewText', 'input', () => { byId('reviewCharCount').textContent = `${byId('reviewText').value.length} / 1000`; });
     document.addEventListener('vertex:languagechange', () => {
-      renderReviews(); renderReviewAllowance(); renderLeaderboard();
+      renderReviews(); renderReviewAllowance();
       qsa('.star-rating').forEach(button => button.setAttribute('aria-label',tr('Rate {count} out of 5',{count:button.dataset.rating})));
     });
     on('linkAbout', 'click', (event) => { event.preventDefault(); showAboutPage(); });
