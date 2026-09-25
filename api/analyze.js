@@ -172,7 +172,7 @@ module.exports = async function handler(req, res) {
   if (!(await enforceRateLimit(req, res, user, 'analyze', { windowSeconds: 3600, limit: 30 }))) return;
 
   try {
-    const analysisKey = `analysis-core:v25:${safeKey(home)}:${safeKey(away)}`;
+    const analysisKey = `analysis-core:v26:${safeKey(home)}:${safeKey(away)}`;
     const cached = await cachedProviderCall({
       cacheKey: analysisKey,
       provider: 'Vertex Analysis Core',
