@@ -77,3 +77,11 @@ test('suspended provider is paused across subsequent calls instead of consuming 
  try { assert.equal((await apiFootballGet('/teams')).ok,false);assert.equal((await apiFootballGet('/teams')).reason,'account_suspended');assert.equal(calls,1); }
  finally {global.fetch=old;if(key===undefined)delete process.env.API_FOOTBALL_KEY;else process.env.API_FOOTBALL_KEY=key;}
 });
+
+test('CSV abbreviations retain full club identities for metadata and context lookups',()=>{
+  for(const [input,canonical] of [['Paris SG','Paris Saint-Germain'],['Estudiantes L.P.','Estudiantes La Plata'],['Atl. Tucuman','Atletico Tucuman'],['Ind. Rivadavia','Independiente Rivadavia'],['St. Gilloise','Union Saint-Gilloise'],['St Truiden','Sint-Truiden'],['Nijmegen','NEC Nijmegen'],['Guimaraes','Vitoria Guimaraes'],['Sp Braga','Braga'],['Goztep','Goztepe'],['Amed SK','Amedspor'],['Kalamata F.C.','Kalamata']]) {
+    assert.equal(resolveTeamName(input),canonical);assert.equal(sameTeam(input,canonical),true);
+  }
+  assert.equal(sameTeam('Estudiantes L.P.','Estudiantes Rio Cuarto'),false);
+  assert.equal(sameTeam('Vitoria Guimaraes','Vitoria'),false);
+});
