@@ -91,6 +91,7 @@ jobs:
           const data = JSON.parse(fs.readFileSync('/tmp/providers.json', 'utf8'));
           const p = data?.providers || {};
           const working = new Set(data?.footballMesh?.working || []);
+          const optional = Array.isArray(data?.optionalFailures) ? data.optionalFailures : [];
           const required = [
             data?.ok === true,
             data?.coreOk === true,
@@ -100,11 +101,12 @@ jobs:
             p?.theSportsDb?.ok === true,
             p?.supabase?.ok === true,
             p?.openWeather?.ok === true,
-            p?.newsApi?.ok === true,
+            // A reported news outage is a degraded context source, not a broken
+            // football pipeline. Require the diagnostic to report it explicitly.
+            p?.newsApi?.configured === true && (p.newsApi.ok === true || optional.includes('newsApi')),
             p?.footballDataCoUk?.ok === true
           ];
           if (required.every(Boolean)) {
-            const optional = Array.isArray(data?.optionalFailures) ? data.optionalFailures : [];
             if (optional.length) console.warn('Optional providers unavailable:', optional.join(', '));
             process.exit(0);
           }
