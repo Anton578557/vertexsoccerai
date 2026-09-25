@@ -115,6 +115,9 @@
     ['Unknown','Неизвестно','Desconocido'],
     ['Not connected / unavailable','Не подключён или недоступен','Sin conexión o no disponible'],
     ['Connected · verified match history','Подключён · проверенная история матчей','Conectada · historial verificado'],
+    ['Connected · verified event statistics','Подключён · проверенная статистика событий','Conectada · estadísticas de eventos verificadas'],
+    ['Insufficient verified corner and card statistics.','Недостаточно проверенной статистики угловых и карточек.','No hay suficientes estadísticas verificadas de córners y tarjetas.'],
+    ['No verified historical event statistics returned.','Источник не вернул проверенную статистику событий.','La fuente no ha devuelto estadísticas de eventos verificadas.'],
     ['Withheld · venue geocode mismatch','Не учтено: местоположение стадиона не совпало','Excluido: la ubicación del estadio no coincide'],
     ['Checked · no key-player availability signal strong enough to alter model','Проверено: существенных сигналов о доступности ключевых игроков нет','Comprobado: no hay señales de disponibilidad de jugadores clave suficientes para ajustar el modelo'],
     ['News availability + Football-Data scorer importance','Доступность по новостям + значимость бомбардиров по Football-Data','Disponibilidad según noticias + importancia de goleadores de Football-Data'],
@@ -167,11 +170,15 @@
     cooldown:['Source temporarily paused','Источник временно приостановлен','Fuente pausada temporalmente']
   };
   Object.assign(statuses,{
+    not_needed:['Existing source coverage is sufficient','Данных основного источника достаточно','La cobertura de la fuente existente es suficiente'],
+    some_stats_unavailable:['Some match statistics are unavailable','Часть статистики матчей недоступна','Algunas estadísticas de partidos no están disponibles'],
+    time_budget:['Statistics collection is incomplete; retry later','Сбор статистики не завершён; повторите позже','Recopilación de estadísticas incompleta; inténtalo más tarde'],
     insufficient_recent_history:['Insufficient recent history','Недостаточно свежей истории','Historial reciente insuficiente'],
     competition_unknown:['Competition not identified','Турнир не определён','Competición sin identificar'],
     insufficient_verified_penalty_sample:['Insufficient verified penalty sample','Недостаточно проверенной истории пенальти','Muestra verificada de penaltis insuficiente'],
     insufficient_team_penalty_sample:['Insufficient team penalty sample','Недостаточно истории пенальти команд','Muestra de penaltis de los equipos insuficiente']
   });
+  sourceKeys.bsdEventStats = 'BSD';
   const languageIndex = lang => ({en:0,ru:1,es:2}[lang]??0);
   function diagnostic(value,lang='en') {
     const raw=String(value||'');

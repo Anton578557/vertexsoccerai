@@ -6,6 +6,7 @@ const vm = require('node:vm');
 test('reversing a pair cannot reuse home/away event estimates from the opposite direction', async()=>{
  const cache=new Map(), calls=[];
  const context={module:{exports:{}},require(name){
+  if(name==='./bsd-event-stats')return{buildBsdEventModel:async()=>({ok:false}),mergeEventModels:(old)=>old};
   if(name==='./provider-cache')return{cachedProviderCall:async({cacheKey,loader})=>{
    if(!cache.has(cacheKey))cache.set(cacheKey,await loader());return{payload:cache.get(cacheKey)};
   }};

@@ -87,3 +87,14 @@ test('score alternatives and honest card coverage are rendered in every language
   assert.match(html,/0 \/ 10/);assert.ok(!/NaN|undefined/.test(html));
  }
 });
+
+test('event coverage displays independent samples and keeps corner estimates separate from red-card history',()=>{
+ for(const [language,sampleLabel] of [['ru','Проверенных матчей'],['en','Verified matches'],['es','Partidos verificados']]) {
+  const a=sample();
+  a.granularModel={ok:true,source:'BSD',eventSamples:{corners:{home:7,away:9},cards:{home:0,away:2},redCards:{home:3,away:0}},
+   corners:{expectedHome:5,expectedAway:4,expectedTotal:9,over75:65,over85:55,over95:45,over105:30}};
+  const html=render(language,a);
+  assert.ok(html.includes(sampleLabel));assert.match(html,/7 \/ 9/);assert.match(html,/0 \/ 2/);
+  assert.match(html,/65%/);assert.ok(!/NaN|undefined/.test(html));
+ }
+});
