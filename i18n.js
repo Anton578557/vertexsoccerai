@@ -10,7 +10,6 @@
   const dictionary = {
     ru: {
       "Home team vs away team": "Хозяева vs гости",
-      "Enter names in Russian, English or Spanish. Choose suggestions for each team. Example: Bayern Múnich vs Inter de Milán.": "Названия можно вводить на русском, английском и испанском. Выберите каждую команду из подсказок. Например: Бавария vs Интер Милан.",
       'Home': 'Главная',
       'Match Analyzer': 'Анализ матча',
       'My Strategy': 'Моя стратегия',
@@ -182,7 +181,6 @@
     },
     es: {
       "Home team vs away team": "Equipo local vs visitante",
-      "Enter names in Russian, English or Spanish. Choose suggestions for each team. Example: Bayern Múnich vs Inter de Milán.": "Escribe en ruso, inglés o español. Elige cada equipo en las sugerencias. Ejemplo: Bayern Múnich vs Inter de Milán.",
       'Home': 'Inicio',
       'Match Analyzer': 'Analizador',
       'My Strategy': 'Mi estrategia',

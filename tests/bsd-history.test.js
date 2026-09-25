@@ -107,3 +107,14 @@ test('BSD quota failures stop subsequent network attempts instead of polling a d
     if(enabled===undefined)delete process.env.BSD_FOOTBALL_ENABLED;else process.env.BSD_FOOTBALL_ENABLED=enabled;
   }
 });
+
+
+test('BSD does not silently replace bare Operário with the Portuguese club', () => {
+  const rows = [{id:827,name:'Operário-MS',country:'Brazil'}, {id:851,name:'Operário-MT',country:'Brazil'},
+    {id:828,name:'Operário-PR',country:'Brazil'}, {id:8324,name:'CD Operário',country:'Portugal'}];
+  assert.equal(selectTeam(rows, {name:'Operário'}), null);
+  assert.equal(selectTeam(rows, {name:'Операрио'}), null);
+  assert.equal(selectTeam(rows, {name:'Operario Ferroviario',country:'Brazil'},'BR').id,828);
+  assert.equal(selectTeam(rows, {name:'CD Operario',country:'Portugal'},'PT').id,8324);
+  assert.equal(selectTeam(rows, {name:'Operario de Campo Grande',country:'Brazil'},'BR').id,827);
+});

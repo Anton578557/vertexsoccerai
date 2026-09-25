@@ -1,7 +1,7 @@
 'use strict';
 
 const { clean, searchTheSportsDbTeams } = require('../lib/football');
-const { localizedSuggestions, searchQuery } = require('../lib/team-aliases');
+const { localizedSuggestions, searchQuery, ambiguousTeamChoices } = require('../lib/team-aliases');
 const { enforceRateLimit } = require('../lib/rate-limit');
 const { searchClubDirectory } = require('../lib/club-directory');
 
@@ -35,6 +35,8 @@ module.exports = async function handler(req, res) {
 
   const q = clean(req.query?.q, 80);
   if (q.length < 2) return res.status(200).json({ teams: [] });
+  const choices = ambiguousTeamChoices(q);
+  if (choices.length) return res.status(200).json({ teams: choices });
 
   const local = localizedSuggestions(q, 8);
   const providerQuery = searchQuery(q);

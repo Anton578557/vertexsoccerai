@@ -8,6 +8,11 @@
   else root.VertexLocaleContent = api;
 })(typeof window === 'object' ? window : this, function () {
   const entries = [
+    ['Enter a match in Russian, English or Spanish. Vertex checks the teams and shows probabilities based on available data.','Введите матч на русском, английском или испанском. Vertex проверит команды и покажет вероятности на основе доступных данных.','Introduce un partido en ruso, inglés o español. Vertex comprueba los equipos y muestra probabilidades según los datos disponibles.'],
+    ['Authentication is temporarily unavailable. Please try again.','Сервис входа временно недоступен. Попробуйте ещё раз.','El servicio de acceso no está disponible temporalmente. Inténtalo de nuevo.'],
+    ['Clarify the team','Уточните команду','Confirma el equipo'],
+    ['Several clubs share this name. Choose a club below or enter its full name.','Это название используют несколько клубов. Уточните команду ниже или введите её полное название.','Varios clubes comparten este nombre. Elige un club o introduce su nombre completo.'],
+    ['Sign in to continue','Войти и продолжить','Iniciar sesión para continuar'],
     ['Language','Язык','Idioma'],
     ['SIGN UP','ЗАРЕГИСТРИРОВАТЬСЯ','REGISTRARSE'],
     ['FAQ','Вопросы','Preguntas'],
@@ -203,6 +208,7 @@
     if(/weak_password/.test(code)||/password should|weak password/.test(message))return 'Use a stronger password with at least 6 characters.';
     if(/rate|too_many/.test(code)||Number(error?.status)===429||/rate limit|too many requests/.test(message))return 'Too many requests. Please try again later.';
     if(/request_timeout/.test(code)||error?.name==='AbortError')return 'Analysis took too long. Please try again — the request was stopped safely.';
+    if(code==='auth_unavailable')return 'Authentication is temporarily unavailable. Please try again.';
     if(/auth_required|session|jwt/.test(code)||[401,403].includes(Number(error?.status)))return 'Your session has expired. Please sign in again.';
     if(/failed to fetch|network|fetch failed/.test(message))return 'Check your connection and try again.';
     return fallback;

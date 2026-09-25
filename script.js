@@ -181,7 +181,8 @@
       updateAuthUI();
       supabaseClient.auth.onAuthStateChange((_event, session) => {
         currentUser = session?.user || null;
-        updateAuthUI();
+        // Run UI effects outside the Supabase auth lock (they can request a session).
+        setTimeout(updateAuthUI, 0);
       });
     } catch (error) {
       console.error('[Vertex] Auth init:', error);
@@ -273,6 +274,7 @@
         const error = new Error(data?.error || `Request failed (${response.status})`);
         error.status = response.status;
         error.code = data?.code;
+        error.details = data;
         throw error;
       }
       return data;
@@ -556,7 +558,12 @@
         await new Promise((resolve) => requestAnimationFrame(() => resolve()));
       } catch (error) {
         const message = errorKey(error,'Analysis is temporarily unavailable. Please try again.');
-        localizedHTML(target,`<div class="analysis-error"><strong>ANALYSIS UNAVAILABLE</strong><p data-i18n="${escapeHtml(message)}">${escapeHtml(tr(message))}</p></div>`);
+        if (error.code === 'TEAM_AMBIGUOUS' && Array.isArray(error.details?.teams)) {
+          localizedHTML(target, `<div class="analysis-error"><strong>Clarify the team</strong><p>Several clubs share this name. Choose a club below or enter its full name.</p>${error.details.teams.map(team => `<div class="analyzer-team-choices"><p>${escapeHtml(team.input)}</p>${team.candidates.map(club => `<button type="button" class="btn-outline" data-resolve-side="${escapeHtml(team.side)}" data-resolve-team="${escapeHtml(club.name)}">${escapeHtml(club.name)} · ${escapeHtml(window.VertexLocaleContent?.country(club.country, window.VertexI18n.getLanguage()) || club.country)}</button>`).join('')}</div>`).join('')}</div>`);
+        } else {
+          const signIn = error.status === 401 ? '<button type="button" class="btn-outline" data-modal-action="login" data-target-tab="analyzer">Sign in to continue</button>' : '';
+          localizedHTML(target,`<div class="analysis-error"><strong>ANALYSIS UNAVAILABLE</strong><p data-i18n="${escapeHtml(message)}">${escapeHtml(tr(message))}</p>${signIn}</div>`);
+        }
       } finally {
         await new Promise((resolve) => requestAnimationFrame(() => resolve()));
         state?.end?.();
@@ -922,6 +929,17 @@
         activateTab('analyzer');
         const parsed = parseMatchInput(match);
         if (parsed) performAnalysis(parsed.home, parsed.away);
+      }
+
+      const teamChoice = event.target.closest('[data-resolve-team]');
+      if (teamChoice) {
+        const pair = parseMatchInput(byId('analyzerSearch')?.value || '');
+        const side = teamChoice.dataset.resolveSide;
+        if (pair && ['home', 'away'].includes(side)) {
+          pair[side] = teamChoice.dataset.resolveTeam;
+          setMatchInputs(`${pair.home} vs ${pair.away}`);
+          startAnalyzerAnalysis();
+        }
       }
 
       const modalAction = event.target.closest('[data-modal-action]');

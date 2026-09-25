@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script defer src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=20260925">
     <link rel="stylesheet" href="ui-v5.css">
     <link rel="stylesheet" href="home.css?v=3">
     <link rel="stylesheet" href="welcome-season.css?v=1">
@@ -107,18 +107,13 @@
                     <p class="section-subtitle">One match. Multiple data sources. No invented statistics.</p>
                 </div>
 
-                <div class="how-to-box">
-                    <strong>HOW IT WORKS</strong>
-                    <span>Enter two teams → Vertex resolves the teams → collects current data → calculates probabilities → shows confidence and data quality.</span>
-                </div>
-
                 <div class="search-box analyzer-search-box">
                     <label for="analyzerSearch" class="analyzer-input-label">Home team vs away team</label>
                     <div class="analyzer-input-wrap">
-                    <input type="text" id="analyzerSearch" placeholder="Borussia Dortmund vs Villarreal" autocomplete="off" spellcheck="false" aria-controls="analyzerSuggestions" aria-expanded="false">
+                    <input type="text" id="analyzerSearch" placeholder="Borussia Dortmund vs Villarreal" autocomplete="off" spellcheck="false" aria-describedby="analyzerHelp" aria-controls="analyzerSuggestions" aria-expanded="false">
                     <div class="suggestions" id="analyzerSuggestions" aria-label="Team suggestions" aria-hidden="true"></div>
                     </div>
-                    <p class="analyzer-language-note">Enter names in Russian, English or Spanish. Choose suggestions for each team. Example: Bayern Múnich vs Inter de Milán.</p>
+                    <p class="analyzer-language-note" id="analyzerHelp">Enter a match in Russian, English or Spanish. Vertex checks the teams and shows probabilities based on available data.</p>
                     <button class="btn-analyze" id="btnAnalyzeMatch" type="button">⚡ RUN ANALYSIS</button>
                 </div>
 
@@ -284,10 +279,10 @@
 
     <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
-    <script defer src="locale-content.js?v=3"></script>
-    <script defer src="i18n.js?v=9"></script>
+    <script defer src="locale-content.js?v=4"></script>
+    <script defer src="i18n.js?v=10"></script>
     <script defer src="language-input-v2.js?v=6"></script>
-    <script defer src="auth-api-runtime-v1.js?v=5"></script>
+    <script defer src="auth-api-runtime-v1.js?v=6"></script>
     <script defer src="analysis-ui-v4.js?v=21"></script>
     <script defer src="contact-runtime-v1.js?v=3"></script>
     <script defer src="polish-v8.js?v=15"></script>
@@ -295,9 +290,9 @@
     <script defer src="analyzer-stability-v1.js?v=6"></script>
     <script defer src="welcome-guide.js?v=2"></script>
     <script defer src="strategy-core.js?v=1"></script>
-    <script defer src="strategy-ui.js?v=2"></script>
+    <script defer src="strategy-ui.js?v=3"></script>
     <script defer src="match-input.js?v=1"></script>
-    <script defer src="script.js?v=21"></script>
+    <script defer src="script.js?v=22"></script>
     <script defer src="particles.js?v=13"></script>
 </body>
 </html>

@@ -11,7 +11,7 @@ const { recordModelEvaluations } = require('../lib/model-evaluation-store');
 const { requireUser } = require('../lib/api-auth');
 const { enforceRateLimit } = require('../lib/rate-limit');
 const { cachedProviderCall } = require('../lib/provider-cache');
-const { resolveTeamName } = require('../lib/team-aliases');
+const { resolveTeamName, ambiguousTeamChoices } = require('../lib/team-aliases');
 const { enrichOpenFootball } = require('../lib/openfootball-history');
 const { enrichOpenLigaDb, resolveOpenLigaClubs } = require('../lib/openligadb-history');
 const { needsMoreHistory, refreshScheduleContext } = require('../lib/verified-history');
@@ -101,6 +101,7 @@ async function attachModelContext(analysis) {
 }
 
 async function buildAnalysisCore(home, away, original = {}) {
+  if ([home, away].some(name => ambiguousTeamChoices(name).length)) throw new Error('TEAM_AMBIGUOUS');
   let base = await buildBaseAnalysis(home, away, original);
   base = await resolveOpenLigaClubs(base);
   base = await preResolveFixture(base);
@@ -162,14 +163,19 @@ module.exports = async function handler(req, res) {
 
   const user = await requireUser(req, res);
   if (!user) return;
-  if (!(await enforceRateLimit(req, res, user, 'analyze', { windowSeconds: 3600, limit: 30 }))) return;
 
   const { homeInput, awayInput, home, away } = readTeams(req);
   if (!homeInput || !awayInput) return res.status(400).json({ error: 'Enter two team names.' });
   if (!home || !away || safeKey(home) === safeKey(away)) return res.status(400).json({ error: 'Choose two different teams.' });
+  const ambiguous = [['home', homeInput], ['away', awayInput]].flatMap(([side, input]) => {
+    const candidates = ambiguousTeamChoices(input);
+    return candidates.length ? [{ side, input, candidates }] : [];
+  });
+  if (ambiguous.length) return res.status(409).json({ code: 'TEAM_AMBIGUOUS', error: 'Clarify the team.', teams: ambiguous });
+  if (!(await enforceRateLimit(req, res, user, 'analyze', { windowSeconds: 3600, limit: 30 }))) return;
 
   try {
-    const analysisKey = `analysis-core:v18:${safeKey(home)}:${safeKey(away)}`;
+    const analysisKey = `analysis-core:v19:${safeKey(home)}:${safeKey(away)}`;
     const cached = await cachedProviderCall({
       cacheKey: analysisKey,
       provider: 'Vertex Analysis Core',

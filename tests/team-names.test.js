@@ -60,7 +60,7 @@ function response() {
 test('generic club search excludes a B team unless the user explicitly asks for reserves', async () => {
   const handler = loadHandler('api/team-search.js', {
     '../lib/football': {clean: v => String(v || '').trim(),searchTheSportsDbTeams: async () => [{name:'Tenerife B'}]},
-    '../lib/team-aliases': {localizedSuggestions: () => [],searchQuery:q=>q},
+    '../lib/team-aliases': {localizedSuggestions: () => [],searchQuery:q=>q,ambiguousTeamChoices:()=>[]},
     '../lib/club-directory': {searchClubDirectory: async () => [{name:'C.D. Tenerife'}]},
     '../lib/rate-limit': {enforceRateLimit:async()=>true}
   });
@@ -126,6 +126,16 @@ test('analysis endpoint passes the same canonical teams and cache key for Russia
   assert.deepEqual(calls[2], calls[3]);
   assert.equal(cacheKeys[0], cacheKeys[1]);
   assert.equal(cacheKeys[2], cacheKeys[3]);
+  const before = calls.length;
+  for (const pair of [['Operário', 'Ceará'], ['Ceará', 'Операрио']]) {
+    const res = response();
+    await handler({ method: 'GET', query: { home: pair[0], away: pair[1] } }, res);
+    assert.equal(res.statusCode, 409);
+    assert.equal(res.body.code, 'TEAM_AMBIGUOUS');
+    assert.equal(res.body.teams[0].side, pair[0] === 'Ceará' ? 'away' : 'home');
+    assert.equal(res.body.teams[0].candidates.length, 4);
+  }
+  assert.equal(calls.length, before, 'ambiguous inputs must never reach the model');
 });
 
 
@@ -139,4 +149,45 @@ test('Spanish spellings, accents and Russian variants resolve to canonical clubs
   assert.ok(aliases.localizedSuggestions('bayern mú').includes('Bayern Munich'));
   assert.ok(aliases.localizedSuggestions('inter de').includes('Inter Milan'));
   assert.notEqual(aliases.resolveTeamName('Manchester'), 'Manchester City');
+});
+
+
+test('Flashscore Brazilian names keep provider identities, hyphens and accents consistent', () => {
+  const { parse } = require('../match-input');
+  const { sameTeam } = require('../lib/match-integrity');
+  for (const [input, expected] of [
+    ['Operário-PR', 'Operario Ferroviario'], ['Операрио ПР', 'Operario Ferroviario'],
+    ['Operário Ferroviário', 'Operario Ferroviario'], ['Сеара', 'Ceara'],
+    ['Новоризонтино', 'Novorizontino'], ['Grêmio Novorizontino', 'Novorizontino'],
+    ['Сан-Бернардо', 'Sao Bernardo'], ['São Bernardo FC', 'Sao Bernardo']
+  ]) {
+    assert.equal(aliases.resolveTeamName(input), expected);
+    assert.ok(aliases.localizedSuggestions(input).includes(expected));
+  }
+  assert.deepEqual(parse('Operario-PR — Ceará'), {home:'Operario-PR',away:'Ceará'});
+  assert.deepEqual(parse('Новоризонтино vs Сан-Бернардо'), {home:'Новоризонтино',away:'Сан-Бернардо'});
+  assert.equal(sameTeam('EC São Bernardo', 'Sao Bernardo'), false);
+  assert.equal(sameTeam('São Bernardo U20', 'Sao Bernardo'), false);
+  for (const bare of ['Operário','Операрио','ФК Операрио']) {
+    assert.equal(aliases.ambiguousTeamChoices(bare).length, 4);
+    for (const club of aliases.ambiguousTeamChoices(bare)) assert.equal(sameTeam(bare, club.name), false);
+  }
+  assert.equal(sameTeam('Operário-PR','Operario Ferroviario'), true);
+  assert.equal(sameTeam('CD Operário','CD Operario'), true);
+  assert.equal(sameTeam('Operário-MS','Operario Ferroviario'), false);
+});
+
+test('ambiguous public suggestions include countries without depending on a live provider', async () => {
+  const handler = loadHandler('api/team-search.js', {
+    '../lib/football': { clean: value => value, searchTheSportsDbTeams: () => { throw Error('unexpected lookup'); } },
+    '../lib/team-aliases': aliases,
+    '../lib/club-directory': { searchClubDirectory: () => { throw Error('unexpected lookup'); } },
+    '../lib/rate-limit': { enforceRateLimit: async () => true }
+  });
+  const res = response();
+  await handler({method:'GET',query:{q:'Operário'}},res);
+  assert.equal(res.body.teams.length,4);
+  assert.equal(res.body.teams[0].name,'Operario Ferroviario');
+  assert.equal(res.body.teams[0].country,'Brazil');
+  assert.equal(res.body.teams[3].country,'Portugal');
 });
