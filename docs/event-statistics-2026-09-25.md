@@ -19,3 +19,20 @@ BSD history requested match result lists only. Those responses contain goals but
 Regression checks cover identity, regulation time, absent versus zero values, per-market source merging, free-quota backoff, response validation, compact cache payloads and localized report rendering. Production coverage must still be checked after deployment: provider documentation promises field presence, not complete statistics for every fixture.
 
 Official API contract: https://www.goaldir.com/docs/football/events/
+
+## Production verification
+
+Published implementation: `d7034eadfe1c5f00c4d8c33a294798763e6fff88`. All 128 regression tests, GitHub quality checks and production smoke checks passed; Vercel reported successful deployment.
+
+The fixed production analyzer probes at 2026-09-25 17:25 UTC confirmed:
+
+| Pair | Corners / yellow sample (home, away) | Reported red-card sample |
+| --- | --- | --- |
+| Operário Ferroviário — Ceará | 12, 12 | 2, 3 |
+| Novorizontino — São Bernardo | 12, 12 | 1, 2 |
+| Real Betis — Mallorca | 11, 10 | 3, 3 |
+| Real Tomayapo — Nacional Potosí | No eligible recent statistics | No eligible recent statistics |
+
+Of 67 distinct cached BSD match-stat responses, 54 lacked paired red-card counts. Therefore red-card history is incomplete and may be biased by which matches were reported; the UI explicitly explains this. It is not a dismissal forecast. Corner/yellow baseline probabilities also remain uncalibrated.
+
+The public browser loaded the updated analyzer assets. Rendering checks exercised the report in RU/EN/ES. A signed-in end-to-end browser run was not performed because this session has no signed-in test user; server probes used the same analysis core without saving predictions.
