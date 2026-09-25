@@ -36,13 +36,23 @@ function baseAnalysis() {
   };
 }
 
+test('a verified neutral venue removes home advantage for otherwise identical teams',()=>{
+ const a=baseAnalysis();
+ a.fixture.neutralGround=true;a.granularModel=null;a.h2h=null;
+ a.form.away=structuredClone(a.form.home);a.advanced.away=structuredClone(a.advanced.home);
+ const m=buildVertexModelV2(a).model;
+ assert.equal(m.oneXtwo.home,m.oneXtwo.away);
+ a.fixture.neutralGround=false;
+ assert.ok(buildVertexModelV2(a).model.oneXtwo.home>buildVertexModelV2(a).model.oneXtwo.away);
+});
+
 test('stronger home profile produces a higher home-win probability', () => {
   const result = buildVertexModelV2(baseAnalysis());
   assert.ok(result.model);
   assert.ok(result.model.oneXtwo.home > result.model.oneXtwo.away);
   const sum = result.model.oneXtwo.home + result.model.oneXtwo.draw + result.model.oneXtwo.away;
   assert.ok(sum >= 99 && sum <= 101);
-  assert.equal(result.meta.version, 'Vertex Model 2.4');
+  assert.equal(result.meta.version, 'Vertex Model 2.5');
   assert.equal(result.meta.qualityBreakdown.opponentStrength, 0);
   assert.ok(result.dataQuality >= 60);
 });

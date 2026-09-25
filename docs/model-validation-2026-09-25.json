@@ -1,0 +1,305 @@
+{
+  "generatedAt": "2026-09-25T18:37:56.757Z",
+  "source": "Football-Data.co.uk results and event-statistics CSVs; no odds used",
+  "protocol": {
+    "training": "2025-10-01 to 2026-01-31",
+    "validation": "2026-02-01 to 2026-04-30",
+    "holdout": "2026-05-01 onwards",
+    "features": "Only results before each target day; previous 365 days; no historical news, weather, injuries or lineups reconstructed.",
+    "candidateSelection": "Best training Brier; promote only if validation improves by at least 0.002 (goals) / 0.001 (counts). Holdout not used to pick parameters."
+  },
+  "datasets": [
+    {
+      "code": "ARG",
+      "rows": 1126,
+      "sha256": "47ea0ae8708a653377beac5e70f3a2fa6179a36ca7e3d476f3d03f5e08bc756a"
+    },
+    {
+      "code": "B1",
+      "rows": 374,
+      "sha256": "f294e2422e6430e83f0729d0dcb586accc630815de38cce8f3bef0ea57314687"
+    },
+    {
+      "code": "BRA",
+      "rows": 809,
+      "sha256": "1037403de3beb833defa6a15c1268a631563f229f7e7bc1c434684dacf0913a1"
+    },
+    {
+      "code": "D1",
+      "rows": 342,
+      "sha256": "c719f198fbe50945c8da82c2fffe4779a2fafdba842fefc1531127caa57b413b"
+    },
+    {
+      "code": "E0",
+      "rows": 430,
+      "sha256": "b68f94594d1aa505b462a6091df8fa3d20767a0538c7dff7d7b8805e19f969ad"
+    },
+    {
+      "code": "E1",
+      "rows": 647,
+      "sha256": "ca76ce1cb832d97555db4969e9e1ff94bfe1416d1dccac46b8918f9fd5831f8e"
+    },
+    {
+      "code": "F1",
+      "rows": 351,
+      "sha256": "9a30116f10e139009cb3b0db6e8b68b44a8e0ee1d4398cab6ff2652e0d5c2d97"
+    },
+    {
+      "code": "G1",
+      "rows": 236,
+      "sha256": "7cb7dcdd87ab3833860ccea7444566d13adaad1944e3e5159ddb697058b00797"
+    },
+    {
+      "code": "I1",
+      "rows": 430,
+      "sha256": "d9d65a3bc8b8a1a2de5265c3239e82cc7b30e9f66bdf0ef06bed430b5aacd262"
+    },
+    {
+      "code": "JPN",
+      "rows": 567,
+      "sha256": "0128695f8ccfa9eafd2d9414b985a39b81588596d152d37f4764eb74a7113183"
+    },
+    {
+      "code": "N1",
+      "rows": 369,
+      "sha256": "7c091ea8a91d510feb7bcd7fe7cd40efc2b37758a115b659c801cf50ade4b16a"
+    },
+    {
+      "code": "P1",
+      "rows": 368,
+      "sha256": "d27551935309420f0b262c3abe0c42b63189a954d110424aff2026f7b91aecb7"
+    },
+    {
+      "code": "SC0",
+      "rows": 270,
+      "sha256": "a886c04aecdedf41b38036d07f4d4db14482cc5ae2c2934647eb899fadb899da"
+    },
+    {
+      "code": "SP1",
+      "rows": 449,
+      "sha256": "73de5c77e15adf25d64af8b910c7a1018879488c323b32e4927bbf0be90f8cd9"
+    },
+    {
+      "code": "T1",
+      "rows": 360,
+      "sha256": "9b8475f934f1fc4967fe62f56ef704733fe0442ee5a2b5ae03c13eccf613e94d"
+    }
+  ],
+  "total": 4829,
+  "selectedParameters": {
+    "strengthExponent": 0.5,
+    "rho": -0.06
+  },
+  "promotedOnValidation": false,
+  "trainingCandidate": {
+    "parameters": {
+      "strengthExponent": 0.5,
+      "rho": 0
+    },
+    "index": 5,
+    "trainingBrier": 0.61781
+  },
+  "goalPeriods": {
+    "training": {
+      "n": 2000,
+      "baselineModelBrier": 0.618053,
+      "selectedModelBrier": 0.618053,
+      "leagueFrequencyBrier": 0.655359,
+      "selectedTopOutcomeAccuracy": 0.484,
+      "scoreModes": {
+        "1-0": 294,
+        "0-0": 120,
+        "1-1": 1309,
+        "0-1": 55,
+        "2-0": 139,
+        "2-1": 66,
+        "1-2": 6,
+        "3-0": 1,
+        "0-2": 9,
+        "3-1": 1
+      }
+    },
+    "validation": {
+      "n": 1568,
+      "baselineModelBrier": 0.620308,
+      "selectedModelBrier": 0.620308,
+      "leagueFrequencyBrier": 0.651212,
+      "selectedTopOutcomeAccuracy": 0.46301,
+      "scoreModes": {
+        "1-1": 937,
+        "1-0": 257,
+        "0-0": 111,
+        "0-1": 63,
+        "1-2": 3,
+        "2-1": 55,
+        "2-0": 133,
+        "0-2": 9
+      }
+    },
+    "holdout": {
+      "n": 1261,
+      "baselineModelBrier": 0.634702,
+      "selectedModelBrier": 0.634702,
+      "leagueFrequencyBrier": 0.653666,
+      "selectedTopOutcomeAccuracy": 0.460745,
+      "scoreModes": {
+        "1-0": 184,
+        "0-1": 27,
+        "1-1": 803,
+        "0-0": 88,
+        "1-2": 7,
+        "2-0": 90,
+        "2-1": 54,
+        "0-2": 4,
+        "2-2": 2,
+        "3-1": 1,
+        "3-0": 1
+      }
+    }
+  },
+  "byLeague": {
+    "ARG": {
+      "n": 180,
+      "baselineModelBrier": 0.654716,
+      "selectedModelBrier": 0.654716,
+      "leagueFrequencyBrier": 0.654718
+    },
+    "B1": {
+      "n": 84,
+      "baselineModelBrier": 0.603722,
+      "selectedModelBrier": 0.603722,
+      "leagueFrequencyBrier": 0.641389
+    },
+    "BRA": {
+      "n": 150,
+      "baselineModelBrier": 0.649334,
+      "selectedModelBrier": 0.649334,
+      "leagueFrequencyBrier": 0.652432
+    },
+    "D1": {
+      "n": 48,
+      "baselineModelBrier": 0.598732,
+      "selectedModelBrier": 0.598732,
+      "leagueFrequencyBrier": 0.632791
+    },
+    "E0": {
+      "n": 79,
+      "baselineModelBrier": 0.661318,
+      "selectedModelBrier": 0.661318,
+      "leagueFrequencyBrier": 0.671085
+    },
+    "E1": {
+      "n": 84,
+      "baselineModelBrier": 0.648089,
+      "selectedModelBrier": 0.648089,
+      "leagueFrequencyBrier": 0.649045
+    },
+    "F1": {
+      "n": 61,
+      "baselineModelBrier": 0.659677,
+      "selectedModelBrier": 0.659677,
+      "leagueFrequencyBrier": 0.652836
+    },
+    "G1": {
+      "n": 31,
+      "baselineModelBrier": 0.66145,
+      "selectedModelBrier": 0.66145,
+      "leagueFrequencyBrier": 0.65932
+    },
+    "I1": {
+      "n": 78,
+      "baselineModelBrier": 0.616546,
+      "selectedModelBrier": 0.616546,
+      "leagueFrequencyBrier": 0.653294
+    },
+    "JPN": {
+      "n": 64,
+      "baselineModelBrier": 0.612836,
+      "selectedModelBrier": 0.612836,
+      "leagueFrequencyBrier": 0.646035
+    },
+    "N1": {
+      "n": 81,
+      "baselineModelBrier": 0.634948,
+      "selectedModelBrier": 0.634948,
+      "leagueFrequencyBrier": 0.685157
+    },
+    "P1": {
+      "n": 84,
+      "baselineModelBrier": 0.589327,
+      "selectedModelBrier": 0.589327,
+      "leagueFrequencyBrier": 0.664189
+    },
+    "SC0": {
+      "n": 63,
+      "baselineModelBrier": 0.63015,
+      "selectedModelBrier": 0.63015,
+      "leagueFrequencyBrier": 0.67061
+    },
+    "SP1": {
+      "n": 106,
+      "baselineModelBrier": 0.62267,
+      "selectedModelBrier": 0.62267,
+      "leagueFrequencyBrier": 0.637925
+    },
+    "T1": {
+      "n": 68,
+      "baselineModelBrier": 0.651194,
+      "selectedModelBrier": 0.651194,
+      "leagueFrequencyBrier": 0.633076
+    }
+  },
+  "countFits": {
+    "corners": {
+      "dispersion": null,
+      "selectedOnValidation": false,
+      "trainingCandidate": {
+        "dispersion": 8,
+        "trainingBrier": 0.252317
+      },
+      "periods": {
+        "training": {
+          "n": 1661,
+          "poissonBrier": 0.254713,
+          "selectedBrier": 0.254713
+        },
+        "validation": {
+          "n": 1268,
+          "poissonBrier": 0.248309,
+          "selectedBrier": 0.248309
+        },
+        "holdout": {
+          "n": 867,
+          "poissonBrier": 0.24725,
+          "selectedBrier": 0.24725
+        }
+      }
+    },
+    "yellow": {
+      "dispersion": null,
+      "selectedOnValidation": false,
+      "trainingCandidate": {
+        "dispersion": 4,
+        "trainingBrier": 0.223138
+      },
+      "periods": {
+        "training": {
+          "n": 1661,
+          "poissonBrier": 0.226293,
+          "selectedBrier": 0.226293
+        },
+        "validation": {
+          "n": 1268,
+          "poissonBrier": 0.225479,
+          "selectedBrier": 0.225479
+        },
+        "holdout": {
+          "n": 867,
+          "poissonBrier": 0.217633,
+          "selectedBrier": 0.217633
+        }
+      }
+    }
+  },
+  "caveat": "Retrospective numerical-model validation is not a live forecast accuracy record. Results vary by league. No profit or superiority claim."
+}

@@ -1,0 +1,8 @@
+{
+  "strengthExponent": 0.5,
+  "rho": -0.06,
+  "cornersDispersion": null,
+  "yellowDispersion": null,
+  "status": "baseline_retained_after_chronological_validation",
+  "validationReport": "docs/model-validation-2026-09-25.json"
+}

@@ -121,6 +121,7 @@ async function buildAnalysisCore(home, away, original = {}) {
       for(const side of ['home','away']) {
         const t=bsd.teams[side];
         if(t.bsdId) primary.teams[side]={...t,...primary.teams[side],bsdId:t.bsdId,
+          name:primary.teams[side].resolved?primary.teams[side].name:t.name,
           resolved:true,country:primary.teams[side].country || t.country,
           badge:primary.teams[side].badge || t.badge,
           badgeCandidates:[...new Set([...(primary.teams[side].badgeCandidates || []),...(t.badgeCandidates || [])])]};
@@ -171,7 +172,7 @@ module.exports = async function handler(req, res) {
   if (!(await enforceRateLimit(req, res, user, 'analyze', { windowSeconds: 3600, limit: 30 }))) return;
 
   try {
-    const analysisKey = `analysis-core:v21:${safeKey(home)}:${safeKey(away)}`;
+    const analysisKey = `analysis-core:v22:${safeKey(home)}:${safeKey(away)}`;
     const cached = await cachedProviderCall({
       cacheKey: analysisKey,
       provider: 'Vertex Analysis Core',

@@ -390,6 +390,21 @@
 
   let analysisUiPromise = null;
   let analysisInFlight = null;
+  let analysisRefreshTimer = null;
+  function scheduleAnalysisRefresh(home, away) {
+    clearTimeout(analysisRefreshTimer);
+    const report=lastAnalysis, userId=currentUser?.id;
+    const kickoff=Date.parse(report?.fixture?.date);
+    if(!userId || !(kickoff>Date.now()) || kickoff-Date.now()>24*36e5) return;
+    const input=byId('analyzerSearch')?.value;
+    analysisRefreshTimer=setTimeout(()=>{
+      if(currentUser?.id!==userId || lastAnalysis!==report || byId('analyzerSearch')?.value!==input || Date.now()>=kickoff) return;
+      if(document.visibilityState==='hidden' || !location.hash.includes('analyzer') || analysisInFlight) {
+        scheduleAnalysisRefresh(home,away);return;
+      }
+      performAnalysis(home,away,{background:true});
+    },5*60e3);
+  }
   function ensureAnalysisUi() {
     if (window.VertexAnalysisUI?.acceptAnalysis) return Promise.resolve(true);
     if (analysisUiPromise) return analysisUiPromise;
@@ -514,7 +529,8 @@
     `;
   }
 
-  async function performAnalysis(home, away) {
+  async function performAnalysis(home, away, options = {}) {
+    const background=options.background === true;
     if (!requireAccount('analyzer')) return;
     const target = byId('analysisResult');
     if (!target) return;
@@ -523,13 +539,15 @@
     const state = window.VertexAnalyzerState;
     if (state?.isBusy?.()) return;
 
+    clearTimeout(analysisRefreshTimer);
+    const userId=currentUser?.id, previous=lastAnalysis, input=byId('analyzerSearch')?.value;
     analysisInFlight = (async () => {
-      const began = state?.begin?.() ?? true;
+      const began = background ? true : (state?.begin?.() ?? true);
       if (!began) return;
 
       try {
         const uiReady = await ensureAnalysisUi();
-        if (!state) localizedHTML(target,'<div class="loading-state">Collecting match data and calculating the Vertex model…</div>');
+        if (!state && !background) localizedHTML(target,'<div class="loading-state">Collecting match data and calculating the Vertex model…</div>');
 
         // Vercel Fluid Compute allows the server enough time for cold provider calls.
         // Keep a client-side upper bound so a broken upstream can never leave the UI stuck.
@@ -540,23 +558,28 @@
         );
         if (!data?.analysis) throw new Error('Analysis providers did not return a usable result.');
 
+        if(currentUser?.id!==userId || (background && (lastAnalysis!==previous || byId('analyzerSearch')?.value!==input)))return;
         lastAnalysis = data.analysis;
 
         // Production has one report renderer. Avoid dispatching a second render
         // when UX7 is already present.
         if (uiReady && window.VertexAnalysisUI?.acceptAnalysis) {
-          window.VertexAnalysisUI.acceptAnalysis(data.analysis);
+          window.VertexAnalysisUI.acceptAnalysis(data.analysis,{persist:!background});
         } else {
           localizedHTML(target,renderAnalysis(data.analysis));
           rememberAnalysis(data.analysis);
         }
 
         // Activity is non-critical. Do not block rendering on this write.
-        incrementActivity();
+        if(!background)incrementActivity();
 
         // Give Chromium a paint opportunity before re-enabling particles/buttons.
         await new Promise((resolve) => requestAnimationFrame(() => resolve()));
       } catch (error) {
+        if(background) {
+          if(previous && currentUser?.id===userId) { previous.engine={...(previous.engine || {}),refreshFailed:true};window.VertexAnalysisUI?.acceptAnalysis(previous,{persist:false}); }
+          return;
+        }
         const message = errorKey(error,'Analysis is temporarily unavailable. Please try again.');
         if (error.code === 'TEAM_AMBIGUOUS' && Array.isArray(error.details?.teams)) {
           localizedHTML(target, `<div class="analysis-error"><strong>Clarify the team</strong><p>Several clubs share this name. Choose a club below or enter its full name.</p>${error.details.teams.map(team => `<div class="analyzer-team-choices"><p>${escapeHtml(team.input)}</p>${team.candidates.map(club => `<button type="button" class="btn-outline" data-resolve-side="${escapeHtml(team.side)}" data-resolve-team="${escapeHtml(club.name)}">${escapeHtml(club.name)} · ${escapeHtml(window.VertexLocaleContent?.country(club.country, window.VertexI18n.getLanguage()) || club.country)}</button>`).join('')}</div>`).join('')}</div>`);
@@ -566,10 +589,11 @@
         }
       } finally {
         await new Promise((resolve) => requestAnimationFrame(() => resolve()));
-        state?.end?.();
+        if(!background)state?.end?.();
       }
     })().finally(() => {
       analysisInFlight = null;
+      scheduleAnalysisRefresh(home,away);
     });
 
     return analysisInFlight;
