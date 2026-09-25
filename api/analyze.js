@@ -1,5 +1,8 @@
 'use strict';
 
+const { withBudget, stage, remaining } = require('../lib/analysis-budget');
+const { enrichMatchContext } = require('../lib/match-context');
+const { applyHistory } = require('../lib/verified-history');
 const { buildBaseAnalysis } = require('../lib/base-analysis-v2');
 const { enhanceAnalysis } = require('../lib/analysis-enhancer');
 const { enhanceGranularAnalysis } = require('../lib/granular-enrichment');
@@ -102,59 +105,52 @@ async function attachModelContext(analysis) {
 
 async function buildAnalysisCore(home, away, original = {}) {
   if ([home, away].some(name => ambiguousTeamChoices(name).length)) throw new Error('TEAM_AMBIGUOUS');
-  let base = await buildBaseAnalysis(home, away, original);
-  base = await resolveOpenLigaClubs(base);
-  base = await preResolveFixture(base);
-  let analysis = await enhanceAnalysis(base);
-
-  const enoughHistory = () => Math.min(analysis.form?.home?.played || 0, analysis.form?.away?.played || 0) >= 3;
-  if (needsMoreHistory(analysis)) analysis = await enrichOpenFootball(analysis);
-  if (needsMoreHistory(analysis)) analysis = await enrichOpenLigaDb(analysis);
-  if (needsMoreHistory(analysis)) analysis = await enrichBsdHistory(analysis);
-  if (process.env.ESPN_FOOTBALL_ENABLED === 'true' && (!enoughHistory() || !analysis.fixture?.date)) analysis = await enrichEspnAnalysis(analysis);
-  if (!enoughHistory()) analysis = await enrichSportmonksHistory(analysis);
-
-  let apiFootballFallback = { used: false, cacheHits: 0 };
-  if (!enoughHistory()) {
-    apiFootballFallback = await enrichApiFootballFallback(analysis);
-    analysis = apiFootballFallback.analysis;
-
-    if (apiFootballFallback.used) {
-      analysis = await enhanceAnalysis(analysis);
-      analysis.sourceStatus = {
-        ...(analysis.sourceStatus || {}),
-        primaryFootball: analysis.model
-          ? 'API-Football fallback + multi-source context'
-          : (analysis.sourceStatus?.primaryFootball || 'API-Football fallback')
-      };
-    }
-  }
-
-  analysis = await enhanceGranularAnalysis(analysis);
-  analysis = await attachModelContext(analysis);
-  analysis = await enrichAvailabilityIntelligence(analysis);
-  analysis = refreshScheduleContext(analysis);
-  analysis = finalizeVertexModelV2(analysis);
-
-  if (analysis.penaltyModel?.ok) {
-    analysis.marketCoverage = {
-      ...(analysis.marketCoverage || {}),
-      granular: {
-        ...(analysis.marketCoverage?.granular || {}),
-        penalties: true,
-        penaltySource: analysis.penaltyModel.source,
-        penaltyBasis: analysis.penaltyModel.basis
+  const started = Date.now();
+  return withBudget(43000, async () => {
+    let analysis = {generatedAt:new Date().toISOString(),
+      teams:{home:{name:home,resolved:false},away:{name:away,resolved:false}},
+      fixture:{date:null}, form:{home:{played:0},away:{played:0}},
+      news:[], sourceStatus:{},limitations:[]};
+    analysis = await stage(analysis,'identity',9500,()=>buildBaseAnalysis(home,away,original));
+    analysis = await stage(analysis,'fixture',3500,preResolveFixture);
+    analysis = await stage(analysis,'history',12500,async base=>{
+      // Independent sources compete on freshness/completeness, not response order.
+      const [primary,bsd] = await Promise.all([
+        enhanceAnalysis(structuredClone(base)), enrichBsdHistory(structuredClone(base))
+      ]);
+      for(const side of ['home','away']) {
+        const t=bsd.teams[side];
+        if(t.bsdId) primary.teams[side]={...t,...primary.teams[side],bsdId:t.bsdId,
+          resolved:true,country:primary.teams[side].country || t.country,
+          badge:primary.teams[side].badge || t.badge,
+          badgeCandidates:[...new Set([...(primary.teams[side].badgeCandidates || []),...(t.badgeCandidates || [])])]};
       }
-    };
-  }
-
-  return {
-    analysis,
-    providerMeta: {
-      apiFootballFallbackUsed: Boolean(apiFootballFallback.used),
-      apiFootballCacheHits: Number(apiFootballFallback.cacheHits || 0)
-    }
-  };
+      primary.sourceStatus ||= {};
+      primary.sourceStatus.bsd=bsd.sourceStatus?.bsd;
+      if(bsd.history?.source === 'BSD') applyHistory(primary,{ok:true,source:'BSD',
+        homeForm:bsd.form.home,awayForm:bsd.form.away,advanced:bsd.advanced,
+        leagueContext:bsd.leagueContext,h2h:bsd.h2h,history:bsd.history});
+      primary.dataSources=[...(primary.dataSources || []),...(bsd.dataSources || [])];
+      return primary;
+    });
+    if(needsMoreHistory(analysis) && remaining()>16000) analysis=await stage(analysis,'open-history',4500,enrichOpenFootball);
+    if(needsMoreHistory(analysis) && remaining()>13000) analysis=await stage(analysis,'open-league',4500,async a=>enrichOpenLigaDb(await resolveOpenLigaClubs(a)));
+    const enough=()=>Math.min(analysis.form?.home?.played || 0,analysis.form?.away?.played || 0)>=3;
+    if(!enough() && remaining()>9000) analysis=await stage(analysis,'sportmonks',4500,enrichSportmonksHistory);
+    let apiFootballFallback={used:false,cacheHits:0};
+    if(!enough() && remaining()>6000) analysis=await stage(analysis,'api-football',4000,async a=>{
+      const fallback=await enrichApiFootballFallback(a);apiFootballFallback=fallback;return fallback.analysis;
+    });
+    analysis=await stage(analysis,'match-context',6500,enrichMatchContext);
+    analysis=await stage(analysis,'event-statistics',Math.min(14500,remaining()-1800),enhanceGranularAnalysis);
+    if(remaining()>1000) analysis=await stage(analysis,'league-context',1800,attachModelContext);
+    if((analysis.news || []).length && remaining()>500) analysis=await stage(analysis,'availability',1600,enrichAvailabilityIntelligence);
+    analysis=finalizeVertexModelV2(refreshScheduleContext(analysis));
+    analysis.engine={...(analysis.engine || {}),analysisDurationMs:Date.now()-started,
+      collectionComplete:!(analysis.collection || []).some(s=>s.status!=='completed'),
+      collectionStages:analysis.collection || [],refreshIntervalSeconds:300};
+    return {analysis,providerMeta:{apiFootballFallbackUsed:Boolean(apiFootballFallback.used),apiFootballCacheHits:Number(apiFootballFallback.cacheHits || 0)}};
+  });
 }
 
 module.exports = async function handler(req, res) {
@@ -175,12 +171,12 @@ module.exports = async function handler(req, res) {
   if (!(await enforceRateLimit(req, res, user, 'analyze', { windowSeconds: 3600, limit: 30 }))) return;
 
   try {
-    const analysisKey = `analysis-core:v20:${safeKey(home)}:${safeKey(away)}`;
+    const analysisKey = `analysis-core:v21:${safeKey(home)}:${safeKey(away)}`;
     const cached = await cachedProviderCall({
       cacheKey: analysisKey,
       provider: 'Vertex Analysis Core',
-      ttlSeconds: 300,
-      staleSeconds: 1800,
+      ttlSeconds: 120,
+      staleSeconds: 0,
       loader: () => buildAnalysisCore(home, away, { home: homeInput, away: awayInput })
     });
 

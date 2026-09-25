@@ -1,0 +1,35 @@
+name: Football Coverage Audit
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['lib/**', 'api/**', '.github/workflows/coverage-audit.yml']
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        league: [E0, E1, SP1, D1, I1, F1, N1, P1, B1, SC0, G1, T1, BRA, ARG, JPN]
+    steps:
+      - name: Allow deployment to become ready
+        run: sleep 25
+      - name: Run four fixed coverage checks
+        env:
+          LEAGUE: ${{ matrix.league }}
+        run: |
+          curl --fail --silent --show-error --max-time 60 "https://vertexsoccerai.com/api/provider-check?coverage=${LEAGUE}" -o report.json
+          node - <<'NODE'
+          const r=JSON.parse(require('fs').readFileSync('report.json','utf8'));
+          console.log(JSON.stringify(r));
+          if(r.checks?.length!==4 || r.checks.some(c=>c.error || c.normalized===false || c.backtest?.noFutureData===false)) process.exit(1);
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-${{ matrix.league }}
+          path: report.json

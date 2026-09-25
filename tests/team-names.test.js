@@ -43,7 +43,7 @@ test('Russian partial queries suggest the right club without merging different F
 
 function loadHandler(file, dependencies) {
   const context = {
-    module: { exports: {} }, console, process: {env:{}},
+    module: { exports: {} }, console, structuredClone, process: {env:{}},
     require(name) {
       assert.ok(name in dependencies, `Unexpected dependency ${name}`);
       return dependencies[name];
@@ -88,6 +88,8 @@ test('analysis endpoint passes the same canonical teams and cache key for Russia
   const cacheKeys = [];
   const identity = async (value) => value;
   const handler = loadHandler('api/analyze.js', {
+    '../lib/analysis-budget': require('../lib/analysis-budget'),
+    '../lib/match-context': {enrichMatchContext:identity},
     '../lib/team-aliases': aliases,
     '../lib/club-directory': { searchClubDirectory: async () => [] },
     '../lib/base-analysis-v2': { buildBaseAnalysis: async (home, away) => {

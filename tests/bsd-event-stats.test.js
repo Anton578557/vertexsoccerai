@@ -89,6 +89,7 @@ test('BSD stats transport validates event identity and caches only the statistic
       const id=Number(new URL(url).pathname.split('/')[4]);
       return{ok:true,json:async()=>({...payload(id===13?99:id),shotmap:[{private:'unused'}]})};},
     require(name){
+      if(name==='./analysis-budget')return{boundedFetch:context.fetch};
       if(name==='./provider-cache')return{getProviderCache:async()=>null,setProviderCache:async()=>{},
         cachedProviderCall:async({cacheKey,loader})=>{if(!saved.has(cacheKey))saved.set(cacheKey,await loader());return{payload:saved.get(cacheKey)};}};
       return require('../lib/'+name.slice(2));
