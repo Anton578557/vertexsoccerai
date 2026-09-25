@@ -31,9 +31,12 @@ test('empty primary news triggers a bounded free fallback and preserves provider
   });
   const r=await getNewsIntelligence('Coventry City','Bristol City');
   assert.equal(r.status,'ready');assert.equal(r.items.length,1);assert.equal(r.providers[1].provider,'GDELT');assert.equal(urls.length,2);
+  await getNewsIntelligence('Arsenal','Fulham');
+  assert.equal(urls.length,2,'Another match reuses the same news feeds');
 });
 
 test('unavailable providers are not reported as a successful empty search',async t=>{
+  const future=Date.now()+2*36e5;t.mock.method(Date,'now',()=>future);
   const previous=process.env.NEWSAPI_KEY;process.env.NEWSAPI_KEY='test-key';
   t.after(()=>{if(previous===undefined)delete process.env.NEWSAPI_KEY;else process.env.NEWSAPI_KEY=previous;});
   t.mock.method(globalThis,'fetch',async()=>new Response('{}',{status:503}));
