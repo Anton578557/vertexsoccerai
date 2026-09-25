@@ -26,7 +26,7 @@ jobs:
           node - <<'NODE'
           const r=JSON.parse(require('fs').readFileSync('report.json','utf8'));
           console.log(JSON.stringify(r));
-          if(r.checks?.length!==4 || r.checks.some(c=>c.error || c.normalized===false || c.backtest?.noFutureData===false)) process.exit(1);
+          if(r.checks?.length!==4 || r.checks.some(c=>c.error || c.modelReady!==true || c.normalized!==true || c.backtest?.noFutureData===false)) process.exit(1);
           NODE
       - uses: actions/upload-artifact@v4
         if: always()

@@ -12,7 +12,7 @@
     link.href = href;
     document.head.appendChild(link);
   }
-  ensureStylesheet('ux-v6.css?v=11');
+  ensureStylesheet('ux-v6.css?v=12');
 
   const SUPABASE_URL = 'https://bznjdzgtiddggcdhxadj.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_kWwttoQARBmC6H_NqsEL_A_A5I7wDON';
@@ -196,6 +196,12 @@
     es: {eventSample:'Partidos verificados para esta estadística',eventMissing:'La estimación requiere datos recientes de ambos equipos. Los datos ausentes no se cuentan como ceros.',cornersNote:'Según los córners de ambos equipos y sus rivales. Modelo de conteo básico; la precisión de las probabilidades aún no se ha validado.'}
   };
   for (const language of Object.keys(eventCopy)) Object.assign(reportCopy[language],eventCopy[language]);
+  const contextCopy = {
+    ru: {basisHistory:'Основа: история команд',basisHistoryNote:'Забитые и пропущенные голы, свежесть результатов и сила соперников при наличии данных.',basisLeague:'Условия матча',leagueBaseline:'База турнира',genericBaseline:'Общая базовая оценка: данных турнира мало',neutral:'Нейтральное поле: преимущество хозяев отключено',venueUsed:'Учтены домашние и гостевые показатели',basisResult:'Расчёт голов',basisResultNote:'Все исходы, тоталы и сценарии счёта получены из одного распределения.',extraFactors:'Дополнительные поправки',applied:'Учтено',lineups:'Стартовые составы',confirmed:'Подтверждены · 11 + 11',predicted:'Только предварительный состав',lineupsPending:'Подтверждённый состав пока не получен',lineupsError:'Источник составов временно недоступен',lineupsNote:'Составы проверяются отдельно. Сам факт публикации не даёт автоматическую прибавку к шансам команды.',injuryNote:'Полный список травм не подтверждён. Отсутствие записи не означает, что игрок здоров.',showLineups:'Посмотреть игроков',newsError:'Не удалось проверить новости',newsErrorNote:'Источник временно недоступен или ограничил доступ. Расчёт использует остальные доступные данные.',newsNone:'Свежих статей, прошедших проверку связи с командами, нет.',newsPartial:'Часть новостных источников недоступна.',checked:'Проверено',indexed:'Найдено в индексе',referee:'Судья матча',notWeighted:'Показано для контекста; отдельная числовая поправка не применяется.',measuredXg:'Качество моментов · история xG',measuredXgNote:'Только измеренные данные источника. Собираем выборку для проверки перед включением в модель.',refreshed:'Данные расчёта',autoRefresh:'Перед матчем отчёт обновляется каждые 5 минут, пока эта вкладка открыта.',refreshFailed:'Обновить данные не удалось. Ниже остаётся предыдущий расчёт.',partialCollection:'Часть источников не ответила вовремя. Расчёт построен по полученным данным.'},
+    en: {basisHistory:'Foundation: team history',basisHistoryNote:'Goals scored and conceded, recency, and opponent strength where available.',basisLeague:'Match conditions',leagueBaseline:'Competition baseline',genericBaseline:'General baseline: limited competition data',neutral:'Neutral venue: home advantage disabled',venueUsed:'Home and away records included',basisResult:'Goal model',basisResultNote:'Outcomes, totals and score scenarios come from one probability distribution.',extraFactors:'Additional adjustments',applied:'Included',lineups:'Starting lineups',confirmed:'Confirmed · 11 + 11',predicted:'Predicted lineup only',lineupsPending:'Confirmed lineup not yet received',lineupsError:'Lineup source temporarily unavailable',lineupsNote:'Lineups are checked separately. Publication alone does not automatically increase a team’s chances.',injuryNote:'The full injury list is not confirmed. A missing record does not mean a player is healthy.',showLineups:'View players',newsError:'News could not be checked',newsErrorNote:'The source is temporarily unavailable or access is limited. The calculation uses the other available data.',newsNone:'No recent articles passed the team relevance checks.',newsPartial:'Some news sources are unavailable.',checked:'Checked',indexed:'Found in the index',referee:'Match referee',notWeighted:'Shown for context; no separate numerical adjustment is applied.',measuredXg:'Chance quality · historical xG',measuredXgNote:'Measured provider data only. A validation sample is being collected before use in the model.',refreshed:'Calculation data',autoRefresh:'Before kickoff, the report refreshes every 5 minutes while this page is open.',refreshFailed:'The refresh failed. The previous calculation remains below.',partialCollection:'Some sources did not respond in time. The calculation uses the data received.'},
+    es: {basisHistory:'Base: historial de los equipos',basisHistoryNote:'Goles a favor y en contra, actualidad y fuerza de los rivales cuando hay datos.',basisLeague:'Condiciones del partido',leagueBaseline:'Base de la competición',genericBaseline:'Base general: pocos datos de la competición',neutral:'Campo neutral: ventaja local desactivada',venueUsed:'Se incluyen registros como local y visitante',basisResult:'Modelo de goles',basisResultNote:'Resultados, totales y marcadores proceden de una misma distribución de probabilidades.',extraFactors:'Ajustes adicionales',applied:'Incluido',lineups:'Alineaciones iniciales',confirmed:'Confirmadas · 11 + 11',predicted:'Solo alineación prevista',lineupsPending:'Alineación confirmada aún no recibida',lineupsError:'Fuente de alineaciones no disponible temporalmente',lineupsNote:'Las alineaciones se comprueban por separado. Su publicación no aumenta automáticamente las opciones de un equipo.',injuryNote:'La lista completa de lesiones no está confirmada. La ausencia de registros no significa que un jugador esté sano.',showLineups:'Ver jugadores',newsError:'No se pudieron comprobar las noticias',newsErrorNote:'La fuente no está disponible temporalmente o limita el acceso. El cálculo utiliza los demás datos disponibles.',newsNone:'Ningún artículo reciente superó la verificación de relación con los equipos.',newsPartial:'Algunas fuentes de noticias no están disponibles.',checked:'Comprobado',indexed:'Encontrado en el índice',referee:'Árbitro del partido',notWeighted:'Se muestra como contexto; no se aplica un ajuste numérico adicional.',measuredXg:'Calidad de ocasiones · xG histórico',measuredXgNote:'Solo datos medidos por la fuente. Se reúne una muestra de validación antes de incorporarlos al modelo.',refreshed:'Datos del cálculo',autoRefresh:'Antes del inicio, el informe se actualiza cada 5 minutos mientras esta página está abierta.',refreshFailed:'La actualización falló. Se conserva el cálculo anterior.',partialCollection:'Algunas fuentes no respondieron a tiempo. El cálculo utiliza los datos recibidos.'}
+  };
+  for (const language of Object.keys(contextCopy)) Object.assign(reportCopy[language],contextCopy[language]);
   const rt = (key) => (reportCopy[lang()] || reportCopy.en)[key] || key;
   const common = (key) => window.VertexI18n?.t?.(key) || window.VertexLocaleContent?.text(key,lang()) || key;
   const diagnostic = value => window.VertexLocaleContent?.diagnostic(value,lang()) || value;
@@ -346,44 +352,50 @@
 
   function renderDrivers(analysis, home, away) {
     const rows = Array.isArray(analysis?.vertexModel?.drivers) ? analysis.vertexModel.drivers.slice(0, 5) : [];
-    if (!rows.length) return `<div class="v6-cabinet-empty">${esc(t('noDrivers'))}</div>`;
+
     const labels = {
       en: { form: 'Recent form', 'schedule-strength': 'Opponent strength', 'home-fatigue': 'Recovery / schedule', 'away-fatigue': 'Recovery / schedule', 'news-home': 'News / squad', 'news-away': 'News / squad', weather: 'Weather', 'shot-pressure': 'Shot pressure', h2h: 'Head-to-head' },
       ru: { form: 'Текущая форма', 'schedule-strength': 'Сила соперников', 'home-fatigue': 'Восстановление / календарь', 'away-fatigue': 'Восстановление / календарь', 'news-home': 'Новости / состав', 'news-away': 'Новости / состав', weather: 'Погода', 'shot-pressure': 'Давление по ударам в створ', h2h: 'Очные встречи' },
       es: { form: 'Forma reciente', 'schedule-strength': 'Fuerza de los rivales', 'home-fatigue': 'Recuperación / calendario', 'away-fatigue': 'Recuperación / calendario', 'news-home': 'Noticias / plantilla', 'news-away': 'Noticias / plantilla', weather: 'Clima', 'shot-pressure': 'Presión de tiros a puerta', h2h: 'Enfrentamientos directos' }
     };
-    return `<div class="v6-driver-list">${rows.map((driver) => {
+    const basis=analysis.vertexModel?.basis || {};
+    const league=basis.league || {};
+    const card=(title,value,note)=>`<div class="v11-basis-card"><span>${esc(title)}</span><strong>${esc(value)}</strong><p>${esc(note)}</p></div>`;
+    const history=`${analysis.form?.home?.played || 0} / ${analysis.form?.away?.played || 0} · ${t('matches')}`;
+    const conditions=basis.neutralGround?rt('neutral'):analysis.vertexModel?.coverage?.homeAwaySplits?rt('venueUsed'):'';
+    const leagueText=analysis.vertexModel?.coverage?.leagueBaseline ? `${rt('leagueBaseline')} · ${num(league.sample || analysis.leagueContext?.sample || 0)} ${t('matches')}` : rt('genericBaseline');
+    const foundation=`<div class="v11-basis-grid">${card(rt('basisHistory'),history,rt('basisHistoryNote'))}${card(rt('basisLeague'),leagueText,conditions)}${card(rt('basisResult'),`${num(analysis.model?.expectedGoals?.home,2)} : ${num(analysis.model?.expectedGoals?.away,2)}`,rt('basisResultNote'))}</div>`;
+    const factors=rows.map((driver) => {
       const side = driver.side === 'home' ? home : driver.side === 'away' ? away : `${home} / ${away}`;
       const label = labels[lang()]?.[driver.key] || labels.en[driver.key] || driver.label || driver.key || 'Vertex';
-      return `<div class="v6-driver"><span class="v6-driver-icon">•</span><div><strong>${esc(label)} · ${esc(side)}</strong><small>${esc(diagnostic(driver.source || 'Vertex'))}</small></div><b>${num(driver.magnitudePct || 0,1)}%</b></div>`;
-    }).join('')}</div>`;
+      return `<div class="v6-driver"><span class="v6-driver-icon" aria-hidden="true">+</span><div><strong>${esc(label)} · ${esc(side)}</strong><small>${esc(diagnostic(driver.source || 'Vertex'))}</small></div><b>${esc(rt('applied'))}</b></div>`;
+    }).join('');
+    return foundation + (factors?`<h5 class="v11-subhead">${esc(rt('extraFactors'))}</h5><div class="v6-driver-list">${factors}</div>`:`<p class="v8-note">${esc(t('noDrivers'))}</p>`);
   }
 
   function renderContext(analysis) {
-    const cards = [];
-    for (const side of ['home', 'away']) {
-      const team = side === 'home' ? analysis.teams?.home?.name : analysis.teams?.away?.name;
-      for (const signal of (analysis?.squad?.[side]?.signals || []).slice(0, 2)) {
-        const rawState = String(signal.state || 'doubtful').toLowerCase();
-        const stateLabels = {
-          en: { out: 'OUT', doubtful: 'DOUBTFUL', available: 'AVAILABLE' },
-          ru: { out: 'ВЫБЫЛ', doubtful: 'ПОД ВОПРОСОМ', available: 'ДОСТУПЕН' },
-          es: { out: 'BAJA', doubtful: 'DUDA', available: 'DISPONIBLE' }
-        };
-        const state = stateLabels[lang()]?.[rawState] || rawState.toUpperCase();
-        const player = signal.player || (lang() === 'ru' ? 'Ключевой игрок' : lang() === 'es' ? 'Jugador clave' : 'Key player');
-        const reason = signal.suspension ? (lang() === 'ru' ? 'дисквалификация' : lang() === 'es' ? 'suspensión' : 'suspension') : (lang() === 'ru' ? 'травма / доступность' : lang() === 'es' ? 'lesión / disponibilidad' : 'injury / availability');
-        cards.push(`<div class="v6-context-card"><span>${esc(t('availability'))}</span><strong>${esc(team)} · ${esc(player)} · ${esc(state)}</strong><p>${esc(reason)}</p></div>`);
-      }
-    }
-    const news = Array.isArray(analysis?.news) ? analysis.news.slice(0, 3) : [];
-    if (!news.length) cards.push(`<div class="v6-context-card"><span>${esc(t('news'))}</span><strong>${esc(t('noNews'))}</strong></div>`);
-    else news.forEach((item) => {
+    const news = Array.isArray(analysis.news) ? analysis.news.slice(0,3) : [];
+    const state=analysis.newsStatus || {};
+    const unavailable=(!state.status && !news.length) || ['temporarily_unavailable','quota_exhausted','access_limited'].includes(state.status);
+    const newsBody=news.length?news.map(item=>{
       const url=safeUrl(item.url || item.link);
-      cards.push(`<div class="v6-context-card"><span>${esc(t('news'))}</span><strong>${esc(common('Context update'))}</strong><p>${esc(item.source || t('news'))}${item.publishedAt ? ` · ${esc(fmtDate(item.publishedAt))}` : ''}</p><details><summary>${esc(common('Original article'))} · ${esc(common('Source language'))}</summary><p translate="no">${esc(item.title || item.signal || '')}</p>${url?`<a href="${url}" target="_blank" rel="noopener noreferrer">${esc(common('Read original'))}</a>`:''}</details></div>`);
-    });
-    if (!analysis.vertexModel?.coverage?.structuredInjuriesAndLineups) cards.push(`<div class="v6-context-card"><span>${esc(t('availability'))}</span><p>${esc(t('squadMissing'))}</p></div>`);
-    return `<section class="v6-section"><div class="v6-section-head"><div><span class="v6-section-kicker">${esc(t('context'))}</span><h4>${esc(t('news'))} · ${esc(t('availability'))}</h4></div></div><div class="v6-context-grid">${cards.join('')}</div></section>`;
+      const date=item.publishedAt || item.indexedAt;
+      return `<article class="v11-news-item"><strong>${esc((item.teams || []).map(side=>analysis.teams?.[side]?.name).filter(Boolean).join(' · ') || common('Context update'))}</strong><p>${esc(item.source || t('news'))}${date?` · ${item.indexedAt?esc(rt('indexed'))+' ':''}${esc(fmtDate(date))}`:''}</p><details><summary>${esc(common('Original article'))} · ${esc(common('Source language'))}</summary><p translate="no">${esc(item.title || '')}</p>${url?`<a href="${url}" target="_blank" rel="noopener noreferrer">${esc(common('Read original'))} ↗</a>`:''}</details></article>`;
+    }).join(''):`<strong>${esc(unavailable?rt('newsError'):rt('newsNone'))}</strong>${unavailable?`<p>${esc(rt('newsErrorNote'))}</p>`:''}`;
+    const newsCard=`<div class="v6-context-card"><span>${esc(t('news'))}</span>${newsBody}${state.partial && !unavailable?`<p>${esc(rt('newsPartial'))}</p>`:''}${state.checkedAt?`<small>${esc(rt('checked'))}: ${esc(fmtDate(state.checkedAt))}</small>`:''}</div>`;
+    const sheet=analysis.matchContext?.lineups || {};
+    const sheetLabel=sheet.confirmed?rt('confirmed'):sheet.status==='predicted'?rt('predicted'):['temporarily_unavailable','invalid_identity','incomplete'].includes(sheet.status)?rt('lineupsError'):rt('lineupsPending');
+    const lineups=sheet.confirmed?`<details><summary>${esc(rt('showLineups'))}</summary>${['home','away'].map(side=>`<strong>${esc(analysis.teams?.[side]?.name)} ${esc(sheet[side]?.formation || '')}</strong><ul class="v11-lineup">${(sheet[side]?.players || []).map(p=>`<li>${esc(p.name)}</li>`).join('')}</ul>`).join('')}</details>`:'';
+    const states={ru:{out:'Выбыл',doubtful:'Под вопросом',available:'Доступен'},en:{out:'Out',doubtful:'Doubtful',available:'Available'},es:{out:'Baja',doubtful:'Duda',available:'Disponible'}};
+    const signals=['home','away'].flatMap(side=>(analysis.squad?.[side]?.signals || []).slice(0,2).map(signal=>`<p>${esc(analysis.teams?.[side]?.name)} · ${esc(signal.player || '')}: <b>${esc(states[lang()]?.[signal.state] || states.en.doubtful)}</b></p>`)).join('');
+    const squadCard=`<div class="v6-context-card"><span>${esc(rt('lineups'))}</span><strong>${esc(sheetLabel)}</strong>${lineups}<p>${esc(rt('lineupsNote'))}</p>${signals}${analysis.squad?.completeInjuries!==true?`<p>${esc(rt('injuryNote'))}</p>`:''}${analysis.matchContext?.checkedAt?`<small>${esc(rt('checked'))}: ${esc(fmtDate(analysis.matchContext.checkedAt))}</small>`:''}</div>`;
+    const referee=analysis.matchContext?.referee;
+    const refCard=referee?`<div class="v6-context-card"><span>${esc(rt('referee'))}</span><strong>${esc(referee.name)}</strong><p>${esc(rt('notWeighted'))}</p></div>`:'';
+    const xg=analysis.performance?.measuredXg;
+    const xgCard=xg?.available?`<div class="v6-context-card"><span>${esc(rt('measuredXg'))}</span>${['home','away'].map(side=>`<strong>${esc(analysis.teams?.[side]?.name)} · ${num(xg[side]?.xgFor,2)} / ${num(xg[side]?.xgAgainst,2)}</strong><p>${esc(t('gf'))} / ${esc(t('ga'))} (xG) · ${num(xg[side]?.sample)} ${esc(t('matches'))}</p>`).join('')}<p>${esc(rt('measuredXgNote'))}</p></div>`:'';
+    const refreshAt=Date.parse(analysis.fixture?.date);
+    const auto=refreshAt>Date.now() && refreshAt-Date.now()<=864e5 && analysis.engine?.refreshIntervalSeconds;
+    return `<section class="v6-section v11-context"><div class="v6-section-head"><div><span class="v6-section-kicker">${esc(t('context'))}</span><h4>${esc(t('news'))} · ${esc(t('availability'))}</h4></div></div><div class="v6-context-grid">${newsCard}${squadCard}${refCard}${xgCard}</div><div class="v11-freshness">${analysis.generatedAt?`<span>${esc(rt('refreshed'))}: ${esc(fmtDate(analysis.generatedAt))}</span>`:''}${auto?`<p>${esc(rt('autoRefresh'))}</p>`:''}${analysis.engine?.refreshFailed?`<p role="status">${esc(rt('refreshFailed'))}</p>`:''}${analysis.engine?.collectionComplete===false?`<p>${esc(rt('partialCollection'))}</p>`:''}</div></section>`;
   }
 
   function marketRows(rows) {
@@ -462,11 +474,12 @@
 
   function compactPayload(analysis) {
     return {
-      version: 'ux8', teams: analysis.teams || null, fixture: analysis.fixture || null,
+      version: 'ux11', teams: analysis.teams || null, fixture: analysis.fixture || null,
       confidence: analysis.confidence ?? null, dataQuality: analysis.dataQuality ?? null,
       model: analysis.model || null,
-      vertexModel: analysis.vertexModel ? { version: analysis.vertexModel.version, coverage: analysis.vertexModel.coverage, decision: analysis.vertexModel.decision || null, drivers: (analysis.vertexModel.drivers || []).slice(0, 8) } : null,
+      vertexModel: analysis.vertexModel ? { version: analysis.vertexModel.version, basis: analysis.vertexModel.basis || null, coverage: analysis.vertexModel.coverage, decision: analysis.vertexModel.decision || null, drivers: (analysis.vertexModel.drivers || []).slice(0, 8) } : null,
       form: analysis.form || null, penaltyModel: analysis.penaltyModel || null, granularModel: analysis.granularModel || null,
+      newsStatus:analysis.newsStatus || null, matchContext:analysis.matchContext || null, performance:analysis.performance || null, engine:analysis.engine || null,
       news: Array.isArray(analysis.news) ? analysis.news.slice(0, 5) : [],
       squad: analysis.squad ? { home: { signals: (analysis.squad.home?.signals || []).slice(0, 4) }, away: { signals: (analysis.squad.away?.signals || []).slice(0, 4) } } : null,
       generatedAt: analysis.generatedAt || new Date().toISOString()

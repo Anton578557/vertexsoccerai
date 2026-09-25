@@ -25,6 +25,20 @@ function sample() {
   });
 }
 
+test('explanation shows model foundations and confirmed XI independently of missing injuries',()=>{
+  const a=sample();
+  a.newsStatus={status:'temporarily_unavailable',checkedAt:new Date().toISOString()};
+  a.matchContext={lineups:{confirmed:true,status:'confirmed',home:{players:[{name:'Player <script>'}]},away:{players:[]}}};
+  a.engine.refreshFailed=true;
+  for(const [language,confirmed,unavailable] of [['ru','Подтверждены · 11 + 11','Не удалось проверить новости'],['en','Confirmed · 11 + 11','News could not be checked'],['es','Confirmadas · 11 + 11','No se pudieron comprobar las noticias']]) {
+    const html=render(language,a);
+    assert.equal((html.match(/class="v11-basis-card"/g)||[]).length,3);
+    assert.ok(html.includes(confirmed));assert.ok(html.includes(unavailable));
+    assert.ok(!html.includes('Player <script>'));assert.ok(!/NaN|undefined/.test(html));
+    assert.match(html,/role="status"/);
+  }
+});
+
 test('report renders all seven views, safe text and valid estimates in RU/EN/ES', () => {
   for (const language of ['ru','en','es']) {
     const html = render(language,sample());
